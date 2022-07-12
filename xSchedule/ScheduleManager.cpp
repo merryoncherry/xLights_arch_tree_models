@@ -435,11 +435,10 @@ ScheduleManager::~ScheduleManager()
         delete _listenerManager;
     }
 
-    while (_overlayData.size() > 0)
+    for (auto it = _overlayData.begin(); it != _overlayData.end(); )
     {
-        auto todelete = _overlayData.front();
-        _overlayData.remove(todelete);
-        delete todelete;
+        delete *it;
+        it = _overlayData.erase(it);
     }
 
     if (_xyzzy != nullptr)
@@ -727,7 +726,7 @@ void ScheduleManager::AllOff()
             _backgroundPlayList->Frame(_buffer, _outputManager->GetTotalChannels(), true);
         }
 
-        if (_eventPlayLists.size() > 0)
+        if (!_eventPlayLists.empty())
         {
             logger_base.debug("   ... except the event lights.");
 
@@ -736,11 +735,10 @@ void ScheduleManager::AllOff()
             {
                 if ((*it)->Frame(_buffer, _outputManager->GetTotalChannels(), true))
                 {
-                    auto temp = it;
-                    ++it;
-                    (*temp)->Stop();
-                    delete *temp;
-                    _eventPlayLists.remove(*temp);
+                    auto temp = *it;
+                    temp->Stop();
+                    delete temp;
+                    it = _eventPlayLists.erase(it);
                 }
                 else
                 {
@@ -956,11 +954,10 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
                 {
                     if ((*it)->Frame(_buffer, _outputManager->GetTotalChannels(), outputframe))
                     {
-                        auto temp = it;
-                        ++it;
-                        (*temp)->Stop();
-                        delete *temp;
-                        _eventPlayLists.remove(*temp);
+                        auto temp = *it;
+                        temp->Stop();
+                        delete temp;
+                        it = _eventPlayLists.erase(it);
                     }
                     else
                     {
@@ -1063,18 +1060,17 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
                         _backgroundPlayList->Frame(_buffer, totalChannels, outputframe);
                     }
 
-                    if (_eventPlayLists.size() > 0)
+                    if (!_eventPlayLists.empty())
                     {
                         auto it = _eventPlayLists.begin();
                         while (it != _eventPlayLists.end())
                         {
                             if ((*it)->Frame(_buffer, _outputManager->GetTotalChannels(), true))
                             {
-                                auto temp = it;
-                                ++it;
-                                (*temp)->Stop();
-                                delete *temp;
-                                _eventPlayLists.remove(*temp);
+                                auto temp = *it;
+                                temp->Stop();
+                                delete temp;
+                                it = _eventPlayLists.erase(it);
                             }
                             else
                             {
@@ -1118,7 +1114,7 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
             }
             else
             {
-                if (_eventPlayLists.size() > 0)
+                if (!_eventPlayLists.empty())
                 {
                     if (outputframe)
                     {
@@ -1132,11 +1128,10 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
                     {
                         if ((*it)->Frame(_buffer, _outputManager->GetTotalChannels(), true))
                         {
-                            auto temp = it;
-                            ++it;
-                            (*temp)->Stop();
-                            delete *temp;
-                            _eventPlayLists.remove(*temp);
+                            auto temp = *it;
+                            temp->Stop();
+                            delete temp;
+                            it = _eventPlayLists.erase(it);
                         }
                         else
                         {
@@ -1168,7 +1163,7 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
                         _outputManager->EndFrame();
                     }
 
-                    if (_eventPlayLists.size() == 0)
+                    if (_eventPlayLists.empty())
                     {
                         // last event playlist ended ... turn everything off
                         _outputManager->AllOff(true);
@@ -2281,11 +2276,10 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                             {
                                 if ((*it2)->GetId() == p->GetId())
                                 {
-                                    auto temp = it2;
-                                    ++it2;
-                                    (*temp)->Stop();
-                                    delete *temp;
-                                    _eventPlayLists.remove(*temp);
+                                    auto temp = *it2;
+                                    temp->Stop();
+                                    delete temp;
+                                    it2 = _eventPlayLists.erase(it2);
                                 }
                                 else
                                 {
@@ -2324,11 +2318,10 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                                 if ((*it2)->GetId() == p->GetId() &&
                                     ((*it2)->GetRunningStep()->GetId() == pls->GetId()))
                                 {
-                                    auto temp = it2;
-                                    ++it2;
-                                    (*temp)->Stop();
-                                    delete *temp;
-                                    _eventPlayLists.remove(*temp);
+                                    auto temp = *it2;
+                                    temp->Stop();
+                                    delete temp;
+                                    it2 = _eventPlayLists.erase(it2);
                                     logger_base.info("Stopped event playlist %s step %s.", (const char*)p->GetNameNoTime().c_str(), (const char *)pls->GetNameNoTime().c_str());
                                 }
                                 else
@@ -2367,11 +2360,10 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                         {
                             if ((*it2)->GetId() == p->GetId())
                             {
-                                auto temp = it2;
-                                ++it2;
-                                (*temp)->Stop();
-                                delete *temp;
-                                _eventPlayLists.remove(*temp);
+                                auto temp = *it2;
+                                temp->Stop();
+                                delete temp;
+                                it2 = _eventPlayLists.erase(it2);
                                 logger_base.info("Stopped event playlist %s.", (const char*)p->GetNameNoTime().c_str());
                             }
                             else
@@ -2402,11 +2394,10 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                             {
                                 if ((*it2)->GetId() == p->GetId())
                                 {
-                                    auto temp = it2;
-                                    ++it2;
-                                    (*temp)->Stop();
-                                    delete *temp;
-                                    _eventPlayLists.remove(*temp);
+                                    auto temp = *it2;
+                                    temp->Stop();
+                                    delete temp;
+                                    it2 = _eventPlayLists.erase(it2);
                                 }
                                 else
                                 {
@@ -3249,7 +3240,7 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
 
                     if (p == nullptr && data.length() != 0)
                     {
-                        logger_base.debug("Pixel overlay data removed.");
+                        logger_base.debug("Pixel overlay data added.");
                         p = new PixelData(sc, data, blendMode);
                         _overlayData.push_back(p);
                     }
@@ -3275,7 +3266,7 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                         PixelData * p = nullptr;
                         for (const auto& it : _overlayData)
                         {
-                            if (it->GetStartChannel() == sc && it->GetSize() == ch)
+                            if (it->GetStartChannel() == sc)
                             {
                                 p = it;
                                 if (ch == 0)
@@ -3283,10 +3274,16 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                                     logger_base.debug("Pixel overlay data removed.");
                                     _overlayData.remove(p);
                                 }
-                                else
+                                else if (it->GetSize() == ch)
                                 {
                                     logger_base.debug("Pixel overlay data changed.");
                                     p->SetColor(c, blendMode);
+                                }
+                                else
+                                {
+                                    // This had been adding a second one
+                                    // It is not clear that was intended, this might not be either
+                                    logger_base.debug("Pixel overlay data not changed - length doesn't match.");
                                 }
                                 break;
                             }
