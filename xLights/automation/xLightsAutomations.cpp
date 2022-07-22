@@ -679,6 +679,8 @@ bool xLightsFrame::ProcessAutomation(std::vector<std::string> &paths,
         }
 
         wxCloseEvent evt;
+        evt.SetEventObject(this);
+        evt.SetEventType(wxEVT_CLOSE_WINDOW);
         wxPostEvent(this, evt);
         return sendResponse("xLights closed.", "msg", 200, false);
     } else if (cmd == "lightsOn") {
