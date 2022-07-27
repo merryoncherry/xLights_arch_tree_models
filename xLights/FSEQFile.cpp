@@ -107,24 +107,29 @@ inline void DumpHeader(const char *title, unsigned char data[], int len) {
     int x = 0;
     char tmpStr[128];
 
-    sprintf( tmpStr, "%s: (%d bytes)\n", title, len);
-    LogInfo(VB_ALL, tmpStr);
+    snprintf(tmpStr, sizeof(tmpStr), "%s: (%d bytes)\n", title, len);
+    tmpStr[sizeof(tmpStr) - 1] = 0;
+    LogInfo(VB_ALL, "%s", tmpStr);
 
     for (int y = 0; y < len; y++) {
         if ( x == 0 ) {
-            sprintf( tmpStr, "%06x: ", y);
+            snprintf(tmpStr, sizeof(tmpStr), "%06x: ", y);
+            tmpStr[sizeof(tmpStr) - 1] = 0;
         }
-        sprintf( tmpStr + strlen(tmpStr), "%02x ", (int)(data[y] & 0xFF) );
+        snprintf(tmpStr + strlen(tmpStr), sizeof(tmpStr) - strlen(tmpStr), "%02x ", (int)(data[y] & 0xFF));
+        tmpStr[sizeof(tmpStr) - 1] = 0;
         x++;
         if (x == 16) {
             x = 0;
-            sprintf( tmpStr + strlen(tmpStr), "\n" );
-            LogInfo(VB_ALL, tmpStr);
+            snprintf(tmpStr + strlen(tmpStr), sizeof(tmpStr) - strlen(tmpStr), "\n");
+            tmpStr[sizeof(tmpStr) - 1] = 0;
+            LogInfo(VB_ALL, "%s", tmpStr);
         }
     }
     if (x != 0) {
-        sprintf( tmpStr + strlen(tmpStr), "\n" );
-        LogInfo(VB_ALL, tmpStr);
+        snprintf(tmpStr + strlen(tmpStr), sizeof(tmpStr) - strlen(tmpStr), "\n");
+        tmpStr[sizeof(tmpStr) - 1] = 0;
+        LogInfo(VB_ALL, "%s", tmpStr);
     }
 }
 
