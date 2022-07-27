@@ -169,43 +169,19 @@ bool ModelGroup::ContainsModel(Model* m) const
 {
     wxASSERT(m->GetDisplayAs() != "ModelGroup");
 
-    std::list<const Model*> visited;
-    visited.push_back(this);
+    std::set<const Model*> visited;
+    return ContainsModel(m, visited);
+ }
 
-    bool found = false;
-    for (auto it = models.begin(); !found && it != models.end(); ++it)
-    {
-        if ((*it)->GetDisplayAs() == "ModelGroup")
-        {
-            if (std::find(visited.begin(), visited.end(), *it) == visited.end())
-            {
-                found |= dynamic_cast<ModelGroup*>(*it)->ContainsModel(m, visited);
-            }
-            else
-            {
-                // already seen this group so dont follow
-            }
-        }
-        else
-        {
-            if (m == *it)
-            {
-                found = true;
-            }
-        }
-    }
-
-    return found;
-}
-
-bool ModelGroup::ContainsModel(Model* m, std::list<const Model*>& visited) const
+bool ModelGroup::ContainsModel(Model* m, std::set<const Model*>& visited) const
 {
-    visited.push_back(this);
+    visited.insert(this);
 
     bool found = false;
     for (const auto& it : models)
     {
-        if (it->GetDisplayAs() == "ModelGroup")
+        std::string da = it->GetDisplayAs();
+        if (da == "ModelGroup")
         {
             if (std::find(visited.begin(), visited.end(), it) == visited.end())
             {

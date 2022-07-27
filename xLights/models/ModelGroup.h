@@ -51,7 +51,7 @@ class ModelGroup : public ModelWithScreenLocation<BoxedScreenLocation>
         bool DirectlyContainsModel(Model* m) const;
         bool DirectlyContainsModel(std::string const& m) const;
         bool ContainsModel(Model* m) const;
-        bool ContainsModel(Model* m, std::list<const Model*>& visited) const;
+        bool ContainsModel(Model* m, std::set<const Model*>& visited) const;
         bool OnlyContainsModel(const std::string& name) const;
         int GetModelCount() const { return models.size(); }
         std::string SerialiseModelGroup(const std::string& forModel) const;
