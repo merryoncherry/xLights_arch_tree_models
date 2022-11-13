@@ -55,7 +55,8 @@ bool HttpConnection::HandleRequest()
 	}
 	else
 	{
-		HttpRequest request(*this, wxString((char *)input.GetData(), input.GetDataLen()));
+		wxString rs((char *)input.GetData(), input.GetDataLen());
+		HttpRequest request(*this, rs);
 
 		if (request.Method() == "GET")
 		{

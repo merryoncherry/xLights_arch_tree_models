@@ -27,50 +27,55 @@ HttpRequest::HttpRequest(HttpConnection &connection, const wxString &input) :
 
 void HttpRequest::Parse(const wxString &input)
 {
-	wxArrayString rows = wxSplit(input, '\n');
     _data = "";
 
-	if (rows.Count() > 0)
-	{
-		wxArrayString tokens = wxSplit(rows[0], ' ');
+    // Find first row and parse
+    auto rstart = input.Find('\n');
+    if (rstart <= 0) {
+        return;
+    }
+    wxArrayString htokens = wxSplit(input.Mid(0, rstart), ' ');
 
-		if (tokens.Count() > 0)
-			_method = tokens[0].Trim(true).Trim(false);
-		if (tokens.Count() > 1)
-			_uri = tokens[1].Trim(true).Trim(false);
-		if (tokens.Count() > 2)
-			_version = tokens[2].Trim(true).Trim(false);
+    if (htokens.Count() > 0)
+        _method = htokens[0].Trim(true).Trim(false);
+    if (htokens.Count() > 1)
+        _uri = htokens[1].Trim(true).Trim(false);
+    if (htokens.Count() > 2)
+        _version = htokens[2].Trim(true).Trim(false);
 
-		wxLogMessage("new request: Method '%s', URI '%s', Version '%s'", _method, _uri, _version);
+    do {
+        ++rstart;
+        auto nxt = rstart;
+        while (nxt < input.Length()) {
+            if (input[nxt] == '\n')
+                break;
+            ++nxt;
+        }
+        // No more newlines found
+        if (nxt >= input.Length()) {
+            rstart = input.Length();
+            break;
+        }
+        // Check for a blank line indicating start of data section
+        if ((nxt == rstart) || (nxt - rstart == 1 && input[rstart] == '\r')) {
+            rstart = nxt + 1;
+            break;
+        }
 
-        int state = 0; // processing headers
+        // An HTTP header
+        wxString hstr = input.Mid(rstart, nxt-rstart);
+        int index = hstr.Find(':');
+        if (index != -1)
+        {
+            wxString key = hstr.Mid(0, index);
+            key.Trim(true).Trim(false);
 
-		for (size_t i = 1; i < rows.Count(); i++)
-		{
-            if (state == 0)
-            {
-                if (rows[i] == "" || rows[i] == "\r") state = 1;
+            wxString value = hstr.Mid(index + 1);
+            value.Trim(true).Trim(false);
 
-                int index = rows[i].Find(':');
-
-                if (index != -1)
-                {
-                    wxString key = rows[i].Mid(0, index);
-                    key.Trim(true).Trim(false);
-
-                    wxString value = rows[i].Mid(index + 1);
-                    value.Trim(true).Trim(false);
-
-                    _headers.Add(key, value);
-                }
-            }
-            else if (state == 1)
-            {
-                _data += rows[i];
-
-                // dont add a carriage return to the last line
-                if (i < rows.Count() - 1) _data += "\n";
-            }
-		}
-	}
+            _headers.Add(key, value);
+        }
+        rstart = nxt;
+    } while (1);
+    _data = wxString(input, rstart, input.Length() - rstart);
 }
