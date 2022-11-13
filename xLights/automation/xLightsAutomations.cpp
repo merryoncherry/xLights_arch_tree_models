@@ -87,6 +87,29 @@ inline bool ReadBool(const std::string &v) {
     return v == "true" || v == "1";
 }
 
+static inline bool ReadMapBool(const std::map<std::string, std::string>& params, const std::string& key, bool dflt)
+{
+    auto it = params.find(key);
+    if (it != params.end()) {
+        return ReadBool(it->second);
+    }
+    return dflt;
+}
+
+static void addPostJSONToParams(std::map<std::string, std::string> &params)
+{
+    if (params["_METHOD"] == "POST" && !params["_DATA"].empty()) {
+        wxString data = params["_DATA"];
+        wxJSONValue val;
+        wxJSONReader reader;
+
+        if (reader.Parse(data, &val) == 0) {
+            for (auto sval : val.GetMemberNames()) {
+                params[sval] = val[sval].AsString();
+            }
+        }
+    }
+}
 
 bool xLightsFrame::ProcessAutomation(std::vector<std::string> &paths,
                                      std::map<std::string, std::string> &params,
@@ -103,35 +126,15 @@ bool xLightsFrame::ProcessAutomation(std::vector<std::string> &paths,
     if (cmd == "getVersion") {
         return sendResponse(GetDisplayVersionString(), "version", 200, false);
     } else if (cmd == "openSequence" || cmd == "getOpenSequence" || cmd == "loadSequence") {
-        wxString fname = "";
+        addPostJSONToParams(params);
         if (paths.size() > 1) {
-            fname = wxURI::Unescape(paths[1]);
+            params["seq"] = wxURI::Unescape(paths[1]);
         }
-        bool force = false;
-        bool prompt = false;
+
+        wxString fname = params["seq"];
+        bool force = ReadMapBool(params, "force", false);
+        bool prompt = ReadMapBool(params, "promptIssues", false);
         
-        if (params["_METHOD"] == "POST" && !params["_DATA"].empty()) {
-            wxString data = params["_DATA"];
-            wxJSONValue val;
-            wxJSONReader reader;
-            if (reader.Parse(data, &val) == 0) {
-                fname = val["seq"].AsString();
-                if (val.HasMember("promptIssues")) {
-                    prompt = ReadBool(params["promptIssues"]);
-                }
-                if (val.HasMember("force")) {
-                    force = ReadBool(params["force"]);
-                }
-            } else {
-                fname = "";
-            }
-        } else {
-            if (params["seq"] != "") {
-                fname = params["seq"];
-            }
-            prompt = ReadBool(params["promptIssues"]);
-            force = ReadBool(params["force"]);
-        }
         if (fname.empty()) {
             if (CurrentSeqXmlFile != nullptr) {
                 std::string response = wxString::Format("{\"seq\":\"%s\",\"fullseq\":\"%s\",\"media\":\"%s\",\"len\":%u,\"framems\":%u}",
@@ -474,6 +477,7 @@ bool xLightsFrame::ProcessAutomation(std::vector<std::string> &paths,
         std::string response = wxString::Format("{\"msg\":\"Sequence checked.\",\"output\":\"%s\"}", JSONSafe(file));
         return sendResponse(response, "", 200, true);
     } else if (cmd == "changeShowFolder") {
+        addPostJSONToParams(params);
         auto shw = params["folder"];
         if (!wxDir::Exists(shw)) {
             return sendResponse("Folder does not exist.", "msg", 503, false);
