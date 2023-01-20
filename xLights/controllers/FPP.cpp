@@ -14,6 +14,7 @@
 #include <string.h>
 #include <cctype>
 #include <thread>
+#include <cinttypes>
 
 #include <curl/curl.h>
 
@@ -29,13 +30,13 @@
 #include <wx/protocol/http.h>
 #include <wx/config.h>
 #include <wx/secretstore.h>
+#include <wx/progdlg.h>
 #include <zstd.h>
 
 #include "../xSchedule/wxJSON/jsonreader.h"
 #include "../xSchedule/wxJSON/jsonwriter.h"
 
 #include "FPP.h"
-#include "../xLightsXmlFile.h"
 #include "../models/CustomModel.h"
 #include "../models/Model.h"
 #include "../models/MatrixModel.h"
@@ -202,7 +203,7 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp) {
     return dt->readData(ptr, buffer_size);
 }
 
-void FPP::setupCurl() {
+void FPP::setupCurl(int timeout) {
     if (curl == nullptr) {
         curl = curl_easy_init();
     }
@@ -211,7 +212,7 @@ void FPP::setupCurl() {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlInputBuffer);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, defaultConnectTimeout);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 30000);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout);
     curl_easy_setopt(curl, CURLOPT_TCP_FASTOPEN, 1L);
 }
 
@@ -498,6 +499,7 @@ void FPP::parseControllerType(wxJSONValue& val) {
         if (val["channelOutputs"][x]["enabled"].AsInt()) {
             if (val["channelOutputs"][x]["type"].AsString() == "RPIWS281X"||
                 val["channelOutputs"][x]["type"].AsString() == "BBB48String" ||
+                val["channelOutputs"][x]["type"].AsString() == "BBShiftString" ||
                 val["channelOutputs"][x]["type"].AsString() == "DPIPixels") {
                 pixelControllerType = val["channelOutputs"][x]["subType"].AsString();
             } else if (val["channelOutputs"][x]["type"].AsString() == "LEDPanelMatrix") {
@@ -1247,7 +1249,7 @@ bool FPP::UploadDisplayMap(const std::string &displayMap) {
         wxFile tf(fn.GetFullPath());
         tf.Write(displayMap);
         tf.Close();
-    } else if (IsVersionAtLeast(3, 6) && !IsVersionAtLeast(6, 0)) {
+    } else if (IsVersionAtLeast(3, 6)) {
         PostToURL("/api/configfile/virtualdisplaymap", displayMap);
     }
     return false;
@@ -1346,21 +1348,28 @@ wxJSONValue FPP::CreateModelMemoryMap(ModelManager* allmodels, int32_t startChan
         if (GetURLAsJSON("/api/models", ogModelJSON)) {
             auto ogModels = ogModelJSON.AsArray();
             for (size_t i = 0; i < ogModels->Count(); i++) {
-                if (!ogModels->Item(i).HasMember("Name") || !ogModels->Item(i).HasMember("StartChannel")) {
+                if (!ogModels->Item(i).HasMember("Name") ) {
                     continue;
                 }
-                if (!ogModels->Item(i).Item(i)["Name"].IsString() || !ogModels->Item(i).Item(i)["StartChannel"].IsInt32()) {
+                if (!ogModels->Item(i)["Name"].IsString()) {
                     continue;
                 }
                 auto ogName = ogModels->Item(i)["Name"].AsString();
-                auto ogStartChan = ogModels->Item(i)["StartChannel"].AsInt32();
-                auto wasAutoCreated = false;
-                if (ogModels->Item(i).HasMember("autoCreated") && ogModels->Item(i).Item(i)["autoCreated"].IsBool()) {
-                    wasAutoCreated = ogModels->Item(i)["autoCreated"].AsBool();
+
+                if (ogModels->Item(i).HasMember("autoCreated") && ogModels->Item(i)["autoCreated"].IsBool()) {
+                    auto wasAutoCreated = ogModels->Item(i)["autoCreated"].AsBool();
+                    if (wasAutoCreated) {
+                        continue;
+                    }
                 }
-                if (ogStartChan < startChan || ogStartChan > endChannel || wasAutoCreated) {
-                    continue;
+
+                if (ogModels->Item(i).HasMember("StartChannel") && ogModels->Item(i)["StartChannel"].IsInt32()) {
+                    auto ogStartChan = ogModels->Item(i)["StartChannel"].AsInt32();
+                    if (ogStartChan < startChan || ogStartChan > endChannel ) {
+                        continue;
+                    }
                 }
+                
                 if (std::find(names.cbegin(), names.cend(), ogName) != names.end()) { // only add if name doesn't exist
                     continue;
                 }
@@ -1378,78 +1387,97 @@ static bool Compare3dPointTuple(const std::tuple<float, float, float, int> &l,
     return std::get<2>(l) < std::get<2>(r);
 }
 
-std::string FPP::CreateVirtualDisplayMap(ModelManager* allmodels, bool center0) {
+std::string FPP::CreateVirtualDisplayMap(ModelManager* allmodels) {
     std::string ret;
 
-    std::vector<std::tuple<float, float, float>> pts;
+    constexpr float PADDING{ 10.0F };
+    bool first { true };
+    float minX{ 0.0F };
+    float maxX{ 0.0F };
+    float minY{ 0.0F };
+    float maxY{ 0.0F };
 
-    std::multiset<std::tuple<float, float, float, int>,
-        bool(*)(const std::tuple<float, float, float, int> &l,
-                const std::tuple<float, float, float, int> &r)> modelPts(Compare3dPointTuple);
-    int first = 1;
-    std::string stringType;
+    if (allmodels->size() == 0) {
+        return ret;
+    }
 
-    float xoffset = 0;
     for (auto m = allmodels->begin(); m != allmodels->end(); ++m) {
         Model* model = m->second;
 
-        if (model->GetLayoutGroup() != "Default")
+        if (model->GetLayoutGroup() != "Default") {
             continue;
-
-        if (model->GetDisplayAs() == "ModelGroup")
-            continue;
-
-        if (first) {
-            first = 0;
-            ret += "# Preview Size\n";
-            ret += wxString::Format("%d,%d\n", model->GetModelScreenLocation().previewW, model->GetModelScreenLocation().previewH);
-
-            if (center0) {
-                xoffset = model->GetModelScreenLocation().previewW / 2;
-            }
         }
 
-        stringType = model->GetStringType();
+        if (model->GetDisplayAs() == "ModelGroup") {
+            continue;
+        }
 
-        if (stringType == "RGB Nodes")
+        if (first) {
+            first = false;
+            maxY = model->GetModelScreenLocation().previewH;
+            maxX = model->GetModelScreenLocation().previewW;
+        }
+
+        minY = std::min(model->GetModelScreenLocation().GetBottom() - PADDING, minY);
+        maxY = std::max(model->GetModelScreenLocation().GetTop() + PADDING, maxY);
+        minX = std::min(model->GetModelScreenLocation().GetLeft() - PADDING, minX);
+        maxX = std::max(model->GetModelScreenLocation().GetRight() + PADDING, maxX);
+    }
+
+    ret += "# Preview Size\n";
+    ret += wxString::Format("%d,%d\n", int(maxX - minX), int(maxY - minY));
+
+    for (auto m = allmodels->begin(); m != allmodels->end(); ++m) {
+        Model* model = m->second;
+
+        if (model->GetLayoutGroup() != "Default") {
+            continue;
+        }
+
+        if (model->GetDisplayAs() == "ModelGroup") {
+            continue;
+        }
+
+        std::string stringType = model->GetStringType();
+
+        if (Contains(stringType, "Nodes")) {
+            stringType = BeforeFirst(stringType, ' ');
+        } else if (stringType == "3 Channel RGB") {
             stringType = "RGB";
-        else if (stringType == "RBG Nodes")
-            stringType = "RBG";
-        else if (stringType == "GBR Nodes")
-            stringType = "GBR";
-        else if (stringType == "BGR Nodes")
-            stringType = "BGR";
-        else if (stringType == "3 Channel RGB")
-            stringType = "RGB";
-        else if (stringType == "4 Channel RGBW")
+        } else if (stringType == "4 Channel RGBW") {
             stringType = "RGBW";
-        else if (stringType == "Strobes")
+        } else if (stringType == "Strobes") {
             stringType = "White";
-        else if (stringType == "Single Color Red")
+        } else if (stringType == "Single Color Red") {
             stringType = "Red";
-        else if ((stringType == "Single Color Green") || (stringType == "G"))
+        } else if ((stringType == "Single Color Green") || (stringType == "G")) {
             stringType = "Green";
-        else if ((stringType == "Single Color Blue") || (stringType == "B"))
+        } else if ((stringType == "Single Color Blue") || (stringType == "B")) {
             stringType = "Blue";
-        else if ((stringType == "Single Color White") || (stringType == "W"))
+        } else if ((stringType == "Single Color White") || (stringType == "W")) {
             stringType = "White";
-        else if (stringType == "Single Color Custom")
+        } else if (stringType == "Single Color Custom") {
             stringType = "White";
-        else if (stringType == "Node Single Color") {
+        } else if (stringType == "Node Single Color") {
             stringType = "White";
         }
 
         ret += wxString::Format("# Model: '%s', %d nodes\n", model->GetName().c_str(), model->GetNodeCount());
 
-        modelPts.clear();
+        std::multiset<std::tuple<float, float, float, int>,
+                bool (*)(const std::tuple<float, float, float, int>& l,
+                        const std::tuple<float, float, float, int>& r)>
+                                modelPts(Compare3dPointTuple);
+
         for (size_t i = 0; i < model->GetNodeCount(); i++) {
-            pts.clear();
+            std::vector<std::tuple<float, float, float>> pts;
             model->GetNode3DScreenCoords(i, pts);
             int ch = model->NodeStartChannel(i);
 
             for (auto [x,y,z] : pts) {
                 model->GetModelScreenLocation().TranslatePoint(x, y, z);
-                x += xoffset;
+                x -= minX;
+                y -= minY;
                 modelPts.insert(std::make_tuple(x, y, z, ch));
             }
         }
@@ -1622,7 +1650,7 @@ bool FPP::SetInputUniverses(Controller* controller, wxWindow* parentWin) {
         }
     }
 
-    parentWin = parent;
+    parent = parentWin;
 
     return (AuthenticateAndUpdateVersions() && !SetInputUniversesBridge(controller));
 }
@@ -1647,8 +1675,8 @@ bool FPP::UploadForImmediateOutput(ModelManager* allmodels, OutputManager* outpu
     UploadPixelOutputs(allmodels, outputManager, controller);
     UploadSerialOutputs(allmodels, outputManager, controller);
     SetInputUniversesBridge(controller);
-
-    if (majorVersion >= 4) {
+    
+    if (majorVersion >= 4 && majorVersion < 6) {
         controller->SetRuntimeProperty("FPPMode", curMode);
         if (restartNeeded || curMode != "bridge") {
             Restart("bridge");
@@ -2301,14 +2329,11 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
                              OutputManager* outputManager,
                              Controller* controller) {
     int maxString = 1;
-    int maxdmx = 0;
-
     auto rules = ControllerCaps::GetControllerConfig(controller);
     if (rules == nullptr) {
         return false;
     }
 
-    maxdmx = rules->GetMaxSerialPort();
     maxString = rules->GetMaxPixelPort();
     if (maxString == 0) {
         return false;
@@ -2393,16 +2418,18 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
 
     maxport = cud.GetMaxPixelPort(); // 1 based
 
+    wxString fppDriver = rules->GetCustomPropertyByPath("fppStringDriverType");
     if (fppFileName == "co-bbbStrings") {
-        stringData["type"] = wxString("BBB48String");
+        if (fppDriver.empty()) {
+            fppDriver = "BBB48String";
+        }
+        stringData["type"] = fppDriver;
         if (!IsCompatible(parent, ipAddress, rules, controllerVendor, controllerModel, controllerVariant, origType)) {
             return true;
         }
-
         stringData["subType"] = rules->GetID();
         stringData["pinoutVersion"] = pinout;
     } else {
-        wxString fppDriver = rules->GetCustomPropertyByPath("fppStringDriverType");
         if (fppDriver.empty()) {
             fppDriver = "RPIWS281X";
         }
@@ -2494,6 +2521,9 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
                 if (vs["groupCount"].AsLong() > 1) {
                     //if the group count is >1, we need to adjust the number of pixels
                     vs["pixelCount"] = vs["pixelCount"].AsLong() * vs["groupCount"].AsLong();
+                }
+                if (pvs->_zigZagSet) {
+                    vs["zigZag"] = pvs->_zigZag;
                 }
                 std::string vsname = "virtualStrings";
                 if (pvs->_smartRemote == 2) {
@@ -2602,7 +2632,7 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
     for (int sp = 1; sp <= cud.GetMaxSerialPort(); sp++) {
         if (cud.HasSerialPort(sp)) {
             UDControllerPort* port = cud.GetControllerSerialPort(sp);
-            isDMX &= ((port->GetProtocol() == "DMX") || (port->GetProtocol() == "dmx"));
+            isDMX &= ((port->GetProtocol() == "DMX") || (port->GetProtocol() == "dmx") || (port->GetProtocol() == "DMX-Open"));
 
             //int dmxOffset = 1;
             //UDControllerPortModel* m = port->GetFirstModel();
@@ -2686,8 +2716,9 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
         bbbDmxData["enabled"] = 1;
         bbbDmxData["startChannel"] = 1;
         bbbDmxData["type"] = wxString("BBBSerial");
-        bbbDmxData["subType"] = wxString("DMX");
-        bbbDmxData["device"] = wxString(pixelControllerType);
+        bbbDmxData["subType"] = isDMX ? wxString("DMX") : wxString("PixelNet") ;
+        bbbDmxData["device"] = wxString(rules->GetID());
+        bbbDmxData["pinoutVersion"] = pinout;
         root["channelOutputs"].Append(bbbDmxData);
     } else {
         wxJSONValue otherOrigRoot = otherDmxData;
@@ -2824,7 +2855,14 @@ static void CreateController(Discovery &discovery, DiscoveredData *inst) {
             inst->pixelControllerType = "ESP32";
         }
         SetControllerType(inst);
-    } else if (inst->typeId >= 0x80 && inst->typeId <= 0xCF) {
+    } else if (inst->typeId >= 0xA0 && inst->typeId <= 0xAF) {
+        //Experence Lights
+        if (inst->controller->GetProtocol() != OUTPUT_DDP) {
+            inst->controller->SetProtocol(OUTPUT_DDP);
+        }
+        inst->pixelControllerType = inst->platformModel;
+        SetControllerType(inst);
+    } else if (inst->typeId >= 0x80 && inst->typeId <= 0x8F) {
         //falcon range
         if (created) {
             inst->controller->SetProtocol(OUTPUT_E131);
@@ -3034,10 +3072,13 @@ static void ProcessFPPChannelOutput(Discovery &discovery, const std::string &ip,
         if (val["channelOutputs"][x]["enabled"].AsInt()) {
             if (val["channelOutputs"][x]["type"].AsString() == "RPIWS281X"||
                 val["channelOutputs"][x]["type"].AsString() == "BBB48String" ||
+                val["channelOutputs"][x]["type"].AsString() == "BBShiftString" ||
                 val["channelOutputs"][x]["type"].AsString() == "DPIPixels") {
                 inst->pixelControllerType = val["channelOutputs"][x]["subType"].AsString();
             } else if (val["channelOutputs"][x]["type"].AsString() == "LEDPanelMatrix") {
-                inst->pixelControllerType = LEDPANELS;
+                if (inst->pixelControllerType.empty()) {
+                    inst->pixelControllerType = LEDPANELS;
+                }
                 int pw = val["channelOutputs"][x]["panelWidth"].AsInt();
                 int ph = val["channelOutputs"][x]["panelHeight"].AsInt();
                 int nw = 0; int nh = 0;
@@ -3060,7 +3101,9 @@ static void ProcessFPPChannelOutput(Discovery &discovery, const std::string &ip,
                 inst->panelSize.append("x");
                 inst->panelSize.append(std::to_string(ph * nh));
             } else if (val["channelOutputs"][x]["type"].AsString() == "VirtualMatrix") {
-                inst->pixelControllerType = "Virtual Matrix";
+                if (inst->pixelControllerType.empty()) {
+                    inst->pixelControllerType = "Virtual Matrix";
+                }
             }
         }
     }
@@ -3132,7 +3175,6 @@ static void ProcessFPPSysinfo(Discovery &discovery, const std::string &ip, const
             baseIp = inst->proxy;
             baseUrl = "/proxy/" + inst->ip;
         }
-        std::string fullAddress = baseUrl + "/fppjson.php?command=getChannelOutputs&file=" + file;
         discovery.AddCurl(baseIp, baseUrl + "/fppjson.php?command=getChannelOutputs&file=" + file,
                           [&discovery, host] (int rc, const std::string &buffer, const std::string &err) {
             if (rc == 200) {
@@ -3162,7 +3204,6 @@ static void ProcessFPPSysinfo(Discovery &discovery, const std::string &ip, const
                 }
                 return true;
             });
-            fullAddress = baseUrl + "/api/proxies";
         }
     }
 }

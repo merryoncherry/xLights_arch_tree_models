@@ -92,12 +92,12 @@ void xLightsFrame::CreateSequencer()
     logger_base.debug("        Model preview.");
     _modelPreviewPanel = new ModelPreview(PanelSequencer, this);
     m_mgr->AddPane(_modelPreviewPanel, wxAuiPaneInfo().Name(wxT("ModelPreview")).Caption(wxT("Model Preview")).
-                   Left().Layer(1).PaneBorder(true).BestSize(250,250).MaximizeButton(true));
+                   Left().Layer(1).PaneBorder(true).BestSize(250,250).MaximizeButton(true).Dockable(IsDockable("MP")));
 
     logger_base.debug("        House preview.");
     _housePreviewPanel = new HousePreviewPanel(PanelSequencer, this, _playControlsOnPreview, PreviewModels, LayoutGroups, false, 0, true);
     m_mgr->AddPane(_housePreviewPanel, wxAuiPaneInfo().Name(wxT("HousePreview")).Caption(wxT("House Preview")).
-        Left().Layer(1).BestSize(250, 250).MaximizeButton(true));
+        Left().Layer(1).BestSize(250, 250).MaximizeButton(true).Dockable(IsDockable("HP")));
 
     logger_base.debug("        Effects.");
     effectsPnl = new TopEffectsPanel(PanelSequencer);
@@ -1259,6 +1259,7 @@ void xLightsFrame::EffectDroppedOnGrid(wxCommandEvent& event)
 
         // need to do this otherwise they dont update when we drop the model
         bufferPanel->UpdateBufferStyles(AllModels[el->GetParentElement()->GetModelName()]);
+        bufferPanel->UpdateCamera(AllModels[el->GetParentElement()->GetModelName()]);
 
         if (playType == PLAY_TYPE_MODEL_PAUSED) {
             DoStopSequence();
@@ -2569,7 +2570,7 @@ bool xLightsFrame::ApplySetting(wxString name, const wxString &value, int count)
 				b->SetValue(true);
 				wxCommandEvent evt(wxEVT_RADIOBUTTON, b->GetId());
 				evt.SetEventObject(b);
-				wxPostEvent(b->GetEventHandler(), evt);
+                b->ProcessWindowEvent(evt); // dont post ... if we post it gets processed in the wrong order
 			}
 
 			wxChoice* ctrl = (wxChoice*)CtrlWin;
@@ -2688,14 +2689,22 @@ void xLightsFrame::SetEffectChoice(wxCommandEvent& event)
 
 void xLightsFrame::TipOfDayReady(wxCommandEvent& event)
 {
-    // at this point if we are downloading tip of day content then the tip of day content is downloaded and ready to go
+    // only show tip of the day if show directory is set
+    if (CurrentDir != "") {
+        // at this point if we are downloading tip of day content then the tip of day content is downloaded and ready to go
 #ifdef __WXMSW__
-    _tod.SetTODXMLFile(event.GetString());
-    _tod.DoTipOfDay(false);
+        _tod.SetTODXMLFile(event.GetString());
+        _tod.DoTipOfDay(false);
 #else
-    _tod->SetTODXMLFile(event.GetString());
-    _tod->DoTipOfDay(false);
+        _tod->SetTODXMLFile(event.GetString());
+        _tod->DoTipOfDay(false);
 #endif
+    }
+}
+
+void xLightsFrame::SetEffectDuration(wxCommandEvent& event)
+{
+    mainSequencer->SetEffectDuration(event.GetString(), event.GetInt());
 }
 
 void xLightsFrame::ApplyLast(wxCommandEvent& event)
