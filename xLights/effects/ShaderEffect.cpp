@@ -1150,8 +1150,15 @@ void ShaderEffect::Render(Effect* eff, const SettingsMap& SettingsMap, RenderBuf
     si->SetUniform1f("TIMEDELTA", (GLfloat)(buffer.frameTimeInMs /1000.f));
 
     if (si->HasUniform("DATE")) {
-        wxDateTime dt = wxDateTime::Now();
-        si->SetUniform4f("DATE", dt.GetYear(), dt.GetMonth() + 1, dt.GetDay(), dt.GetHour() * 3600 + dt.GetMinute() * 60 + dt.GetSecond());
+        if (true) { // TODO: When is this to happen?
+            // TODO: Get the start time of the sequence, plus the start time of the effect, and put properly
+            int year = 2022, month = 12, day = 3, hour = 5, min = 6, sec = 7, ms = 102;
+            ms += int(_timeMS);
+            si->SetUniform4f("DATE", year, month, day, hour * 3600 + min * 60 + sec + (float(ms) / 1000.0));
+        } else {
+            wxDateTime dt = wxDateTime::Now(); // TODO: This is totally goofy / depends on render speed.  Get the render time at the start
+            si->SetUniform4f("DATE", dt.GetYear(), dt.GetMonth() + 1, dt.GetDay(), dt.GetHour() * 3600 + dt.GetMinute() * 60 + dt.GetSecond() + (dt.GetMillisecond() / 1000.0));
+        }
     }
     si->SetUniformInt("PASSINDEX", 0);
     si->SetUniformInt("FRAMEINDEX", _timeMS / buffer.frameTimeInMs);
