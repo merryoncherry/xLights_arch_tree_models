@@ -108,7 +108,6 @@ class MetaBall : public RgbBalls
 public:
     float Equation(float x, float y)
     {
-        //            if(x==_x || y==_y) return 1; //this is incorrect
         if ((x == _x) && (y == _y)) return 1; //only return 1 if *both* coordinates match; else gives extraneous horiz or vert lines -DJ
         return (_radius / (sqrt(pow(x - _x, 2) + pow(y - _y, 2))));
     }
@@ -116,7 +115,7 @@ public:
 
 static const int MAX_RGB_BALLS = 20;
 
-class CirclesRenderCache : public EffectRenderCache {
+class CirclesRenderCache : public EffectRenderStatePRNG {
 public:
     CirclesRenderCache() : numBalls(0), metaType(false) {
         balls = new RgbBalls[MAX_RGB_BALLS];
@@ -178,6 +177,7 @@ void CirclesEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Rende
     if (cache == nullptr) {
         cache = new CirclesRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
 
     size_t colorCnt = buffer.GetColorCount();
@@ -203,11 +203,11 @@ void CirclesEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Rende
             float spd;
             if (ii >= cache->numBalls || buffer.needToInit)
             {
-                start_x = rand() % (buffer.BufferWi);
-                start_y = rand() % (buffer.BufferHt);
+                start_x = cache->prngint(buffer.BufferWi);
+                start_y = cache->prngint(buffer.BufferHt);
                 colorIdx = ii % colorCnt;
-                angle = rand() % 2 ? rand() % 90 : -rand() % 90;
-                spd = rand() % 3 + 1;
+                angle = cache->prngint(2) ? cache->prngint(90) : -cache->prngint(90);
+                spd = cache->prngint(3) + 1;
             }
             else
             {
@@ -220,8 +220,7 @@ void CirclesEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Rende
             effectObjects[ii].Reset((float)start_x, (float)start_y, spd, angle, (float)radius, colorIdx);
             if (bubbles) //keep bubbles going mostly up
             {
-                // This looks odd ... rand() is 0-1 so % 45 is going to be rand()
-                angle = 90 + rand() % 45 - 22.5f; //+/- 22.5 degrees from 90 degrees
+                angle = 90 + cache->prngint(45) - 22.5f; //+/- 22.5 degrees from 90 degrees
                 angle *= 2.0f * (float)M_PI / 180.0f;
                 effectObjects[ii]._dx = spd * cos(angle);
                 effectObjects[ii]._dy = spd * sin(angle);

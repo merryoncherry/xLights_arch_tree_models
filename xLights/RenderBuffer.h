@@ -420,6 +420,124 @@ public:
 	virtual ~EffectRenderCache();
 };
 
+class EffectRenderStatePRNG : public EffectRenderCache
+{
+public:
+    EffectRenderStatePRNG() :
+        EffectRenderCache()
+    {
+        xoroshiro_state[0] = 0xBAD5EED0DEADBEEFLLU;
+        xoroshiro_state[1] = 0xCAFECAFEBADC0DE2LLU;
+    }
+
+    /*  Written in 2016-2018 by David Blackman and Sebastiano Vigna (vigna@acm.org)
+
+        To the extent possible under law, the author has dedicated all copyright
+        and related and neighboring rights to this software to the public domain
+        worldwide. This software is distributed without any warranty.
+        See <http://creativecommons.org/publicdomain/zero/1.0/>. */
+
+    /* For reference - see license and code at https://prng.di.unimi.it/xoroshiro128plus.c */
+    static inline uint64_t rotl(const uint64_t x, int k)
+    {
+        return (x << k) | (x >> (64 - k));
+    }
+
+    uint64_t xoroshiro_state[2];
+
+    uint64_t prngnext(void)
+    {
+        const uint64_t s0 = xoroshiro_state[0];
+        uint64_t s1 = xoroshiro_state[1];
+        const uint64_t result = s0 + s1;
+
+        s1 ^= s0;
+        xoroshiro_state[0] = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
+        xoroshiro_state[1] = rotl(s1, 37);                   // c
+
+        return result;
+    }
+
+    uint64_t prngint(uint64_t mx)
+    {
+        // TODO: This is not what they advise.  Can change.
+        return prngnext() % mx;
+    }
+
+    /* This is the jump function for the generator. It is equivalent
+       to 2^64 calls to next(); it can be used to generate 2^64
+       non-overlapping subsequences for parallel computations. */
+
+    void jump(void)
+    {
+        static const uint64_t JUMP[] = { 0xdf900294d8f554a5, 0x170865df4b3201fc };
+
+        uint64_t s0 = 0;
+        uint64_t s1 = 0;
+        for (int i = 0; i < sizeof JUMP / sizeof *JUMP; i++)
+            for (int b = 0; b < 64; b++) {
+                if (JUMP[i] & UINT64_C(1) << b) {
+                    s0 ^= xoroshiro_state[0];
+                    s1 ^= xoroshiro_state[1];
+                }
+                prngnext();
+            }
+
+        xoroshiro_state[0] = s0;
+        xoroshiro_state[1] = s1;
+    }
+
+    /* This is the long-jump function for the generator. It is equivalent to
+       2^96 calls to next(); it can be used to generate 2^32 starting points,
+       from each of which jump() will generate 2^32 non-overlapping
+       subsequences for parallel distributed computations. */
+
+    void long_jump(void)
+    {
+        static const uint64_t LONG_JUMP[] = { 0xd2a98b26625eee7b, 0xdddf9b1090aa7ac1 };
+
+        uint64_t s0 = 0;
+        uint64_t s1 = 0;
+        for (int i = 0; i < sizeof LONG_JUMP / sizeof *LONG_JUMP; i++)
+            for (int b = 0; b < 64; b++) {
+                if (LONG_JUMP[i] & UINT64_C(1) << b) {
+                    s0 ^= xoroshiro_state[0];
+                    s1 ^= xoroshiro_state[1];
+                }
+                prngnext();
+            }
+
+        xoroshiro_state[0] = s0;
+        xoroshiro_state[1] = s1;
+    }
+
+    /*
+     * The PRNG should be seeded.  The idea here is that you might want it consistent though,
+     *   what should influence it?  In some cases, time would be good, but not some other times
+     */
+    void seedConsistently(uint64_t frame, uint64_t w, uint64_t h, const char* desc, uint64_t id)
+    {
+        xoroshiro_state[0] = 0xBAD5EED0DEADBEEFLLU;
+        xoroshiro_state[1] = 0xCAFECAFEBADC0DE2LLU;
+
+        xoroshiro_state[0] ^= (frame << 32) | (id);
+        xoroshiro_state[1] ^= (w << 32) | h;
+
+        if (desc) {
+            int l = strlen(desc);
+            int pl = l > 8 ? 8 : l;
+            for (int i = 0; i < pl; ++i) {
+                xoroshiro_state[0] ^= (desc[i] << (i * 8));
+            }
+            for (int i = 0; i < pl; ++i) {
+                xoroshiro_state[1] ^= ((desc[l - i - 1]) << (i*8));
+            }
+        }
+
+        prngnext();
+    }
+};
+
 class /*NCCDLLEXPORT*/ RenderBuffer {
 public:
     RenderBuffer(xLightsFrame *frame);
