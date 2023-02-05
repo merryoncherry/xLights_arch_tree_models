@@ -152,7 +152,8 @@ static int GetLocation(const std::string &location) {
 
 
 
-class FireRenderCache : public EffectRenderCache {
+class FireRenderCache : public EffectRenderStatePRNG
+{
 public:
     FireRenderCache() {};
     virtual ~FireRenderCache() {};
@@ -243,6 +244,7 @@ void FireEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
     float mod_state = 4.0;
     if (buffer.needToInit) {
         buffer.needToInit = false;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
         cache->FireBuffer.resize(maxMHt * maxMWi);
         for (size_t i = 0; i < cache->FireBuffer.size(); ++i) {
             cache->FireBuffer[i] = 0;
@@ -252,7 +254,7 @@ void FireEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
     }
     // build fire
     for (int x = 0; x < maxMWi; ++x) {
-        int r = x % 2 == 0 ? 190 + (rand() % 10) : 100 + (rand() % 50);
+        int r = x % 2 == 0 ? 190 + (cache->prngint(10)) : 100 + (cache->prngint(50));
         SetFireBuffer(x, 0, r, cache->FireBuffer, maxMWi, maxMHt);
     }
     int step = 255 * 100 / maxHt / HeightPct;
@@ -282,7 +284,7 @@ void FireEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
             }
             int new_index = n > 0 ? sum / n : 0;
             if (new_index > 0) {
-                new_index += (rand() % 100 < 20) ? step : -step;
+                new_index += (cache->prngint(100) < 20) ? step : -step;
                 if (new_index < 0)
                     new_index = 0;
                 if (new_index >= FirePalette.size())
