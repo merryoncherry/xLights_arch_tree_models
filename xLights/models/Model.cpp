@@ -3000,8 +3000,12 @@ void Model::SetFromXml(wxXmlNode* ModelNode, bool zb)
     InitModel();
 
     size_t NodeCount = GetNodeCount();
+
+    // Sparkles are determined in advance
+    EffectRenderStatePRNG prng;
+    prng.seedConsistently(StartChannel, 0, NumberOfStrings, name.c_str(), 0);
     for (size_t i = 0; i < NodeCount; i++) {
-        Nodes[i]->sparkle = rand() % 10000;
+        Nodes[i]->sparkle = prng.prngint(10000);
     }
 
     wxXmlNode* f = ModelNode->GetChildren();
