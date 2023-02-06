@@ -24,6 +24,8 @@
 #define CANDLE_WINDCALMNESS_MIN 0
 #define CANDLE_WINDCALMNESS_MAX 10
 
+class EffectRenderStatePRNG;
+
 class CandleEffect : public RenderableEffect
 {
 public:
@@ -60,5 +62,5 @@ public:
 
 protected:
     virtual xlEffectPanel* CreatePanel(wxWindow* parent) override;
-    void Update(wxByte& flameprime, wxByte& flame, wxByte& wind, size_t windVariability, size_t flameAgility, size_t windCalmness, size_t windBaseline);
+    void Update(EffectRenderStatePRNG *prng, wxByte& flameprime, wxByte& flame, wxByte& wind, size_t windVariability, size_t flameAgility, size_t windCalmness, size_t windBaseline);
 };

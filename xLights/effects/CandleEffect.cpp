@@ -61,7 +61,7 @@ struct CandleState
     wxByte flameg;
 };
 
-class CandleRenderCache : public EffectRenderCache
+class CandleRenderCache : public EffectRenderStatePRNG
 {
 public:
     std::map<int, CandleState*> _states;
@@ -85,6 +85,7 @@ static CandleRenderCache* GetCache(RenderBuffer& buffer, int id)
     if (cache == nullptr) {
         cache = new CandleRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
     return cache;
 }
@@ -109,11 +110,11 @@ void CandleEffect::SetDefaultParameters()
     SetCheckBoxValue(fp->CheckBox_PerNode, false);
 }
 
-void CandleEffect::Update(wxByte& flameprime, wxByte& flame, wxByte& wind, size_t windVariability, size_t flameAgility, size_t windCalmness, size_t windBaseline)
+void CandleEffect::Update(EffectRenderStatePRNG* prng, wxByte& flameprime, wxByte& flame, wxByte& wind, size_t windVariability, size_t flameAgility, size_t windCalmness, size_t windBaseline)
 {
     // We simulate a gust of wind by setting the wind var to a random value
-    if (wxByte(rand01() * 255.0) < windVariability) {
-        wind = wxByte(rand01() * 255.0);
+    if (wxByte(prng->prnguniform() * 255.0) < windVariability) {
+        wind = wxByte(prng->prnguniform() * 255.0);
     }
 
     // The wind constantly settles towards its baseline value
@@ -128,8 +129,8 @@ void CandleEffect::Update(wxByte& flameprime, wxByte& flame, wxByte& wind, size_
 
     // Depending on the wind strength and the calmness modifier we calculate the odds
     // of the wind knocking down the flame by setting it to random values
-    if (wxByte(rand01() * 255) < (wind >> windCalmness)) {
-        flame = wxByte(rand01() * 255);
+    if (wxByte(prng->prnguniform() * 255) < (wind >> windCalmness)) {
+        flame = wxByte(prng->prnguniform() * 255);
     }
 
     // Real flames ook like they have inertia so we use this constant-aproach-rate filter
@@ -148,20 +149,20 @@ void CandleEffect::Update(wxByte& flameprime, wxByte& flame, wxByte& wind, size_
     // We don't. It adds to the realism.
 }
 
-void InitialiseState(int node, std::map<int, CandleState*>& states)
+void InitialiseState(CandleRenderCache *cache, int node, std::map<int, CandleState*>& states)
 {
     if (states.find(node) == states.end()) {
         CandleState* state = new CandleState();
         states[node] = state;
     }
 
-    states[node]->flamer = rand01() * 255;
-    states[node]->flameprimer = rand01() * 255;
+    states[node]->flamer = cache->prngint(255); // Could be 256 but 255 closely follows the original code
+    states[node]->flameprimer = cache->prngint(255);
 
-    states[node]->flameg = rand01() * states[node]->flamer;
-    states[node]->flameprimeg = rand01() * states[node]->flameprimer;
+    states[node]->flameg = cache->prnguniform() * states[node]->flamer;
+    states[node]->flameprimeg = cache->prnguniform() * states[node]->flameprimer;
 
-    states[node]->wind = rand01() * 255;
+    states[node]->wind = cache->prnguniform() * 255;
 }
 
 // 10 <= HeightPct <= 100
@@ -188,17 +189,20 @@ void CandleEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Render
             for (size_t x = 0; x < maxMWi; ++x) {
                 for (size_t y = 0; y < maxMHt; ++y) {
                     size_t index = y * maxMWi + x;
-                    InitialiseState(index, states);
+                    InitialiseState(cache, index, states);
                 }
             }
         } else {
-            InitialiseState(0, states);
+            InitialiseState(cache, 0, states);
         }
     }
 
     if (perNode) {
         int maxW = cache->maxWid;
         parallel_for(0, buffer.BufferHt, [&buffer, &states, maxW, windVariability, flameAgility, windCalmness, windBaseline, this](int y) {
+            EffectRenderStatePRNG prng;
+            prng.seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), y);
+            prng.prngnext();
             for (size_t x = 0; x < buffer.BufferWi; x++) {
                 size_t index = y * maxW + x;
                 if (index >= states.size()) {
@@ -207,8 +211,8 @@ void CandleEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Render
                 } else {
                     CandleState* state = states[index];
 
-                    Update(state->flameprimer, state->flamer, state->wind, windVariability, flameAgility, windCalmness, windBaseline);
-                    Update(state->flameprimeg, state->flameg, state->wind, windVariability, flameAgility, windCalmness, windBaseline);
+                    Update(&prng, state->flameprimer, state->flamer, state->wind, windVariability, flameAgility, windCalmness, windBaseline);
+                    Update(&prng, state->flameprimeg, state->flameg, state->wind, windVariability, flameAgility, windCalmness, windBaseline);
 
                     if (state->flameprimeg > state->flameprimer)
                         state->flameprimeg = state->flameprimer;
@@ -224,8 +228,8 @@ void CandleEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Render
     } else {
         CandleState* state = states[0];
 
-        Update(state->flameprimer, state->flamer, state->wind, windVariability, flameAgility, windCalmness, windBaseline);
-        Update(state->flameprimeg, state->flameg, state->wind, windVariability, flameAgility, windCalmness, windBaseline);
+        Update(cache, state->flameprimer, state->flamer, state->wind, windVariability, flameAgility, windCalmness, windBaseline);
+        Update(cache, state->flameprimeg, state->flameg, state->wind, windVariability, flameAgility, windCalmness, windBaseline);
 
         if (state->flameprimeg > state->flameprimer)
             state->flameprimeg = state->flameprimer;
