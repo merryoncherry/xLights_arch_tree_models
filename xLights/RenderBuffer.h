@@ -458,10 +458,17 @@ public:
         return result;
     }
 
+    // Random int in the interval [0, mx)
     uint64_t prngint(uint64_t mx)
     {
         // TODO: This is not what they advise.  Can change.
         return prngnext() % mx;
+    }
+
+    // Random int in the closed interval [mn, mx]
+    int64_t prngintc(int64_t mn, int64_t mx)
+    {
+        return mn + prngint(uint64_t(mx - mn) + 1);
     }
 
     /* Uniform 0-1 */

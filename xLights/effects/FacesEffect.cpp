@@ -30,7 +30,7 @@
 
 #include <log4cpp/Category.hh>
 
-class FacesRenderCache : public EffectRenderCache {
+class FacesRenderCache : public EffectRenderStatePRNG {
     std::map<std::string, RenderBuffer*> _imageCache;
 
 public:
@@ -39,7 +39,7 @@ public:
     std::map<std::string, int> nodeNameCache;
 
     FacesRenderCache() :
-        blinkEndTime(0), nextBlinkTime(intRand(0, 5000)) {
+        blinkEndTime(0), nextBlinkTime(0) {
     }
     virtual ~FacesRenderCache() {
         for (auto it : _imageCache) {
@@ -679,6 +679,8 @@ void FacesEffect::drawoutline(RenderBuffer& buffer, int Phoneme, bool outline, c
     if (cache == nullptr) {
         cache = new FacesRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
+        cache->nextBlinkTime = cache->prngintc(0, 5000);
     }
 
     int Ht = BufferHt - 1;
@@ -696,7 +698,7 @@ void FacesEffect::drawoutline(RenderBuffer& buffer, int Phoneme, bool outline, c
         if (Phoneme == 9 || Phoneme == 10) {
             if ((buffer.curPeriod * buffer.frameTimeInMs) >= cache->nextBlinkTime) {
                 //roughly every 5 seconds we'll blink
-                cache->nextBlinkTime += intRand(4500, 5500);
+                cache->nextBlinkTime += cache->prngintc(4500, 5500);
                 cache->blinkEndTime = buffer.curPeriod * buffer.frameTimeInMs + 101; //100ms blink
                 eye = "Closed";
             } else if ((buffer.curPeriod * buffer.frameTimeInMs) < cache->blinkEndTime) {
@@ -999,7 +1001,7 @@ void FacesEffect::RenderFaces(RenderBuffer& buffer,
             if ("Auto" == eyes) {
                 if ((buffer.curPeriod * buffer.frameTimeInMs) >= cache->nextBlinkTime) {
                     // roughly every 5 seconds we'll blink
-                    cache->nextBlinkTime += intRand(4500, 5500);
+                    cache->nextBlinkTime += cache->prngintc(4500, 5500);
                     cache->blinkEndTime = buffer.curPeriod * buffer.frameTimeInMs + 101; // 100ms blink
                     eyes = "Closed";
                 } else if ((buffer.curPeriod * buffer.frameTimeInMs) < cache->blinkEndTime) {
@@ -1050,7 +1052,7 @@ void FacesEffect::RenderFaces(RenderBuffer& buffer,
                     if ((buffer.curPeriod * buffer.frameTimeInMs) >= cache->nextBlinkTime) {
                         if ((startms + 150) >= (buffer.curPeriod * buffer.frameTimeInMs)) {
                             // don't want to blink RIGHT at the start of the rest, delay a little bie
-                            int tmp = (buffer.curPeriod * buffer.frameTimeInMs) + intRand(150, 549);
+                            int tmp = (buffer.curPeriod * buffer.frameTimeInMs) + cache->prngintc(150, 549);
 
                             // also don't want it right at the end
                             if ((tmp + 130) > endms) {
@@ -1060,7 +1062,7 @@ void FacesEffect::RenderFaces(RenderBuffer& buffer,
                             }
                         } else {
                             // roughly every 5 seconds we'll blink
-                            cache->nextBlinkTime += intRand(4500, 5500);
+                            cache->nextBlinkTime += cache->prngintc(4500, 5500);
                             cache->blinkEndTime = buffer.curPeriod * buffer.frameTimeInMs + 101; // 100ms blink
                             eyes = "Closed";
                         }
@@ -1076,7 +1078,7 @@ void FacesEffect::RenderFaces(RenderBuffer& buffer,
             if ("Auto" == eyes) {
                 if ((buffer.curPeriod * buffer.frameTimeInMs) >= cache->nextBlinkTime) {
                     // roughly every 5 seconds we'll blink
-                    cache->nextBlinkTime += intRand(4500, 5500);
+                    cache->nextBlinkTime += cache->prngintc(4500, 5500);
                     cache->blinkEndTime = buffer.curPeriod * buffer.frameTimeInMs + 101; // 100ms blink
                     eyes = "Closed";
                 } else if ((buffer.curPeriod * buffer.frameTimeInMs) < cache->blinkEndTime) {

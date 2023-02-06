@@ -99,7 +99,6 @@ inline double rand01()
 
 void SaveWindowPosition(const std::string& tag, wxWindow* window);
 void LoadWindowPosition(const std::string& tag, wxSize& size, wxPoint& position);
-int intRand(const int& min, const int& max);
 int ExtractInt(std::string& s);
 void SaveInt(const std::string& tag, int value);
 int LoadInt(const std::string& tag, int defaultValue);

@@ -921,13 +921,6 @@ std::string BeforeInt(std::string& s)
     return res;
 }
 
-int intRand(const int& min, const int& max) {
-    static thread_local std::mt19937* generator = nullptr;
-    if (!generator) generator = new std::mt19937(clock() + std::hash<std::thread::id>{}(std::this_thread::get_id()));
-    std::uniform_int_distribution<int> distribution(min, max);
-    return distribution(*generator);
-}
-
 // Extract any leading number ... strip it from the input string
 int ExtractInt(std::string& s)
 {
