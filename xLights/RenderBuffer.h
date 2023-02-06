@@ -471,10 +471,25 @@ public:
         return mn + prngint(uint64_t(mx - mn) + 1);
     }
 
-    /* Uniform 0-1 */
+    // Uniform [0-1]
     double prnguniform()
     {
         return double(prngnext()) / double(std::numeric_limits<uint64_t>::max());
+    }
+
+    // Random double in the closed interval [mn, mx]
+    //  There is no obligation for mx > mn
+    double prngdc(double mn, double mx)
+    {
+        return prnguniform() * (mx - mn) + mn;
+    }
+
+    // sets newcolor to a random color between hsv1 and hsv2
+    void RandomColorInRange(const HSVValue& hsv1, const HSVValue& hsv2, HSVValue& newhsv)
+    {
+        newhsv.hue = prngdc(hsv1.hue, hsv2.hue);
+        newhsv.saturation = prngdc(hsv1.saturation, hsv2.saturation);
+        newhsv.value = 1.0;
     }
 
     /* This is the jump function for the generator. It is equivalent
@@ -622,7 +637,6 @@ public:
     void Get2ColorAlphaBlend(const xlColor& c1, const xlColor& c2, float ratio, xlColor &color);
     void GetMultiColorBlend(float n, bool circular, xlColor &color, int reserveColors = 0);
     void SetRangeColor(const HSVValue& hsv1, const HSVValue& hsv2, HSVValue& newhsv);
-    double RandomRange(double num1, double num2) const;
     void Color2HSV(const xlColor& color, HSVValue& hsv) const;
     const PaletteClass& GetPalette() const { return palette; }
 

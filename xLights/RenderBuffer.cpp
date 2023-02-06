@@ -800,34 +800,9 @@ float RenderBuffer::cos(float rad)
     return sinTable.cos(rad);
 }
 
-// generates a random number between num1 and num2 inclusive
-double RenderBuffer::RandomRange(double num1, double num2) const
-{
-    double hi,lo;
-    if (num1 < num2)
-    {
-        lo = num1;
-        hi = num2;
-    }
-    else
-    {
-        lo = num2;
-        hi = num1;
-    }
-    return rand01()*(hi-lo)+ lo;
-}
-
 void RenderBuffer::Color2HSV(const xlColor& color, HSVValue& hsv) const
 {
     color.toHSV(hsv);
-}
-
-// sets newcolor to a random color between hsv1 and hsv2
-void RenderBuffer::SetRangeColor(const HSVValue& hsv1, const HSVValue& hsv2, HSVValue& newhsv)
-{
-    newhsv.hue=RandomRange(hsv1.hue,hsv2.hue);
-    newhsv.saturation=RandomRange(hsv1.saturation,hsv2.saturation);
-    newhsv.value=1.0;
 }
 
 // return a value between c1 and c2

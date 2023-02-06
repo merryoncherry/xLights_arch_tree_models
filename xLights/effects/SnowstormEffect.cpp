@@ -85,13 +85,23 @@ static wxPoint SnowstormVector(int idx)
     return xy;
 }
 
-static void SnowstormAdvance(RenderBuffer& buffer, SnowstormClass& ssItem)
+class SnowstormRenderCache : public EffectRenderStatePRNG
+{
+public:
+    SnowstormRenderCache(){};
+    virtual ~SnowstormRenderCache(){};
+
+    int LastSnowstormCount;
+    std::list<SnowstormClass> SnowstormItems;
+};
+
+static void SnowstormAdvance(RenderBuffer& buffer, SnowstormClass& ssItem, SnowstormRenderCache *cache)
 {
     const int cnt = 8;  // # of integers in each set in arr[]
     const int arr[] = { 30,20,10,5,0,5,10,20,20,15,10,10,10,10,10,15 }; // 2 sets of 8 numbers, each of which add up to 100
     wxPoint adv = SnowstormVector(7);
     int i0 = ssItem.idx % 7 <= 4 ? 0 : cnt;
-    int r = rand() % 100;
+    int r = cache->prngint(100);
     for (int i = 0, val = 0; i < cnt; i++)
     {
         val += arr[i0 + i];
@@ -114,15 +124,6 @@ static void SnowstormAdvance(RenderBuffer& buffer, SnowstormClass& ssItem)
     if (xy.y < 0) xy.y += buffer.BufferHt;
     ssItem.points.push_back(xy);
 }
-
-class SnowstormRenderCache : public EffectRenderCache {
-public:
-    SnowstormRenderCache() {};
-    virtual ~SnowstormRenderCache() {};
-    
-    int LastSnowstormCount;
-    std::list<SnowstormClass> SnowstormItems;
-};
 
 void SnowstormEffect::SetDefaultParameters()
 {
@@ -154,6 +155,7 @@ void SnowstormEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Ren
     if (cache == nullptr) {
         cache = new SnowstormRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
     std::list<SnowstormClass>& SnowstormItems = cache->SnowstormItems;
 
@@ -168,14 +170,14 @@ void SnowstormEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Ren
             ssItem.idx = i;
             ssItem.ssDecay = 0;
             ssItem.points.clear();
-            buffer.SetRangeColor(hsv0, hsv1, ssItem.hsv);
+            cache->RandomColorInRange(hsv0, hsv1, ssItem.hsv);
 
             // start in a random state
-            int r = rand() % (2 * TailLength);
+            int r = cache->prngint(2 * TailLength);
             if (r > 0) {
                 wxPoint xy;
-                xy.x = rand() % buffer.BufferWi;
-                xy.y = rand() % buffer.BufferHt;
+                xy.x = cache->prngint(buffer.BufferWi);
+                xy.y = cache->prngint(buffer.BufferHt);
                 ssItem.points.push_back(xy);
             }
             if (r >= TailLength) {
@@ -183,7 +185,7 @@ void SnowstormEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Ren
                 r = TailLength;
             }
             for (int j = 1; j < r; j++) {
-                SnowstormAdvance(buffer, ssItem);
+                SnowstormAdvance(buffer, ssItem, cache);
             }
             SnowstormItems.push_back(ssItem);
         }
@@ -193,7 +195,7 @@ void SnowstormEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Ren
         // This updates the colours where using colour curves
         for (auto& it : SnowstormItems) {
             int val = it.hsv.value;
-            buffer.SetRangeColor(hsv0, hsv1, it.hsv);
+            cache->RandomColorInRange(hsv0, hsv1, it.hsv);
             it.hsv.value = val;
         }
     }
@@ -206,19 +208,19 @@ void SnowstormEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Ren
                 it.points.clear();  // start over
                 it.ssDecay = 0;
             }
-            else if (rand() % 20 < sSpeed) {
+            else if (cache->prngint(20) < sSpeed) {
                 it.ssDecay++;
             }
         }
 
         if (it.points.empty()) {
             wxPoint xy;
-            xy.x = rand() % buffer.BufferWi;
-            xy.y = rand() % buffer.BufferHt;
+            xy.x = cache->prngint(buffer.BufferWi);
+            xy.y = cache->prngint(buffer.BufferHt);
             it.points.push_back(xy);
         }
-        else if (rand() % 20 < sSpeed) {
-            SnowstormAdvance(buffer, it);
+        else if (cache->prngint(20) < sSpeed) {
+            SnowstormAdvance(buffer, it, cache);
         }
 
         int sz = it.points.size();

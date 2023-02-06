@@ -115,7 +115,7 @@ public:
 typedef std::list<MeteorClass> MeteorList;
 typedef std::list<MeteorRadialClass> MeteorRadialList;
 
-class MeteorsRenderCache : public EffectRenderCache {
+class MeteorsRenderCache : public EffectRenderStatePRNG {
 public:
     MeteorsRenderCache() {};
     virtual ~MeteorsRenderCache() {};
@@ -131,6 +131,7 @@ static MeteorsRenderCache* GetCache(RenderBuffer &buffer, int id) {
     if (cache == nullptr) {
         cache = new MeteorsRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
     return cache;
 }
@@ -270,10 +271,10 @@ void MeteorsEffect::RenderMeteorsHorizontal(RenderBuffer &buffer, int ColorSchem
 
             switch (ColorScheme) {
                 case 1:
-                    buffer.SetRangeColor(hsv0,hsv1,m.hsv);
+                    cache->RandomColorInRange(hsv0,hsv1,m.hsv);
                     break;
                 case 2:
-                    buffer.palette.GetHSV(rand()%colorcnt, m.hsv);
+                    buffer.palette.GetHSV(cache->prngint(colorcnt), m.hsv);
                     break;
             }
             cache->meteors.push_back(m);
@@ -371,10 +372,10 @@ void MeteorsEffect::RenderMeteorsVertical(RenderBuffer &buffer, int ColorScheme,
 
             switch (ColorScheme) {
                 case 1:
-                    buffer.SetRangeColor(hsv0,hsv1,m.hsv);
+                    cache->RandomColorInRange(hsv0,hsv1,m.hsv);
                     break;
                 case 2:
-                    buffer.palette.GetHSV(rand()%colorcnt, m.hsv);
+                    buffer.palette.GetHSV(cache->prngint(colorcnt), m.hsv);
                     break;
             }
             cache->meteors.push_back(m);
@@ -457,10 +458,10 @@ void MeteorsEffect::RenderIcicleDrip(RenderBuffer &buffer, int ColorScheme, int 
 
             switch (ColorScheme) {
                 case 1:
-                    buffer.SetRangeColor(hsv0,hsv1,m.hsv);
+                    cache->RandomColorInRange(hsv0,hsv1,m.hsv);
                     break;
                 case 2:
-                    buffer.palette.GetHSV(rand()%colorcnt, m.hsv);
+                    buffer.palette.GetHSV(cache->prngint(colorcnt), m.hsv);
                     break;
             }
             cache->meteors.push_back(m);
@@ -574,10 +575,10 @@ void MeteorsEffect::RenderMeteorsImplode(RenderBuffer &buffer, int ColorScheme, 
 
             switch (ColorScheme) {
                 case 1:
-                    buffer.SetRangeColor(hsv0,hsv1,m.hsv);
+                    cache->RandomColorInRange(hsv0,hsv1,m.hsv);
                     break;
                 case 2:
-                    buffer.palette.GetHSV(rand()%colorcnt, m.hsv);
+                    buffer.palette.GetHSV(cache->prngint(colorcnt), m.hsv);
                     break;
             }
             cache->meteorsRadial.push_back(m);
@@ -707,10 +708,10 @@ void MeteorsEffect::RenderMeteorsExplode(RenderBuffer &buffer, int ColorScheme, 
 
             switch (ColorScheme) {
                 case 1:
-                    buffer.SetRangeColor(hsv0,hsv1,m.hsv);
+                    cache->RandomColorInRange(hsv0,hsv1,m.hsv);
                     break;
                 case 2:
-                    buffer.palette.GetHSV(rand()%colorcnt, m.hsv);
+                    buffer.palette.GetHSV(cache->prngint(colorcnt), m.hsv);
                     break;
             }
             cache->meteorsRadial.push_back(m);
