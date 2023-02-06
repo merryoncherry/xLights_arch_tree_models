@@ -464,6 +464,12 @@ public:
         return prngnext() % mx;
     }
 
+    /* Uniform 0-1 */
+    double prnguniform()
+    {
+        return double(prngnext()) / double(std::numeric_limits<uint64_t>::max());
+    }
+
     /* This is the jump function for the generator. It is equivalent
        to 2^64 calls to next(); it can be used to generate 2^64
        non-overlapping subsequences for parallel computations. */

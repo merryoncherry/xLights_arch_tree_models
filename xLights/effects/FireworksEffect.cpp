@@ -74,7 +74,8 @@ class FireworkParticle
     int _age = 0;
 
 public:
-    FireworkParticle(int x, int y, double vx, double vy, int fade, bool gravity, int colourIndex, bool holdColour, double velocity, int width, int height, int frameMS, const PaletteClass& palette)
+    FireworkParticle(int x, int y, double vx, double vy, int fade, bool gravity, int colourIndex, bool holdColour, double velocity, int width, int height,
+                     int frameMS, const PaletteClass& palette, EffectRenderStatePRNG *prng)
     {
         _width = width;
         _height = height;
@@ -92,8 +93,8 @@ public:
 
         _fps = 1000.0 / frameMS;
 
-        double explosionVelocity = (rand() - RAND_MAX / 2)*velocity / (RAND_MAX / 2);
-        double angle = 2 * M_PI*rand() / RAND_MAX;
+        double explosionVelocity = (prng->prnguniform() * 2 - 1)*velocity;
+        double angle = 2 * M_PI * prng->prnguniform();
         _vx = 3.0 * vx / 100 + explosionVelocity * cos(angle);
         _vy = 3.0 * -vy / 100 + explosionVelocity * sin(angle);
     }
@@ -165,12 +166,13 @@ class Firework
     std::vector<FireworkParticle> _particles;
 
 public:
-    Firework(int particles, int x, int y, double vx, double vy, int fade, bool gravity, int colourIndex, bool holdColour, double velocity, int width, int height, int frameMS, const PaletteClass& palette)
+    Firework(int particles, int x, int y, double vx, double vy, int fade, bool gravity, int colourIndex, bool holdColour, double velocity,
+             int width, int height, int frameMS, const PaletteClass& palette, EffectRenderStatePRNG *prng)
     {
         _cycles = 0;
         for (int i = 0; i < particles; i++)
         {
-            _particles.push_back(FireworkParticle(x, y, vx, vy, fade, gravity, colourIndex, holdColour, velocity, width, height, frameMS, palette));
+            _particles.push_back(FireworkParticle(x, y, vx, vy, fade, gravity, colourIndex, holdColour, velocity, width, height, frameMS, palette, prng));
         }
     }
 
@@ -207,7 +209,7 @@ public:
     }
 };
 
-class FireworksRenderCache : public EffectRenderCache {
+class FireworksRenderCache : public EffectRenderStatePRNG {
 public:
     FireworksRenderCache() {};
     virtual ~FireworksRenderCache() {};
@@ -305,7 +307,7 @@ void FireworksEffect::SetPanelTimingTracks() const
     wxPostEvent(fp, event);
 }
 
-std::pair<int,int> FireworksEffect::GetFireworkLocation(int width, int height, int overridex, int overridey)
+std::pair<int,int> GetFireworkLocation(int width, int height, int overridex, int overridey, EffectRenderStatePRNG *prng)
 {
     int startX;
     int startY;
@@ -317,7 +319,7 @@ std::pair<int,int> FireworksEffect::GetFireworkLocation(int width, int height, i
     {
         int x25 = static_cast<int>(0.25f * width);
         int x75 = static_cast<int>(0.75f * width);
-        if ((x75 - x25) > 0) startX = x25 + rand() % (x75 - x25); else startX = 0;
+        if ((x75 - x25) > 0) startX = x25 + prng->prngint(x75 - x25); else startX = 0;
     }
 
     if (overridey >= 0)
@@ -328,7 +330,7 @@ std::pair<int,int> FireworksEffect::GetFireworkLocation(int width, int height, i
     {
         int y25 = static_cast<int>(0.25f * height);
         int y75 = static_cast<int>(0.75f * height);
-        if ((y75 - y25) > 0) startY = y25 + rand() % (y75 - y25); else startY = 0;
+        if ((y75 - y25) > 0) startY = y25 + prng->prngint(y75 - y25); else startY = 0;
     }
     return { startX, startY };
 }
@@ -381,12 +383,13 @@ void FireworksEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
 
     if (buffer.needToInit) {
         buffer.needToInit = false;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
         SetPanelTimingTracks();
         sinceLastTriggered = 0;
         if (!useMusic && !useTiming)
         {
             for (int i = 0; i < numberOfExplosions; i++) {
-                firePeriods.push_back(buffer.curEffStartPer + rand01() * (buffer.curEffEndPer - buffer.curEffStartPer));
+                firePeriods.push_back(buffer.curEffStartPer + cache->prnguniform() * (buffer.curEffEndPer - buffer.curEffStartPer));
             }
         }
 
@@ -404,8 +407,8 @@ void FireworksEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
             // trigger if it was not previously triggered or has been triggered for REPEATTRIGGER frames
             if (sinceLastTriggered == 0 || sinceLastTriggered > REPEATTRIGGER)
             {
-                auto location = GetFireworkLocation(buffer.BufferWi, buffer.BufferHt, xLocation, yLocation);
-                int colourIndex = rand() % colorcnt;
+                auto location = GetFireworkLocation(buffer.BufferWi, buffer.BufferHt, xLocation, yLocation, cache);
+                int colourIndex = cache->prngint(colorcnt);
                 fireworks.push_back(Firework(particleCount,
                     location.first, location.second,
                     xVelocity, yVelocity,
@@ -413,7 +416,7 @@ void FireworksEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
                     colourIndex, holdColour,
                     particleVelocity,
                     buffer.BufferWi, buffer.BufferHt,
-                    buffer.frameTimeInMs, buffer.palette));
+                    buffer.frameTimeInMs, buffer.palette, cache));
             }
 
             // if music is over the trigger level for REPEATTRIGGER frames then we will trigger another firework
@@ -453,8 +456,8 @@ void FireworksEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
                     if (buffer.curPeriod == el->GetEffect(j)->GetStartTimeMS() / buffer.frameTimeInMs ||
                         buffer.curPeriod == el->GetEffect(j)->GetEndTimeMS() / buffer.frameTimeInMs)
                     {
-                        auto location = GetFireworkLocation(buffer.BufferWi, buffer.BufferHt, xLocation, yLocation);
-                        int colourIndex = rand() % colorcnt;
+                        auto location = GetFireworkLocation(buffer.BufferWi, buffer.BufferHt, xLocation, yLocation, cache);
+                        int colourIndex = cache->prngint(colorcnt);
                         fireworks.push_back(Firework(particleCount,
                             location.first, location.second,
                             xVelocity, yVelocity,
@@ -462,7 +465,7 @@ void FireworksEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
                             colourIndex, holdColour,
                             particleVelocity,
                             buffer.BufferWi, buffer.BufferHt,
-                            buffer.frameTimeInMs, buffer.palette));
+                            buffer.frameTimeInMs, buffer.palette, cache));
                         break;
                     }
                 }
@@ -476,8 +479,8 @@ void FireworksEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
         {
             if (it == buffer.curPeriod)
             {
-                auto location = GetFireworkLocation(buffer.BufferWi, buffer.BufferHt, xLocation, yLocation);
-                int colourIndex = rand() % colorcnt;
+                auto location = GetFireworkLocation(buffer.BufferWi, buffer.BufferHt, xLocation, yLocation, cache);
+                int colourIndex = cache->prngint(colorcnt);
                 fireworks.push_back(Firework(particleCount,
                     location.first, location.second,
                     xVelocity, yVelocity,
@@ -485,7 +488,7 @@ void FireworksEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
                     colourIndex, holdColour,
                     particleVelocity,
                     buffer.BufferWi, buffer.BufferHt,
-                    buffer.frameTimeInMs, buffer.palette));
+                    buffer.frameTimeInMs, buffer.palette, cache));
             }
         }
     }
