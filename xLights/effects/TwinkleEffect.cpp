@@ -27,10 +27,6 @@
 #include <random>
 #include <cmath>
 
-static std::random_device rd;
-static std::default_random_engine eng{ rd() };
-static std::uniform_int_distribution<> dist(0, INT_MAX);
-
 TwinkleEffect::TwinkleEffect(int id) : RenderableEffect(id, "Twinkle", twinkle_16, twinkle_24, twinkle_32, twinkle_48, twinkle_64)
 {
     //ctor
@@ -55,7 +51,7 @@ public:
     bool isByNode = false;
 };
 
-class TwinkleRenderCache : public EffectRenderCache {
+class TwinkleRenderCache : public EffectRenderStatePRNG {
 public:
     TwinkleRenderCache() {};
     virtual ~TwinkleRenderCache() {};
@@ -185,23 +181,24 @@ int TwinkleEffect::DrawEffectBackground(const Effect *e, int x1, int y1, int x2,
     return 1;
 }
 
-static void place_twinkles(int lights_to_place, int &curIndex, std::vector<StrobeClass>& strobe, RenderBuffer& buffer,
-                           int max_modulo, size_t colorcnt) {
+static void place_twinkles(int lights_to_place, int &curIndex, std::vector<StrobeClass>& strobe, TwinkleRenderCache *cache,
+                           int max_modulo, size_t colorcnt)
+{
     while (lights_to_place > 0 && (curIndex < strobe.size())) {
-        int idx = dist(eng) % (strobe.size() - curIndex) + curIndex;
+        int idx = cache->prngint(strobe.size() - curIndex) + curIndex;
         if (idx != curIndex) {
             std::swap(strobe[idx], strobe[curIndex]);
         }
-        strobe[curIndex].duration = dist(eng) % max_modulo;
-        strobe[curIndex].colorindex = dist(eng) % colorcnt;
+        strobe[curIndex].duration = cache->prngint(max_modulo);
+        strobe[curIndex].colorindex = cache->prngint(colorcnt);
         strobe[curIndex].strobing = true;
         curIndex++;
         lights_to_place--;
     }
 }
 
-void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderBuffer &buffer) {
-    
+void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderBuffer &buffer)
+{   
     float oset = buffer.GetEffectTimeIntervalPosition();
     int Count = GetValueCurveInt("Twinkle_Count", 3, SettingsMap, oset, TWINKLE_COUNT_MIN, TWINKLE_COUNT_MAX, buffer.GetStartTimeMS(), buffer.GetEndTimeMS());
     int Steps = GetValueCurveInt("Twinkle_Steps", 30, SettingsMap, oset, TWINKLE_STEPS_MIN, TWINKLE_STEPS_MAX, buffer.GetStartTimeMS(), buffer.GetEndTimeMS());
@@ -249,6 +246,7 @@ void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
         cache->num_lights = lights;
         cache->lights_to_renew = lights;
         cache->curNumStrobe = 0;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
     std::vector<StrobeClass> &strobe = cache->strobe;
 
@@ -266,6 +264,7 @@ void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
     int i = 0;
 
     if (buffer.needToInit) {
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
         buffer.needToInit = false;
         cache->lights_to_renew = lights;
         cache->curNumStrobe = 0;
@@ -295,7 +294,7 @@ void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
             }
             //randomize the locations
             for (int s = 0; s < strobe.size(); ++s) {
-                int r = dist(eng) % strobe.size();
+                int r = cache->prngint(strobe.size());
                 if (r != s) {
                     std::swap(strobe[r], strobe[s]);
                 }
@@ -308,13 +307,13 @@ void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
                     if (i % step == 1 || step == 1) {
                         int s = strobe.size();
                         strobe.resize(s + 1);
-                        strobe[s].duration = dist(eng) % max_modulo;
+                        strobe[s].duration = cache->prngint(max_modulo);
 
                         strobe[s].x = i;
                         strobe[s].y = 0;
                         strobe[s].isByNode = true;
 
-                        strobe[s].colorindex = dist(eng) % colorcnt;
+                        strobe[s].colorindex = cache->prngint(colorcnt);
                         cache->curNumStrobe++;
                     }
                 }
@@ -325,13 +324,13 @@ void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
                         if (i % step == 1 || step == 1) {
                             int s = strobe.size();
                             strobe.resize(s + 1);
-                            strobe[s].duration = dist(eng) % max_modulo;
+                            strobe[s].duration = cache->prngint(max_modulo);
 
                             strobe[s].x = x;
                             strobe[s].y = y;
                             strobe[s].isByNode = false;
 
-                            strobe[s].colorindex = dist(eng) % colorcnt;
+                            strobe[s].colorindex = cache->prngint(colorcnt);
                             cache->curNumStrobe++;
                         }
                     }
@@ -356,7 +355,7 @@ void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
                     }
                 }
             }
-            place_twinkles(cache->lights_to_renew, cache->curNumStrobe, strobe, buffer, max_modulo, colorcnt);
+            place_twinkles(cache->lights_to_renew, cache->curNumStrobe, strobe, cache, max_modulo, colorcnt);
             cache->lights_to_renew = 0;
         }
     }
@@ -377,8 +376,8 @@ void TwinkleEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
                 cache->lights_to_renew++;
                 strobe[x].strobing = false;
             } else if (reRandomize) {
-                strobe[x].duration -= dist(eng) % max_modulo2;
-                strobe[x].colorindex = dist(eng) % colorcnt;
+                strobe[x].duration -= cache->prngint(max_modulo2);
+                strobe[x].colorindex = cache->prngint(colorcnt);
             }
         }
         int i7 = strobe[x].duration;
