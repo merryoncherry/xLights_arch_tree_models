@@ -195,6 +195,7 @@ void MeteorsEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
 
     if (buffer.needToInit) {
         buffer.needToInit = false;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
         cache->meteors.clear();
         cache->meteorsRadial.clear();
         cache->effectState = mSpeed * buffer.frameTimeInMs / 50;
@@ -283,13 +284,19 @@ void MeteorsEffect::RenderMeteorsHorizontal(RenderBuffer &buffer, int ColorSchem
 
     // render meteors
 
-    std::function<void(MeteorClass &, int)> f = [&buffer, cache, MeteorsEffect, TailLength, mspeed, SwirlIntensity, ColorScheme] (MeteorClass &meteor, int n) {
+    std::function<void(MeteorClass &, int)> f = [&buffer, MeteorsEffect, TailLength, mspeed, SwirlIntensity, ColorScheme] (MeteorClass &meteor, int n) {
         int x,y,dy;
         HSVValue hsv;
+
+        EffectRenderStatePRNG prng;
+        if (ColorScheme == 0) {
+            prng.seedConsistently(meteor.x, meteor.y, n * 100, buffer.BufferWi * 100 + buffer.BufferHt);
+        }
+
         for (int ph = 0; ph <= TailLength; ph++) {
             switch (ColorScheme) {
                 case 0:
-                    hsv.hue=cache->prnguniform();
+                    hsv.hue = prng.prnguniform();
                     hsv.saturation=1.0;
                     hsv.value=1.0;
                     break;
@@ -384,13 +391,19 @@ void MeteorsEffect::RenderMeteorsVertical(RenderBuffer &buffer, int ColorScheme,
 
     // render meteors
 
-    std::function<void(MeteorClass &, int)> f = [&buffer, cache, MeteorsEffect, TailLength, mspeed, SwirlIntensity, ColorScheme] (MeteorClass &meteor, int n) {
+    std::function<void(MeteorClass &, int)> f = [&buffer, MeteorsEffect, TailLength, mspeed, SwirlIntensity, ColorScheme] (MeteorClass &meteor, int n) {
         int x,y,dx;
         HSVValue hsv;
+
+        EffectRenderStatePRNG prng;
+        if (ColorScheme == 0) {
+            prng.seedConsistently(meteor.x, meteor.y, n * 100, buffer.BufferWi * 100 + buffer.BufferHt);
+        }
+
         for (int ph = 0; ph <= TailLength; ph++) {
             switch (ColorScheme) {
                 case 0:
-                    hsv.hue=cache->prnguniform();
+                    hsv.hue=prng.prnguniform();
                     hsv.saturation=1.0;
                     hsv.value=1.0;
                     break;
@@ -587,7 +600,7 @@ void MeteorsEffect::RenderMeteorsImplode(RenderBuffer &buffer, int ColorScheme, 
 
     // render meteors
 
-    std::function<void(MeteorRadialClass&, int)> f = [&buffer, cache, fadeWithDistance, centerX, centerY, maxdiag, TailLength, ColorScheme, mspeed](MeteorRadialClass& meteor, int n) {
+    std::function<void(MeteorRadialClass&, int)> f = [&buffer, fadeWithDistance, centerX, centerY, maxdiag, TailLength, ColorScheme, mspeed](MeteorRadialClass& meteor, int n) {
         int x,y;
         HSVValue hsv;
         float hdistance = 1.0f;
@@ -597,10 +610,15 @@ void MeteorsEffect::RenderMeteorsImplode(RenderBuffer &buffer, int ColorScheme, 
             hdistance = std::max(0.1f, (float)sqrt((x - (float)centerX) * (x - (float)centerX) + (y - (float)centerY) * (y - (float)centerY)) / (float)maxdiag);
         }
 
+        EffectRenderStatePRNG prng;
+        if (ColorScheme == 0) {
+            prng.seedConsistently(meteor.x, meteor.y, n * 100, buffer.BufferWi * 100 + buffer.BufferHt);
+        }
+
         for (int ph = 0; ph <= TailLength; ph++) {
             switch (ColorScheme) {
                 case 0:
-                    hsv.hue = cache->prnguniform();
+                    hsv.hue = prng.prnguniform();
                     hsv.saturation=1.0;
                     hsv.value=1.0;
                     break;
@@ -720,7 +738,7 @@ void MeteorsEffect::RenderMeteorsExplode(RenderBuffer &buffer, int ColorScheme, 
 
     // render meteors
 
-    std::function<void(MeteorRadialClass&, int)> f = [&buffer, cache, fadeWithDistance, centerX, centerY, maxdiag, TailLength, ColorScheme, mspeed](MeteorRadialClass& meteor, int n) {
+    std::function<void(MeteorRadialClass&, int)> f = [&buffer, fadeWithDistance, centerX, centerY, maxdiag, TailLength, ColorScheme, mspeed](MeteorRadialClass& meteor, int n) {
         int x,y;
         HSVValue hsv;
 
@@ -731,11 +749,16 @@ void MeteorsEffect::RenderMeteorsExplode(RenderBuffer &buffer, int ColorScheme, 
             hdistance = std::max(0.1f, (float)sqrt((x - (float)centerX) * (x - (float)centerX) + (y - (float)centerY) * (y - (float)centerY)) / (float)maxdiag);
         }
 
+        EffectRenderStatePRNG prng;
+        if (ColorScheme == 0) {
+            prng.seedConsistently(meteor.x, meteor.y, n * 100, buffer.BufferWi * 100 + buffer.BufferHt);
+        }
+
         for(int ph = 0; ph <= TailLength; ph++) {
             //if (ph >= it->cnt) continue;
             switch (ColorScheme) {
                 case 0:
-                    hsv.hue = cache->prnguniform();
+                    hsv.hue = prng.prnguniform();
                     hsv.saturation=1.0;
                     hsv.value=1.0;
                     break;

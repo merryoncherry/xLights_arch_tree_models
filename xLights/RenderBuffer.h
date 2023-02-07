@@ -579,6 +579,23 @@ public:
         }
 
         prngnext();
+        prngnext();
+    }
+
+        /*
+     * The PRNG should be seeded.  The idea here is that you might want it consistent though,
+     *   what should influence it?  In some cases, time would be good, but not some other times
+     */
+    void seedConsistently(uint64_t v1, uint64_t v2, uint64_t v3, uint64_t v4)
+    {
+        xoroshiro_state[0] = 0xBAD5EED0DEADBEEFLLU;
+        xoroshiro_state[1] = 0xCAFECAFEBADC0DE2LLU;
+
+        xoroshiro_state[0] ^= (v1 << 32) | v2;
+        xoroshiro_state[1] ^= (v3 << 32) | v4;
+
+        prngnext();
+        prngnext();
     }
 };
 
