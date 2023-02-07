@@ -265,7 +265,7 @@ void MeteorsEffect::RenderMeteorsHorizontal(RenderBuffer &buffer, int ColorSchem
     // create new meteors
 
     for (int i = 0; i < buffer.BufferHt; i++) {
-        if (rand() % 200 < Count) {
+        if (cache->prngint(200) < Count) {
             m.x=buffer.BufferWi - 1;
             m.y=i;
 
@@ -283,13 +283,13 @@ void MeteorsEffect::RenderMeteorsHorizontal(RenderBuffer &buffer, int ColorSchem
 
     // render meteors
 
-    std::function<void(MeteorClass &, int)> f = [&buffer, MeteorsEffect, TailLength, mspeed, SwirlIntensity, ColorScheme] (MeteorClass &meteor, int n) {
+    std::function<void(MeteorClass &, int)> f = [&buffer, cache, MeteorsEffect, TailLength, mspeed, SwirlIntensity, ColorScheme] (MeteorClass &meteor, int n) {
         int x,y,dy;
         HSVValue hsv;
         for (int ph = 0; ph <= TailLength; ph++) {
             switch (ColorScheme) {
                 case 0:
-                    hsv.hue=double(rand() % 1000) / 1000.0;
+                    hsv.hue=cache->prnguniform();
                     hsv.saturation=1.0;
                     hsv.value=1.0;
                     break;
@@ -366,7 +366,7 @@ void MeteorsEffect::RenderMeteorsVertical(RenderBuffer &buffer, int ColorScheme,
     // create new meteors
 
     for (int i = 0; i < buffer.BufferWi; i++) {
-        if (rand() % 200 < Count) {
+        if (cache->prngint(200) < Count) {
             m.x=i;
             m.y=buffer.BufferHt - 1;
 
@@ -384,13 +384,13 @@ void MeteorsEffect::RenderMeteorsVertical(RenderBuffer &buffer, int ColorScheme,
 
     // render meteors
 
-    std::function<void(MeteorClass &, int)> f = [&buffer, MeteorsEffect, TailLength, mspeed, SwirlIntensity, ColorScheme] (MeteorClass &meteor, int n) {
+    std::function<void(MeteorClass &, int)> f = [&buffer, cache, MeteorsEffect, TailLength, mspeed, SwirlIntensity, ColorScheme] (MeteorClass &meteor, int n) {
         int x,y,dx;
         HSVValue hsv;
         for (int ph = 0; ph <= TailLength; ph++) {
             switch (ColorScheme) {
                 case 0:
-                    hsv.hue=double(rand() % 1000) / 1000.0;
+                    hsv.hue=cache->prnguniform();
                     hsv.saturation=1.0;
                     hsv.value=1.0;
                     break;
@@ -450,11 +450,11 @@ void MeteorsEffect::RenderIcicleDrip(RenderBuffer &buffer, int ColorScheme, int 
 
     MeteorClass m;
     for (int i = 0; i < buffer.BufferWi; i++) {
-        if (rand() % 200 < Count) {
+        if (cache->prngint(200) < Count) {
             m.x=i;
             m.y=buffer.BufferHt - 1;
             //            m.h = TailLength;
-            m.h = (rand() % (2 * buffer.BufferHt))/3; //somewhat variable length -DJ
+            m.h = (cache->prngint(2 * buffer.BufferHt))/3; //somewhat variable length -DJ
 
             switch (ColorScheme) {
                 case 1:
@@ -558,13 +558,13 @@ void MeteorsEffect::RenderMeteorsImplode(RenderBuffer &buffer, int ColorScheme, 
 
     m.cnt=1;
     for (int i = 0; i < MinDimension; i++) {
-        if (rand() % 200 < Count) {
+        if (cache->prngint(200) < Count) {
             if (buffer.BufferHt == 1) {
-                angle=double(rand() % 2) * M_PI;
+                angle=double(cache->prngint(2)) * M_PI;
             } else if (buffer.BufferWi == 1) {
-                angle=double(rand() % 2) * M_PI - (M_PI/2.0);
+                angle=double(cache->prngint(2)) * M_PI - (M_PI/2.0);
             } else {
-                angle=rand01()*2.0*M_PI;
+                angle = cache->prnguniform() * 2.0 * M_PI;
             }
             m.dx=buffer.cos(angle);
             m.dy=buffer.sin(angle);
@@ -587,7 +587,7 @@ void MeteorsEffect::RenderMeteorsImplode(RenderBuffer &buffer, int ColorScheme, 
 
     // render meteors
 
-    std::function<void(MeteorRadialClass&, int)> f = [&buffer, fadeWithDistance, centerX, centerY, maxdiag, TailLength, ColorScheme, mspeed](MeteorRadialClass& meteor, int n) {
+    std::function<void(MeteorRadialClass&, int)> f = [&buffer, cache, fadeWithDistance, centerX, centerY, maxdiag, TailLength, ColorScheme, mspeed](MeteorRadialClass& meteor, int n) {
         int x,y;
         HSVValue hsv;
         float hdistance = 1.0f;
@@ -600,7 +600,7 @@ void MeteorsEffect::RenderMeteorsImplode(RenderBuffer &buffer, int ColorScheme, 
         for (int ph = 0; ph <= TailLength; ph++) {
             switch (ColorScheme) {
                 case 0:
-                    hsv.hue=double(rand() % 1000) / 1000.0;
+                    hsv.hue = cache->prnguniform();
                     hsv.saturation=1.0;
                     hsv.value=1.0;
                     break;
@@ -695,13 +695,13 @@ void MeteorsEffect::RenderMeteorsExplode(RenderBuffer &buffer, int ColorScheme, 
     m.y=buffer.BufferHt/2+trueyoffset;
     m.cnt=1;
     for (int i = 0; i < MinDimension; i++) {
-        if (rand() % 200 < Count) {
+        if (cache->prngint(200) < Count) {
             if (buffer.BufferHt == 1) {
-                angle=double(rand() % 2) * M_PI;
+                angle=double(cache->prngint(2)) * M_PI;
             } else if (buffer.BufferWi == 1) {
-                angle=double(rand() % 2) * M_PI - (M_PI/2.0);
+                angle=double(cache->prngint(2)) * M_PI - (M_PI/2.0);
             } else {
-                angle=rand01()*2.0*M_PI;
+                angle = cache->prnguniform() * 2.0 * M_PI;
             }
             m.dx=buffer.cos(angle);
             m.dy=buffer.sin(angle);
@@ -720,7 +720,7 @@ void MeteorsEffect::RenderMeteorsExplode(RenderBuffer &buffer, int ColorScheme, 
 
     // render meteors
 
-    std::function<void(MeteorRadialClass&, int)> f = [&buffer, fadeWithDistance, centerX, centerY, maxdiag, TailLength, ColorScheme, mspeed](MeteorRadialClass& meteor, int n) {
+    std::function<void(MeteorRadialClass&, int)> f = [&buffer, cache, fadeWithDistance, centerX, centerY, maxdiag, TailLength, ColorScheme, mspeed](MeteorRadialClass& meteor, int n) {
         int x,y;
         HSVValue hsv;
 
@@ -735,7 +735,7 @@ void MeteorsEffect::RenderMeteorsExplode(RenderBuffer &buffer, int ColorScheme, 
             //if (ph >= it->cnt) continue;
             switch (ColorScheme) {
                 case 0:
-                    hsv.hue=double(rand() % 1000) / 1000.0;
+                    hsv.hue = cache->prnguniform();
                     hsv.saturation=1.0;
                     hsv.value=1.0;
                     break;

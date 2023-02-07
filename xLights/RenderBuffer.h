@@ -445,7 +445,7 @@ public:
 
     uint64_t xoroshiro_state[2];
 
-    uint64_t prngnext(void)
+    uint64_t prngnext64(void)
     {
         const uint64_t s0 = xoroshiro_state[0];
         uint64_t s1 = xoroshiro_state[1];
@@ -458,23 +458,39 @@ public:
         return result;
     }
 
+    uint32_t prngnext()
+    {
+        return uint32_t(prngnext64());
+    }
+
     // Random int in the interval [0, mx)
-    uint64_t prngint(uint64_t mx)
+    uint64_t prngint64(uint64_t mx)
     {
         // TODO: This is not what they advise.  Can change.
         return prngnext() % mx;
     }
 
-    // Random int in the closed interval [mn, mx]
-    int64_t prngintc(int64_t mn, int64_t mx)
+    // Random int in the interval [0, mx)
+    uint32_t prngint(uint32_t mx)
     {
-        return mn + prngint(uint64_t(mx - mn) + 1);
+        // TODO: This is not what they advise.  Can change.
+        return prngnext() % mx;
+    }
+    
+    // Random int in the closed interval [mn, mx]
+    int32_t prngintc(int32_t mn, int32_t mx)
+    {
+        return mn + prngint(uint32_t(mx - mn) + 1);
     }
 
     // Uniform [0-1]
-    double prnguniform()
+    double prnguniform64()
     {
         return double(prngnext()) / double(std::numeric_limits<uint64_t>::max());
+    }
+    double prnguniform()
+    {
+        return double(prngnext()) / double(std::numeric_limits<uint32_t>::max());
     }
 
     // Random double in the closed interval [mn, mx]
