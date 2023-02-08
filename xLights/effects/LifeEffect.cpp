@@ -58,7 +58,7 @@ static size_t Life_CountNeighbors(RenderBuffer& buffer, int x0, int y0)
     return cnt;
 }
 
-class LifeRenderCache : public EffectRenderCache {
+class LifeRenderCache : public EffectRenderStatePRNG {
 public:
     LifeRenderCache() : LastLifeCount(0), LastLifeType(0), LastLifeState(0) {};
     virtual ~LifeRenderCache() {};
@@ -88,6 +88,7 @@ void LifeEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
     if (cache == nullptr) {
         cache = new LifeRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
 
     int i, x, y, cnt;
@@ -102,14 +103,15 @@ void LifeEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
     Count = BufferWi * BufferHt * Count / 200 + 1;
     if (buffer.needToInit || Count != cache->LastLifeCount || Type != cache->LastLifeType) {
         buffer.needToInit = false;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
         // seed tempbuf
         cache->LastLifeCount = Count;
         cache->LastLifeType = Type;
         buffer.ClearTempBuf();
         for (i = 0; i < Count; i++) {
-            x = rand() % BufferWi;
-            y = rand() % BufferHt;
-            buffer.GetMultiColorBlend(rand01(), false, color);
+            x = cache->prngint(BufferWi);
+            y = cache->prngint(BufferHt);
+            buffer.GetMultiColorBlend(cache->prnguniform(), false, color);
             buffer.SetTempPixel(x, y, color);
         }
     }
@@ -139,7 +141,7 @@ void LifeEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
                 if (isLive && cnt >= 2 && cnt <= 3) {
                     buffer.SetPixel(x, y, color);
                 } else if (!isLive && cnt == 3) {
-                    buffer.GetMultiColorBlend(rand01(), false, color);
+                    buffer.GetMultiColorBlend(cache->prnguniform(), false, color);
                     buffer.SetPixel(x, y, color);
                 }
                 break;
@@ -148,7 +150,7 @@ void LifeEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
                 if (isLive && (cnt == 2 || cnt == 3 || cnt == 6)) {
                     buffer.SetPixel(x, y, color);
                 } else if (!isLive && (cnt == 3 || cnt == 5)) {
-                    buffer.GetMultiColorBlend(rand01(), false, color);
+                    buffer.GetMultiColorBlend(cache->prnguniform(), false, color);
                     buffer.SetPixel(x, y, color);
                 }
                 break;
@@ -157,7 +159,7 @@ void LifeEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
                 if (isLive && (cnt == 1 || cnt == 3 || cnt == 5 || cnt == 8)) {
                     buffer.SetPixel(x, y, color);
                 } else if (!isLive && (cnt == 3 || cnt == 5 || cnt == 7)) {
-                    buffer.GetMultiColorBlend(rand01(), false, color);
+                    buffer.GetMultiColorBlend(cache->prnguniform(), false, color);
                     buffer.SetPixel(x, y, color);
                 }
                 break;
@@ -166,7 +168,7 @@ void LifeEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
                 if (isLive && (cnt == 2 || cnt == 3 || cnt >= 5)) {
                     buffer.SetPixel(x, y, color);
                 } else if (!isLive && (cnt == 3 || cnt == 7 || cnt == 8)) {
-                    buffer.GetMultiColorBlend(rand01(), false, color);
+                    buffer.GetMultiColorBlend(cache->prnguniform(), false, color);
                     buffer.SetPixel(x, y, color);
                 }
                 break;
@@ -175,7 +177,7 @@ void LifeEffect::Render(Effect* effect, const SettingsMap& SettingsMap, RenderBu
                 if (isLive && (cnt >= 5)) {
                     buffer.SetPixel(x, y, color);
                 } else if (!isLive && (cnt == 2 || cnt >= 5)) {
-                    buffer.GetMultiColorBlend(rand01(), false, color);
+                    buffer.GetMultiColorBlend(cache->prnguniform(), false, color);
                     buffer.SetPixel(x, y, color);
                 }
                 break;
