@@ -90,12 +90,12 @@ class LineObject
 {
     std::list<std::list<LinePoint>> _points;
 
-    static LinePoint CreatePoint(int width, int height)
+    static LinePoint CreatePoint(EffectRenderStatePRNG *cache, int width, int height)
     {
         LinePoint pt;
-        pt._x = rand01() * width;
-        pt._y = rand01() * height;
-        pt._angle = rand01() * pi2;
+        pt._x = cache->prngint(width);
+        pt._y = cache->prngint(height);
+        pt._angle = cache->prnguniform() * pi2;
         return pt;
     }
 
@@ -117,13 +117,13 @@ class LineObject
     }
 
 public:
-    void CreateFirst(int points, int width, int height)
+    void CreateFirst(EffectRenderStatePRNG* cache, int points, int width, int height)
     {
         if (_points.size() != 0) return;
 
         std::list<LinePoint> pts;
         while (pts.size() < points) {
-            pts.push_back(CreatePoint(width, height));
+            pts.push_back(CreatePoint(cache, width, height));
         }
         _points.push_back(std::move(pts));
     }
@@ -182,7 +182,7 @@ public:
     }
 };
 
-class LinesRenderCache : public EffectRenderCache
+class LinesRenderCache : public EffectRenderStatePRNG
 {
 
 public:
@@ -202,7 +202,7 @@ public:
         }
         while (_lineObjects.size() < objects) {
             LineObject line;
-            line.CreateFirst(points, width, height);
+            line.CreateFirst(this, points, width, height);
             _lineObjects.push_back(std::move(line));
         }
     }
@@ -215,6 +215,7 @@ void LinesEffect::Render(RenderBuffer &buffer, int objects, int points, int thic
 	if (cache == nullptr) {
 		cache = new LinesRenderCache();
 		buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
 	}
 
     auto& _lines = cache->_lineObjects;
@@ -222,6 +223,7 @@ void LinesEffect::Render(RenderBuffer &buffer, int objects, int points, int thic
 	// Check for config changes which require us to reset
 	if (buffer.needToInit) {
         buffer.needToInit = false;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
 	}
 
     cache->CreateDestroy(objects, points, buffer.BufferWi, buffer.BufferHt);
