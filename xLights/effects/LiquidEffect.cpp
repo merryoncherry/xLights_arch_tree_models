@@ -200,7 +200,7 @@ void LiquidEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Render
         );
 }
 
-class LiquidRenderCache : public EffectRenderCache {
+class LiquidRenderCache : public EffectRenderStatePRNG {
 public:
     LiquidRenderCache() { _world = nullptr; };
     virtual ~LiquidRenderCache() {
@@ -386,7 +386,8 @@ xlColor LiquidEffect::GetDespeckleColor(RenderBuffer& buffer, size_t x, size_t y
     return xlColor(red / count, green / count, blue / count);
 }
 
-void LiquidEffect::CreateParticles(b2ParticleSystem* ps, int x, int y, int direction, int velocity, int flow, bool flowMusic, int lifetime, int width, int height, const xlColor& c, const std::string& particleType, bool mixcolors, float audioLevel, int sourceSize)
+void LiquidEffect::CreateParticles(EffectRenderStatePRNG *cache, b2ParticleSystem* ps, int x, int y, int direction, int velocity, int flow, bool flowMusic,
+    int lifetime, int width, int height, const xlColor& c, const std::string& particleType, bool mixcolors, float audioLevel, int sourceSize)
 {
     static const float pi2 = 6.283185307f;
     float posx = (float)x * (float)width / 100.0;
@@ -395,7 +396,7 @@ void LiquidEffect::CreateParticles(b2ParticleSystem* ps, int x, int y, int direc
     float velx = (float)velocity * 10.0 * RenderBuffer::cos(pi2 * (float)direction / 360.0);
     float vely = (float)velocity * 10.0 * RenderBuffer::sin(pi2 * (float)direction / 360.0);
 
-    float velVariation = rand01() * 0.1;
+    float velVariation = cache->prnguniform() * 0.1;
     velVariation -= velVariation / 2.0;
 
     velx -= velx * velVariation;
@@ -459,10 +460,10 @@ void LiquidEffect::CreateParticles(b2ParticleSystem* ps, int x, int y, int direc
         if (sourceSize == 0)
         {
             // Randomly pick a position within the emitter's radius.
-            const float32 angle = rand01() * 2.0f * b2_pi;
+            const float32 angle = cache->prnguniform() * 2.0f * b2_pi;
 
             // Distance from the center of the circle.
-            const float32 distance = rand01();
+            const float32 distance = cache->prnguniform();
             b2Vec2 positionOnUnitCircle(RenderBuffer::sin(angle), RenderBuffer::cos(angle));
 
             // Initial position.
@@ -473,7 +474,7 @@ void LiquidEffect::CreateParticles(b2ParticleSystem* ps, int x, int y, int direc
         else
         {
             // Distance from the center of the circle.
-            const float32 distance = rand01() * ((float)sourceSize - (float)sourceSize / 2.0);
+            const float32 distance = cache->prnguniform() * ((float)sourceSize - (float)sourceSize / 2.0);
 
             float offx = distance * RenderBuffer::cos(pi2 * ((float)direction + 90.0) / 360.0);
             float offy = distance * RenderBuffer::sin(pi2 * ((float)direction + 90.0) / 360.0);
@@ -489,7 +490,7 @@ void LiquidEffect::CreateParticles(b2ParticleSystem* ps, int x, int y, int direc
         // give it a lifetime
         if (lifetime > 0)
         {
-            float randomlt = lt + (lt * 0.2 * rand01()) - (lt *.01);
+            float randomlt = lt + (lt * 0.2 * cache->prnguniform()) - (lt *.01);
             pd.lifetime = randomlt;
         }
         ps->CreateParticle(pd);
@@ -515,6 +516,8 @@ void LiquidEffect::Step(b2World* world, RenderBuffer &buffer, bool enabled[], in
     int x4, int y4, int direction4, int velocity4, int flow4, int sourceSize4, bool flowMusic4, float time
 )
 {
+    LiquidRenderCache* cache = (LiquidRenderCache*)buffer.infoCache[id];
+
     // move all existing items
     float32 timeStep = (float)buffer.frameTimeInMs / 1000.0;
     int32 velocityIterations = 6;
@@ -547,16 +550,16 @@ void LiquidEffect::Step(b2World* world, RenderBuffer &buffer, bool enabled[], in
                 switch (i)
                 {
                 case 0:
-                    CreateParticles(ps, x1, y1, direction1, velocity1, flow1, flowMusic1, lifetime, buffer.BufferWi, buffer.BufferHt, color, particleType, mixcolors, audioLevel, sourceSize1);
+                    CreateParticles(cache, ps, x1, y1, direction1, velocity1, flow1, flowMusic1, lifetime, buffer.BufferWi, buffer.BufferHt, color, particleType, mixcolors, audioLevel, sourceSize1);
                     break;
                 case 1:
-                    CreateParticles(ps, x2, y2, direction2, velocity2, flow2, flowMusic2, lifetime, buffer.BufferWi, buffer.BufferHt, color, particleType, mixcolors, audioLevel, sourceSize2);
+                    CreateParticles(cache, ps, x2, y2, direction2, velocity2, flow2, flowMusic2, lifetime, buffer.BufferWi, buffer.BufferHt, color, particleType, mixcolors, audioLevel, sourceSize2);
                     break;
                 case 2:
-                    CreateParticles(ps, x3, y3, direction3, velocity3, flow3, flowMusic3, lifetime, buffer.BufferWi, buffer.BufferHt, color, particleType, mixcolors, audioLevel, sourceSize3);
+                    CreateParticles(cache, ps, x3, y3, direction3, velocity3, flow3, flowMusic3, lifetime, buffer.BufferWi, buffer.BufferHt, color, particleType, mixcolors, audioLevel, sourceSize3);
                     break;
                 case 3:
-                    CreateParticles(ps, x4, y4, direction4, velocity4, flow4, flowMusic4, lifetime, buffer.BufferWi, buffer.BufferHt, color, particleType, mixcolors, audioLevel, sourceSize4);
+                    CreateParticles(cache, ps, x4, y4, direction4, velocity4, flow4, flowMusic4, lifetime, buffer.BufferWi, buffer.BufferHt, color, particleType, mixcolors, audioLevel, sourceSize4);
                     break;
                 }
                 j++;
@@ -586,6 +589,7 @@ void LiquidEffect::Render(RenderBuffer &buffer,
     if (cache == nullptr) {
         cache = new LiquidRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
     b2World*& _world = cache->_world;
 
@@ -597,6 +601,8 @@ void LiquidEffect::Render(RenderBuffer &buffer,
     if (buffer.needToInit)
     {
         buffer.needToInit = false;
+
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
 
         if (_world != nullptr)
         {

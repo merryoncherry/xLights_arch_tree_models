@@ -196,7 +196,9 @@ void CirclesEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Rende
 
     if (buffer.needToInit || radius != effectObjects[0]._radius || number != cache->numBalls || cache->metaType != plasma)
     {
-        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
+        if (buffer.needToInit) {
+            cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
+        }
         for (int ii = 0; ii < number; ii++)
         {
             int colorIdx = 0;
