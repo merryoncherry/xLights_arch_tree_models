@@ -37,54 +37,6 @@ class wxString;
 #define TENDRIL_OFFSETY_MIN -100
 #define TENDRIL_OFFSETY_MAX 100
 
-class TendrilNode
-{
-    public:
-    float x;
-    float y;
-    float vx;
-    float vy;
-
-    TendrilNode(float x_, float y_);
-    wxPoint* Point();
-};
-
-class ATendril
-{
-    float _friction;
-	size_t _size;
-	float _dampening;
-	float _tension;
-	float _spring;
-	size_t _thickness;
-    int _lastWidth = -1;
-    int _lastHeight = -1;
-
-    std::list<TendrilNode*> _nodes;
-
-	public:
-
-	~ATendril();
-	ATendril(float friction, int size, float dampening, float tension, float spring, const wxPoint& start);
-    void Update(wxPoint* target, int tunemovement, int width, int height);
-	void Draw(PathDrawingContext* gc, xlColor colour, int thickness);
-	wxPoint* LastLocation();
-};
-
-class Tendril
-{
-	std::list<ATendril*> _tendrils;
-
-	public:
-
-	~Tendril();
-	Tendril(float friction, int trails, int size, float dampening, float tension, float springbase, float springincr, const wxPoint& start);
-	void UpdateRandomMove(int tunemovement, int width, int height);
-    void Update(wxPoint* target, int tunemovement, size_t width, size_t height);
-    void Update(int x, int y, int tunemovement, size_t width, size_t height);
-    void Draw(PathDrawingContext* gc, xlColor colour, int thickness);
-};
-
 class TendrilEffect : public RenderableEffect
 {
 public:
