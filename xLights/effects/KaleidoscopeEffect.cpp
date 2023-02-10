@@ -392,7 +392,8 @@ void KaleidoscopeEffect::Render(Effect *eff, const SettingsMap &SettingsMap, Ren
         //int set = 0;
 
         //DumpUsed(currentUsed, buffer.BufferWi, buffer.BufferHt);
-        parallel_for(0, buffer.BufferHt, [&currentUsed, this, &buffer, &edge, &setSinceBegin] (int y) {
+        auto nextUsed = currentUsed;
+        parallel_for(0, buffer.BufferHt, [&currentUsed, &nextUsed, this, &buffer, &edge, &setSinceBegin] (int y) {
             for (int x = 0; x < buffer.BufferWi; x++) {
                 if (!currentUsed[x][y]) {
                     // this pixel needs to be set
@@ -400,14 +401,16 @@ void KaleidoscopeEffect::Render(Effect *eff, const SettingsMap &SettingsMap, Ren
                     if (source.first >= 0 && source.first < buffer.BufferWi && source.second >= 0 && source.second < buffer.BufferHt) {
                         if (currentUsed[source.first][source.second]) {
                             buffer.SetPixel(x, y, buffer.GetPixel(source.first, source.second));
-                            currentUsed[x][y] = true;
+                            nextUsed[x][y] = true;
                             //set++;
                             setSinceBegin++;
                         }
                     }
                 }
             }
-        });
+        }, 999999999);
+        currentUsed = nextUsed;
+
         //logger_base.debug("   set this iteration %d", set);
         ++edge;
         if (edge == edges.end()) {
