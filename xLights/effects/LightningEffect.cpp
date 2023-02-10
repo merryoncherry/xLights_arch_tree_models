@@ -88,6 +88,12 @@ void LightningEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
     //int botY = SettingsMap.GetInt("SLIDER_Lightning_BOTY", 0);
     int DIRECTION = GetLightningEffect(SettingsMap["CHOICE_Lightning_Direction"]);
 
+    EffectRenderStatePRNG prng;
+    prng.seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
+    prng.prngnext(); // Seed is very close by, doing this just in case, but never checked if it's really a concern
+    prng.prngnext();
+    prng.prngnext();
+
     if (Number_Bolts == 0) {
         Number_Bolts = 1;
     }
@@ -118,17 +124,17 @@ void LightningEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
 
     int xoffset = curState * botX / 10.0;
     for(int i = 0; i <= segment; i++) {
-        int j = rand() + 1;
+        int j = prng.prngint(2000000000) + 1;
         int x2 = 0;
         int y2 = 0;
         if(DIRECTION==UP || DIRECTION==DOWN) {
             if(i % 2 == 0) { // Every even segment will alternate direction
-                if (rand() % 2 == 0) // target x is to the left
+                if (prng.prngint(2) == 0) // target x is to the left
                     x2 = xc + topX - (j % Number_Segments);
-                else // but randomely we reverse direction, also make it a larger jag
+                else // but randomly we reverse direction, also make it a larger jag
                     x2 = xc + topX + (2 * (j % Number_Segments));
             } else { // odd segments will
-                if (rand() % 2 == 0) // move to the right
+                if (prng.prngint(2) == 0) // move to the right
                     x2 = xc + topX + (j % Number_Segments);
                 else // but sometimes move 3 units to left.
                     x2 = xc + topX - (3 * (j % Number_Segments));
@@ -148,11 +154,11 @@ void LightningEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
             if (i > (segment / 2)) {
                 int x3 = 0;
                 if (i % 2 == 1) {
-                    if (rand()%2==1)
+                    if (prng.prngint(2)==1)
                         x3 = xc + topX - (j % Number_Segments);
                     else  x3 = xc + topX + (2 * (j % Number_Segments));
                 } else {
-                    if (rand() % 2 == 1)
+                    if (prng.prngint(2) == 1)
                         x3 = xc + topX + (j % Number_Segments);
                     else
                         x3 = xc + topX - (3 * (j % Number_Segments));
