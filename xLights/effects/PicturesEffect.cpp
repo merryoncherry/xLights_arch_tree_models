@@ -942,11 +942,16 @@ void PicturesEffect::Render(RenderBuffer& buffer,
 
     // add shimmer effect which just randomly turns off pixels
     if (shimmer) {
+        EffectRenderStatePRNG prng;
+        prng.seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), PicturesEffectId);
+        prng.prngnext();
+        prng.prngnext();
+
         c = xlBLACK;
         xlColor color;
         for (int x = 0; x < BufferWi; x++) {
             for (int y = 0; y < BufferHt; y++) {
-                if (rand01() > 0.5) {
+                if (prng.prnguniform() > 0.5) {
                     buffer.GetPixel(x, y, color);
                     if (color != xlBLACK) {
                         buffer.ProcessPixel(x, y, c, false);
