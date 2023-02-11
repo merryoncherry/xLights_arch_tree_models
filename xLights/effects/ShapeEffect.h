@@ -139,7 +139,7 @@ protected:
     virtual xlEffectPanel* CreatePanel(wxWindow* parent) override;
 
 private:
-    static int DecodeShape(const std::string& shape);
+    static int DecodeShape(EffectRenderStatePRNG* prng, const std::string& shape);
     void SetPanelTimingTracks() const;
     void Drawcircle(RenderBuffer& buffer, int xc, int yc, double radius, xlColor color, int thickness) const;
     void Drawheart(RenderBuffer& buffer, int xc, int yc, double radius, xlColor color, int thickness, double rotation) const;

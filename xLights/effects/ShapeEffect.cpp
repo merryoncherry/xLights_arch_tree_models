@@ -260,7 +260,7 @@ bool compare_shapes(const ShapeData* first, const ShapeData* second)
     return first->_oset > second->_oset;
 }
 
-class ShapeRenderCache : public EffectRenderCache {
+class ShapeRenderCache : public EffectRenderStatePRNG {
 
 public:
     ShapeRenderCache() { _lastColorIdx = -1; _sinceLastTriggered = 0; }
@@ -291,12 +291,12 @@ public:
         }
     }
 
-    void AddShape(wxPoint centre, float size, xlColor color, int oset, int shape, int angle, int speed, bool randomMovement, bool holdColour, int colourIndex)
+    void AddShape(EffectRenderStatePRNG *cache, wxPoint centre, float size, xlColor color, int oset, int shape, int angle, int speed, bool randomMovement, bool holdColour, int colourIndex)
     {
         if (randomMovement)
         {
-            speed = rand01() * (SHAPE_VELOCITY_MAX - SHAPE_VELOCITY_MIN) - SHAPE_VELOCITY_MIN;
-            angle = rand01() * (SHAPE_DIRECTION_MAX - SHAPE_DIRECTION_MIN) - SHAPE_VELOCITY_MIN;
+            speed = cache->prnguniform() * (SHAPE_VELOCITY_MAX - SHAPE_VELOCITY_MIN) - SHAPE_VELOCITY_MIN;
+            angle = cache->prnguniform() * (SHAPE_DIRECTION_MAX - SHAPE_DIRECTION_MIN) - SHAPE_VELOCITY_MIN;
         }
         _shapes.push_back(new ShapeData(centre, size, oset, color, shape, angle, speed, holdColour, colourIndex));
     }
@@ -331,7 +331,7 @@ public:
     }
 };
 
-int ShapeEffect::DecodeShape(const std::string& shape)
+int ShapeEffect::DecodeShape(EffectRenderStatePRNG *prng, const std::string& shape)
 {
     if (shape == "Circle") {
         return RENDER_SHAPE_CIRCLE;
@@ -369,7 +369,7 @@ int ShapeEffect::DecodeShape(const std::string& shape)
         return RENDER_SHAPE_SVG;
     }
 
-    return rand01() * 13; // exclude emoji
+    return prng->prngint(14); // exclude emoji
 }
 
 static int mapSkinTone(const std::string &v) {
@@ -413,8 +413,6 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
 
     int rotation = GetValueCurveInt("Shape_Rotation", 0, SettingsMap, oset, SHAPE_ROTATION_MIN, SHAPE_ROTATION_MAX, buffer.GetStartTimeMS(), buffer.GetEndTimeMS());
 
-    int Object_To_Draw = DecodeShape(Object_To_DrawStr);
-
     float f = 0.0;
     bool useMusic = SettingsMap.GetBool("CHECKBOX_Shape_UseMusic", false);
     float sensitivity = (float)SettingsMap.GetInt("SLIDER_Shape_Sensitivity", 50) / 100.0;
@@ -431,11 +429,14 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
         }
     }
 
-    ShapeRenderCache *cache = (ShapeRenderCache*)buffer.infoCache[id];
+    ShapeRenderCache* cache = (ShapeRenderCache*)buffer.infoCache[id];
     if (cache == nullptr) {
         cache = new ShapeRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
+
+    int Object_To_Draw = DecodeShape(cache, Object_To_DrawStr);
 
     std::list<ShapeData*>& _shapes = cache->_shapes;
     int& _lastColorIdx = cache->_lastColorIdx;
@@ -448,7 +449,7 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
 
     if (buffer.needToInit) {
         buffer.needToInit = false;
-
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
         _sinceLastTriggered = 0;
 
         if (Object_To_Draw == RENDER_SHAPE_EMOJI) {
@@ -476,7 +477,7 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
             for (int i = _shapes.size(); i < count; ++i) {
                 wxPoint pt;
                 if (randomLocation) {
-                    pt = wxPoint(rand01() * buffer.BufferWi, rand01() * buffer.BufferHt);
+                    pt = wxPoint(cache->prnguniform() * buffer.BufferWi, cache->prnguniform() * buffer.BufferHt);
                 } else {
                     pt = wxPoint(xc, yc);
                 }
@@ -490,10 +491,10 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
                 int os = 0;
                 if (startRandomly)
                 {
-                    os = rand01() * lifetimeFrames;
+                    os = cache->prnguniform() * lifetimeFrames;
                 }
 
-                cache->AddShape(pt, startSize + os * growthPerFrame, buffer.palette.GetColor(_lastColorIdx), os, Object_To_Draw, direction, velocity, randomMovement, holdColour, _lastColorIdx);
+                cache->AddShape(cache, pt, startSize + os * growthPerFrame, buffer.palette.GetColor(_lastColorIdx), os, Object_To_Draw, direction, velocity, randomMovement, holdColour, _lastColorIdx);
             }
             cache->SortShapes();
         }
@@ -535,7 +536,7 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
                         wxPoint pt;
                         if (randomLocation)
                         {
-                            pt = wxPoint(rand01() * buffer.BufferWi, rand01() * buffer.BufferHt);
+                            pt = wxPoint(cache->prnguniform() * buffer.BufferWi, cache->prnguniform() * buffer.BufferHt);
                         }
                         else
                         {
@@ -549,7 +550,7 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
                             _lastColorIdx = 0;
                         }
 
-                        cache->AddShape(pt, startSize, buffer.palette.GetColor(_lastColorIdx), 0, Object_To_Draw, direction, velocity, randomMovement, holdColour, _lastColorIdx);
+                        cache->AddShape(cache, pt, startSize, buffer.palette.GetColor(_lastColorIdx), 0, Object_To_Draw, direction, velocity, randomMovement, holdColour, _lastColorIdx);
                         break;
                     }
                 }
@@ -567,7 +568,7 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
                 wxPoint pt;
                 if (randomLocation)
                 {
-                    pt = wxPoint(rand01() * buffer.BufferWi, rand01() * buffer.BufferHt);
+                    pt = wxPoint(cache->prnguniform() * buffer.BufferWi, cache->prnguniform() * buffer.BufferHt);
                 }
                 else
                 {
@@ -581,7 +582,7 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
                     _lastColorIdx = 0;
                 }
 
-                cache->AddShape(pt, startSize, buffer.palette.GetColor(_lastColorIdx), 0, Object_To_Draw, direction, velocity, randomMovement, holdColour, _lastColorIdx);
+                cache->AddShape(cache, pt, startSize, buffer.palette.GetColor(_lastColorIdx), 0, Object_To_Draw, direction, velocity, randomMovement, holdColour, _lastColorIdx);
             }
 
             // if music is over the trigger level for REPEATTRIGGER frames then we will trigger another firework
@@ -604,7 +605,7 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
             wxPoint pt;
             if (randomLocation)
             {
-                pt = wxPoint(rand01() * buffer.BufferWi, rand01() * buffer.BufferHt);
+                pt = wxPoint(cache->prnguniform() * buffer.BufferWi, cache->prnguniform() * buffer.BufferHt);
             }
             else
             {
@@ -618,7 +619,7 @@ void ShapeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderB
                 _lastColorIdx = 0;
             }
 
-            cache->AddShape(pt, startSize, buffer.palette.GetColor(_lastColorIdx), 0, Object_To_Draw, direction, velocity, randomMovement, holdColour, _lastColorIdx);
+            cache->AddShape(cache, pt, startSize, buffer.palette.GetColor(_lastColorIdx), 0, Object_To_Draw, direction, velocity, randomMovement, holdColour, _lastColorIdx);
         }
     }
 

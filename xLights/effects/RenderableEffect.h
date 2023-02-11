@@ -31,6 +31,7 @@ class wxSpinCtrl;
 class xlEffectPanel;
 class EffectManager;
 class EffectLayer;
+class EffectRenderStatePRNG;
 
 class RenderableEffect
 {
