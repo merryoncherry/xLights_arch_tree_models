@@ -146,9 +146,12 @@ void SpiralsEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
                 }
             }
         };
-        
-        if ((!isSpacial && !Blend) && SpiralThickness > 2) {
+
+        if ((!isSpacial && !Blend) && SpiralThickness > 999999999) {
+        //if ((!isSpacial && !Blend) && SpiralThickness > 2) {
             // if we aren't blending or dealing with spacial, we can use parallel
+            // This goes in a vertical direction; potential for splash damage.  Not clear what it has to do with spatial either.
+            //   Or the performance benefit; the height would determine that I suppose.  Should be possible to rasterize
             parallel_for(0, SpiralThickness, [&spiralF](int i) { spiralF(i); }, 1);
         } else {
             for (int i = 0; i < SpiralThickness; i++) {
