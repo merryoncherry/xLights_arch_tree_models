@@ -272,7 +272,7 @@ void VUMeterEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Rende
         );
 }
 
-class VUMeterRenderCache : public EffectRenderCache
+class VUMeterRenderCache : public EffectRenderStatePRNG
 {
 
 public:
@@ -531,6 +531,7 @@ void VUMeterEffect::Render(RenderBuffer &buffer, SequenceElements *elements, int
 	if (cache == nullptr) {
 		cache = new VUMeterRenderCache();
 		buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
 	}
 	std::list<int>& _timingmarks = cache->_timingmarks;
 	int &_lasttimingmark = cache->_lasttimingmark;
@@ -546,6 +547,7 @@ void VUMeterEffect::Render(RenderBuffer &buffer, SequenceElements *elements, int
 	if (buffer.needToInit)
 	{
         buffer.needToInit = false;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
         _lineHistory.clear();
         _nCount = 0;
         _colourindex = -1;
@@ -2792,9 +2794,10 @@ void VUMeterEffect::RenderLevelBarFrame(RenderBuffer &buffer, int bars, int sens
             }
 
             if (random && bars > 2) {
+                auto cache = static_cast<VUMeterRenderCache*>(buffer.infoCache[id]);
                 int lb = lastbar;
                 while (lb == (int)lastbar) {
-                    lastbar = 1 + rand01() * bars;
+                    lastbar = 1 + cache->prnguniform() * bars;
                 }
                 if (lastbar > bars) lastbar = 1;
             }
@@ -2863,9 +2866,10 @@ void VUMeterEffect::RenderTimingEventBarFrame(RenderBuffer &buffer, int bars, st
                 }
 
                 if (random && bars > 2) {
+                    auto cache = static_cast<VUMeterRenderCache*>(buffer.infoCache[id]);
                     int lb = lastbar;
                     while (lb == (int)lastbar) {
-                        lastbar = 1 + rand01() * bars;
+                        lastbar = 1 + cache->prnguniform() * bars;
                     }
                     if (lastbar > bars + 1) lastbar = 1;
                 }
@@ -2956,9 +2960,10 @@ void VUMeterEffect::RenderNoteLevelBarFrame(RenderBuffer &buffer, int bars, int 
             }
 
             if (random && bars > 2) {
+                auto cache = static_cast<VUMeterRenderCache*>(buffer.infoCache[id]);
                 int lb = lastbar;
                 while (lb == (int)lastbar) {
-                    lastbar = 1 + rand01() * bars;
+                    lastbar = 1 + cache->prnguniform() * bars;
                 }
                 if (lastbar > bars) lastbar = 1;
             }
