@@ -2735,6 +2735,7 @@ void LayoutPanel::OnButtonSavePreviewClick(wxCommandEvent& event)
     SaveEffects();
     if (xlights->IsControllersAndLayoutTabSaveLinked()) {
         xlights->SaveNetworksFile();
+        xlights->UpdateLayoutSave(); // SaveEffects tried to do this, but if the saves are linked it is marked dirty til nets are saved.
     }
 }
 
@@ -5660,6 +5661,7 @@ void LayoutPanel::SetTreeSubModelSelected(Model* model, bool isPrimary) {
 }
 
 void LayoutPanel::CheckModelForOverlaps(Model* model) {
+    // this is the channel range of the clicked on model
     int mStart = model->GetNumberFromChannelString(model->ModelStartChannel);
     int mEnd = model->GetLastChannel();
 
@@ -5670,20 +5672,13 @@ void LayoutPanel::CheckModelForOverlaps(Model* model) {
             ModelTreeData *data = dynamic_cast<ModelTreeData*>(TreeListViewModels->GetItemData(item));
             Model *mm = data != nullptr ? data->GetModel() : nullptr;
             if (mm != nullptr && mm != selectedBaseObject) {
+                // this is the channel range of the model we are checking
                 int startChan = mm->GetNumberFromChannelString(mm->ModelStartChannel);
                 int endChan = mm->GetLastChannel();
-                if ((startChan >= mStart) && (endChan <= mEnd)) {
-                    mm->Overlapping = true;
-                }
-                else if ((startChan >= mStart) && (startChan <= mEnd)) {
-                    mm->Overlapping = true;
-                }
-                else if ((endChan >= mStart) && (endChan <= mEnd)) {
-                    mm->Overlapping = true;
-                }
-                else {
-                    mm->Overlapping = false;
-                }
+
+                mm->Overlapping = ((mStart <= startChan && mEnd >= startChan) ||
+                                   (mStart <= endChan && mEnd >= endChan) ||
+                                   (mStart >= startChan && mEnd <= endChan));
             }
         }
     }
