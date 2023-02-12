@@ -68,7 +68,7 @@ public:
     }
 };
 
-class StrobeRenderCache : public EffectRenderCache {
+class StrobeRenderCache : public EffectRenderStatePRNG {
 public:
     StrobeRenderCache() {};
     virtual ~StrobeRenderCache() {};
@@ -110,6 +110,7 @@ void StrobeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Render
     if (cache == nullptr) {
         cache = new StrobeRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
     std::list<StrobeClass> &strobe = cache->strobe;
 
@@ -123,16 +124,17 @@ void StrobeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Render
 
     if (buffer.needToInit) {
         buffer.needToInit = false;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
         strobe.clear();
 
         // prepopulate first frame
         for (int i = 0; i < Number_Strobes * StrobeDuration; i++) {
             xlColor color;
-            ColorIdx = rand() % colorcnt;
+            ColorIdx = cache->prngint(colorcnt);
             buffer.palette.GetHSV(ColorIdx, hsv); // take first checked color as color of flash
             buffer.palette.GetColor(ColorIdx, color); // take first checked color as color of flash
-            strobe.push_back(StrobeClass(rand() % buffer.BufferWi,
-                rand() % buffer.BufferHt, i % StrobeDuration, hsv, color));
+            strobe.push_back(StrobeClass(cache->prngint(buffer.BufferWi),
+                cache->prngint(buffer.BufferHt), i % StrobeDuration, hsv, color));
         }
     }
 
@@ -140,11 +142,11 @@ void StrobeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Render
     while (strobe.size() < Number_Strobes * StrobeDuration) {
         HSVValue hsv;
         xlColor color;
-        ColorIdx = rand() % colorcnt;
+        ColorIdx = cache->prngint(colorcnt);
         buffer.palette.GetHSV(ColorIdx, hsv); // take first checked color as color of flash
         buffer.palette.GetColor(ColorIdx, color); // take first checked color as color of flash
-        strobe.push_back(StrobeClass(rand() % buffer.BufferWi,
-            rand() % buffer.BufferHt, StrobeDuration, hsv, color));
+        strobe.push_back(StrobeClass(cache->prngint(buffer.BufferWi),
+            cache->prngint(buffer.BufferHt), StrobeDuration, hsv, color));
     }
 
     // render strobe, we go through all storbes and decide if they should be turned on
@@ -174,7 +176,7 @@ void StrobeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Render
         }
 
         if (Strobe_Type == 2) {
-            int r = rand() % 2;
+            int r = cache->prngint(2);
             if (r == 0) {
                 buffer.SetPixel(x, y - 1, color);
                 buffer.SetPixel(x, y + 1, color);
@@ -190,7 +192,7 @@ void StrobeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Render
             buffer.SetPixel(x + 1, y, color);
         }
         if (Strobe_Type == 4) {
-            int r = rand() % 2;
+            int r = cache->prngint(2);
             if (r == 0) {
                 buffer.SetPixel(x, y - 1, color);
                 buffer.SetPixel(x, y + 1, color);

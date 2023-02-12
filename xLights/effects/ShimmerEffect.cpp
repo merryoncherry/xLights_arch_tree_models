@@ -123,10 +123,13 @@ void ShimmerEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Rende
 
     xlColor color;
     buffer.palette.GetColor(ColorIdx, color);
+    EffectRenderStatePRNG prng;
+    prng.seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
+
     for (int y = 0; y < buffer.BufferHt; y++) {
         for (int x = 0; x < buffer.BufferWi; x++) {
             if (Use_All_Colors) {                         // Should we randomly assign colors from palette or cycle thru sequentially?
-                ColorIdx = rand() % colorcnt;             // Select random numbers from 0 up to number of colors the user has checked. 0-5 if 6 boxes checked
+                ColorIdx = prng.prngint(colorcnt);             // Select random numbers from 0 up to number of colors the user has checked. 0-5 if 6 boxes checked
                 buffer.palette.GetColor(ColorIdx, color); // Now go and get the hsv value for this ColorIdx
             } else {
                 buffer.palette.GetSpatialColor(ColorIdx, (float)x / (float)buffer.BufferWi, (float)y / (float)buffer.BufferHt, color);
