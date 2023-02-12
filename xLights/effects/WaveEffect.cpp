@@ -78,7 +78,7 @@ void WaveEffect::adjustSettings(const std::string& version, Effect* effect, bool
 #endif
 
 
-class WaveRenderCache : public EffectRenderCache {
+class WaveRenderCache : public EffectRenderStatePRNG {
 public:
     WaveRenderCache() {};
     virtual ~WaveRenderCache() {};
@@ -154,6 +154,7 @@ void WaveEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderBu
     if (cache == nullptr) {
         cache = new WaveRenderCache();
         buffer.infoCache[id] = cache;
+        cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
     }
     std::vector<int> &WaveBuffer0 = cache->WaveBuffer;
 
@@ -178,20 +179,23 @@ void WaveEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderBu
         if (r < 0) r = 0; //turn into straight line; don't completely disappear
     } else if (WaveType == WAVETYPE_IVYFRACTAL) { //generate branches at start of effect
         if (buffer.needToInit || (WaveBuffer0.size() != NumberWaves * buffer.BufferWi)) {
+            if (buffer.needToInit) {
+                cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
+            }
             r = 0;
             debug(10, "regen wave path, state %0.1f", state);
             int delay = 0;
             int delta = 0; //next branch length, angle
             WaveBuffer0.resize(NumberWaves * buffer.BufferWi);
             for (int x1 = 0; x1 < NumberWaves * buffer.BufferWi; ++x1) {
-                //                if (delay < 1) angle = (rand() % 45) - 22.5;
+                //                if (delay < 1) angle = (cache->prngint(45)) - 22.5;
                 //                int xx = WaveDirection? NumberWaves * BufferWi - x - 1: x;
                 WaveBuffer0[x1] = (delay-- > 0) ? WaveBuffer0[x1 - 1] + delta : 2 * yc;
                 if (WaveBuffer0[x1] >= 2 * buffer.BufferHt) { delta = -2; WaveBuffer0[x1] = 2 * buffer.BufferHt - 1; if (delay > 1) delay = 1; }
                 if (WaveBuffer0[x1] < 0) { delta = 2; WaveBuffer0[x1] = 0; if (delay > 1) delay = 1; }
                 if (delay < 1) {
-                    delta = (rand() % 7) - 3;
-                    delay = 2 + (rand() % 3);
+                    delta = (cache->prngint(7)) - 3;
+                    delay = 2 + (cache->prngint(3));
                 }
             }
             buffer.needToInit = false;
