@@ -71,7 +71,7 @@ void SpirographEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Re
     int width = GetValueCurveInt("Spirograph_Width", 1, SettingsMap, oset, SPIROGRAPH_WIDTH_MIN, SPIROGRAPH_WIDTH_MAX, buffer.GetStartTimeMS(), buffer.GetEndTimeMS());
 
     int d_mod;
-    HSVValue hsv, hsv0, hsv1;
+    HSVValue hsv, hsv0;
     size_t colorcnt = buffer.GetColorCount();
 
     int state = (buffer.curPeriod - buffer.curEffStartPer) * sspeed * buffer.frameTimeInMs / 50;
@@ -90,8 +90,6 @@ void SpirographEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Re
     if (r > R) r = R;
     float d = xc * (int_d / 100.0);
 
-    //  palette.GetHSV(1, hsv1);
-    //
     //    A hypotrochoid is a roulette traced by a point attached to a circle of radius r rolling around the inside of a fixed circle of radius R, where the point is a distance d from the center of the interior circle.
     //The parametric equations for a hypotrochoid are:[citation needed]
     //
@@ -126,8 +124,6 @@ void SpirographEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Re
         buffer.palette.GetHSV(ColorIdx, hsv); // Now go and get the hsv value for this ColorIdx
 
         buffer.palette.GetHSV(0, hsv0);
-        ColorIdx = (colorcnt > 0) ? (state + rand()) % colorcnt : 0; // Select random numbers from 0 up to number of colors the user has checked. 0-5 if 6 boxes checked
-        buffer.palette.GetHSV(ColorIdx, hsv1); // Now go and get the hsv value for this ColorIdx
 
         // work out the normal to the point being drawn
         float tt = ((R - r) / r) * t;
