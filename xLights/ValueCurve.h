@@ -147,9 +147,15 @@ public:
     float GetOutputValueAt(float offset, long startMS, long endMS);
     float GetOutputValueAtDivided(float offset, long startMS, long endMS);
     float GetScaledValue(float offset) const;
-    void SetActive(bool a) { _active = a; RenderType(); }
+    void SetActive(bool a) {
+        _active = a;
+        RenderType();
+    }
     bool IsActive() const { return _active && IsOk(); }
-    void ToggleActive() { _active = !_active; if (_active) RenderType(); }
+    void ToggleActive() {
+        _active = !_active;
+        if (_active) RenderType();
+    }
     void SetValueAt(float offset, float value);
     void DeletePoint(float offset);
     bool IsSetPoint(float offset);

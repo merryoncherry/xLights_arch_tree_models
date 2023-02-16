@@ -476,6 +476,12 @@ public:
         // TODO: This is not what they advise.  Can change.
         return prngnext() % mx;
     }
+
+    // Random boolean
+    uint32_t prngbool(int pct_true = 50)
+    {
+        return prngint(100) >= pct;
+    }
     
     // Random int in the closed interval [mn, mx]
     int32_t prngintc(int32_t mn, int32_t mx)
