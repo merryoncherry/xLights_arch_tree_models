@@ -487,8 +487,7 @@ public:
     // Random boolean
     bool prngbool(int pct_true = 50)
     {
-        return prngint(2) > 0;
-        //return prngint(100) >= pct_true;
+        return prngint(100) < pct_true;
     }
     
     // Random int in the closed interval [mn, mx]
@@ -596,7 +595,7 @@ public:
         prngnext();
     }
 
-        /*
+    /*
      * The PRNG should be seeded.  The idea here is that you might want it consistent though,
      *   what should influence it?  In some cases, time would be good, but not some other times
      */

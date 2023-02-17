@@ -486,9 +486,9 @@ void SnowflakesEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Re
                                     x0 = x - 1;
                                 }
                                 else {
-                                    switch (cache->prngint(100) >= 50)
+                                    switch (cache->prngbool())
                                     {
-                                    case false:
+                                    case true:
                                         x0 = x + 1;
                                         break;
                                     default:

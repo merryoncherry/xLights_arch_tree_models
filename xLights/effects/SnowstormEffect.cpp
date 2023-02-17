@@ -155,7 +155,7 @@ void SnowstormEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Ren
     if (cache == nullptr) {
         cache = new SnowstormRenderCache();
         buffer.infoCache[id] = cache;
-     }
+    }
     std::list<SnowstormClass>& SnowstormItems = cache->SnowstormItems;
 
     if (buffer.needToInit || Count != cache->LastSnowstormCount) {

@@ -176,8 +176,7 @@ void StrobeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Render
         }
 
         if (Strobe_Type == 2) {
-            int r = cache->prngint(2);
-            if (r == 0) {
+            if (!cache->prngbool()) {
                 buffer.SetPixel(x, y - 1, color);
                 buffer.SetPixel(x, y + 1, color);
             } else {
@@ -192,8 +191,7 @@ void StrobeEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Render
             buffer.SetPixel(x + 1, y, color);
         }
         if (Strobe_Type == 4) {
-            int r = cache->prngint(2);
-            if (r == 0) {
+            if (!cache->prngbool()) {
                 buffer.SetPixel(x, y - 1, color);
                 buffer.SetPixel(x, y + 1, color);
                 buffer.SetPixel(x - 1, y, color);

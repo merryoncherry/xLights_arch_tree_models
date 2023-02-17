@@ -129,12 +129,12 @@ void LightningEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
         int y2 = 0;
         if(DIRECTION==UP || DIRECTION==DOWN) {
             if(i % 2 == 0) { // Every even segment will alternate direction
-                if (prng.prngint(2) == 0) // target x is to the left
+                if (!prng.prngbool()) // target x is to the left
                     x2 = xc + topX - (j % Number_Segments);
                 else // but randomly we reverse direction, also make it a larger jag
                     x2 = xc + topX + (2 * (j % Number_Segments));
             } else { // odd segments will
-                if (prng.prngint(2) == 0) // move to the right
+                if (!prng.prngbool()) // move to the right
                     x2 = xc + topX + (j % Number_Segments);
                 else // but sometimes move 3 units to left.
                     x2 = xc + topX - (3 * (j % Number_Segments));
@@ -154,11 +154,11 @@ void LightningEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
             if (i > (segment / 2)) {
                 int x3 = 0;
                 if (i % 2 == 1) {
-                    if (prng.prngint(2)==1)
+                    if (prng.prngbool())
                         x3 = xc + topX - (j % Number_Segments);
                     else  x3 = xc + topX + (2 * (j % Number_Segments));
                 } else {
-                    if (prng.prngint(2) == 1)
+                    if (prng.prngbool())
                         x3 = xc + topX + (j % Number_Segments);
                     else
                         x3 = xc + topX - (3 * (j % Number_Segments));
