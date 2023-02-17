@@ -471,16 +471,24 @@ public:
     }
 
     // Random int in the interval [0, mx)
-    uint32_t prngint(uint32_t mx)
+    int32_t prngint(uint32_t mx)
     {
-        // TODO: This is not what they advise.  Can change.
+        // This is not what they advise, should mx be a small power of 2.  Can change.
+        return prngnext() % mx;
+    }
+
+    // Random unsigned int in the interval [0, mx)
+    uint32_t prnguint(uint32_t mx)
+    {
+        // This is not what they advise, should mx be a small power of 2.  Can change.
         return prngnext() % mx;
     }
 
     // Random boolean
-    uint32_t prngbool(int pct_true = 50)
+    bool prngbool(int pct_true = 50)
     {
-        return prngint(100) >= pct;
+        return prngint(2) > 0;
+        //return prngint(100) >= pct_true;
     }
     
     // Random int in the closed interval [mn, mx]

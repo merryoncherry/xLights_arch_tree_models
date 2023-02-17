@@ -209,7 +209,7 @@ void CirclesEffect::Render(Effect* effect, const SettingsMap& SettingsMap, Rende
                 start_x = cache->prngint(buffer.BufferWi);
                 start_y = cache->prngint(buffer.BufferHt);
                 colorIdx = ii % colorCnt;
-                angle = cache->prngint(2) ? cache->prngint(90) : -cache->prngint(90);
+                angle = cache->prngbool() ? cache->prngint(90) : -cache->prngint(90);
                 spd = cache->prngint(3) + 1;
             }
             else
