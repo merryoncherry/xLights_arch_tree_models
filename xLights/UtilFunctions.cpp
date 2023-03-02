@@ -1469,8 +1469,26 @@ wxString CompressNodes(const wxString& nodes)
     int last = -1;
     auto as = wxSplit(s, ',');
 
+    // There is no difference between empty row and row with one blank pixel (shrug)
+    // We will take removal of the last comma approach
+
     for (const auto& i : as)
     {
+        if (i.empty()) {
+            // Flush out start/last if any
+            if (start != -1) {
+                if (last != start) {
+                    res += wxString::Format("%d-%d,", start, last);
+                } else {
+                    res += wxString::Format("%d,", start);
+                }
+            }
+            // Add empty and separator
+            res += ",";
+            start = last = -1;
+            dir = 0;
+            continue;
+        }
         if (start == -1)
         {
             start = wxAtoi(i);
@@ -1492,8 +1510,7 @@ wxString CompressNodes(const wxString& nodes)
                 }
                 else
                 {
-                    if (res != "") res += ",";
-                    res += wxString::Format("%d", start);
+                    res += wxString::Format("%d,", start);
                     start = j;
                     dir = 0;
                 }
@@ -1506,8 +1523,7 @@ wxString CompressNodes(const wxString& nodes)
                 }
                 else
                 {
-                    if (res != "") res += ",";
-                    res += wxString::Format("%d-%d", start, last);
+                    res += wxString::Format("%d-%d,", start, last);
                     start = j;
                     dir = 0;
                 }
@@ -1520,16 +1536,17 @@ wxString CompressNodes(const wxString& nodes)
     {
         // nothing to do
     }
-    if (start == last)
+    else if (start == last)
     {
-        if (res != "") res += ",";
-        res += wxString::Format("%d", start);
+        res += wxString::Format("%d,", start);
     }
     else
     {
-        if (res != "") res += ",";
-        res += wxString::Format("%d-%d", start, last);
+        res += wxString::Format("%d-%d,", start, last);
     }
+
+    if (!res.empty())
+        res = res.substr(0, res.length() - 1); // Chop last comma
 
     return res;
 }
@@ -1540,6 +1557,7 @@ wxString ExpandNodes(const wxString& nodes)
 
     auto as = wxSplit(nodes, ',');
 
+    bool first = true;
     for (const auto& i : as)
     {
         if (i.Contains("-"))
@@ -1553,20 +1571,20 @@ wxString ExpandNodes(const wxString& nodes)
                 {
                     for (int j = start; j <= end; j++)
                     {
-                        if (res != "") res += ",";
+                        if (!first || res != "") res += ",";
                         res += wxString::Format("%d", j);
                     }
                 }
                 else if (start == end)
                 {
-                    if (res != "") res += ",";
+                    if (!first || res != "") res += ",";
                     res += wxString::Format("%d", start);
                 }
                 else
                 {
                     for (int j = start; j >= end; j--)
                     {
-                        if (res != "") res += ",";
+                        if (!first || res != "") res += ",";
                         res += wxString::Format("%d", j);
                     }
                 }
@@ -1574,9 +1592,10 @@ wxString ExpandNodes(const wxString& nodes)
         }
         else
         {
-            if (res != "") res += ",";
+            if (!first || res != "") res += ",";
             res += i;
         }
+        first = false;
     }
     return res;
 }

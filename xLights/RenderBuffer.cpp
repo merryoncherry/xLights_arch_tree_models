@@ -990,7 +990,6 @@ void RenderBuffer::CopyNodeColorsToPixels(std::vector<uint8_t> &done) {
                 done[y*BufferWi+x] = true;
             }
         }
-
     }, 500);
 }
 
