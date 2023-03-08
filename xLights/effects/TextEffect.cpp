@@ -1359,28 +1359,28 @@ void TextEffect::FormatCountdown(int Countdown, int state, wxString& Line, Rende
     }
 }
 
-#define msgReplace(a, b, c) \
-    do                      \
-    {                    \
-       if (a.Contains(b)) { \
-           a.Replace(b, (c)); \
-       } \
-    } while (0)
+template<typename F>
+void msgReplace(wxString &a, const char *b, F c)
+{
+    if (a.Contains(b)) {
+        a.Replace(b, c());
+    }
+}
 
 void TextEffect::ReplaceVaribles(wxString& msg, RenderBuffer& buffer) const
 {
-    msgReplace(msg, "${TITLE}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::SONG));
-    msgReplace(msg, "${SONG}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::SONG));
-    msgReplace(msg, "${ARTIST}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::ARTIST));
-    msgReplace(msg, "${ALBUM}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::ALBUM));
+    msgReplace(msg, "${TITLE}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::SONG); });
+    msgReplace(msg, "${SONG}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::SONG); });
+    msgReplace(msg, "${ARTIST}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::ARTIST); });
+    msgReplace(msg, "${ALBUM}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::ALBUM); });
     if (buffer.GetMedia() != nullptr) {
-        msgReplace(msg, "${FILENAME}", buffer.GetMedia()->FileName());
+        msgReplace(msg, "${FILENAME}", [&]() { return buffer.GetMedia()->FileName(); });
     }
-    msgReplace(msg, "${AUTHOR}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::AUTHOR));
-    msgReplace(msg, "${AUTHOREMAIL}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::AUTHOR_EMAIL));
-    msgReplace(msg, "${COMMENT}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::COMMENT));
-    msgReplace(msg, "${URL}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::URL));
-    msgReplace(msg, "${WEBSITE}", buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::WEBSITE));
+    msgReplace(msg, "${AUTHOR}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::AUTHOR); });
+    msgReplace(msg, "${AUTHOREMAIL}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::AUTHOR_EMAIL); });
+    msgReplace(msg, "${COMMENT}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::COMMENT); });
+    msgReplace(msg, "${URL}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::URL); });
+    msgReplace(msg, "${WEBSITE}", [&]() { return buffer.GetXmlHeaderInfo(HEADER_INFO_TYPES::WEBSITE); });
 
     if (msg.Contains("${UPPER}")) {
         msg.Replace("${UPPER}", "");
