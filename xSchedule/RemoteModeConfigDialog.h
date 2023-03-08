@@ -11,11 +11,11 @@
  **************************************************************/
 
  //(*Headers(RemoteModeConfigDialog)
-#include <wx/dialog.h>
-#include <wx/sizer.h>
-#include <wx/spinctrl.h>
-#include <wx/stattext.h>
-//*)
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/spinctrl.h>
+ #include <wx/stattext.h>
+ //*)
 
 class RemoteModeConfigDialog: public wxDialog
 {

@@ -62,7 +62,7 @@ EventPingPanel::EventPingPanel(wxWindow* parent, OutputManager* outputManager, w
 	SpinCtrl_PingFailures = new wxSpinCtrl(this, ID_SPINCTRL1, _T("1"), wxDefaultPosition, wxDefaultSize, 0, 1, 10, 1, _T("ID_SPINCTRL1"));
 	SpinCtrl_PingFailures->SetValue(_T("1"));
 	FlexGridSizer1->Add(SpinCtrl_PingFailures, 1, wxALL|wxEXPAND, 5);
-	FlexGridSizer1->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer1->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	CheckBox_FireOnce = new wxCheckBox(this, ID_CHECKBOX1, _("Fire once only"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
 	CheckBox_FireOnce->SetValue(true);
 	FlexGridSizer1->Add(CheckBox_FireOnce, 1, wxALL|wxEXPAND, 5);

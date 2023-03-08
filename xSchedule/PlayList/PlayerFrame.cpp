@@ -40,11 +40,11 @@ PlayerFrame::PlayerFrame(wxWindow* parent, bool topmost, wxWindowID id, const wx
     //Create(parent, id, _("xPlayer"), wxDefaultPosition, wxDefaultSize, style, _T("id"));
 
     //(*Initialize(PlayerFrame)
-    Create(parent, id, _("xPlayer"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("id"));
+    Create(parent, id, _("xPlayer"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE, _T("id"));
     SetClientSize(wxDefaultSize);
     Move(wxDefaultPosition);
 
-    Connect(wxID_ANY, wxEVT_CLOSE_WINDOW, (wxObjectEventFunction)&PlayerFrame::OnClose);
+    Connect(wxID_ANY,wxEVT_CLOSE_WINDOW,(wxObjectEventFunction)&PlayerFrame::OnClose);
     //*)
 
     //Connect(wxEVT_LEFT_DOWN, (wxObjectEventFunction)&PlayerFrame::OnMouseLeftDown, 0, this);

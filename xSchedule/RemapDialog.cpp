@@ -63,10 +63,10 @@ RemapDialog::RemapDialog(wxWindow* parent, OutputManager* outputManager, std::st
     _outputManager = outputManager;
 
     //(*Initialize(RemapDialog)
-    wxFlexGridSizer* FlexGridSizer3;
-    wxFlexGridSizer* FlexGridSizer2;
     wxBoxSizer* BoxSizer1;
     wxFlexGridSizer* FlexGridSizer1;
+    wxFlexGridSizer* FlexGridSizer2;
+    wxFlexGridSizer* FlexGridSizer3;
 
     Create(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("id"));
     SetClientSize(wxDefaultSize);

@@ -11,11 +11,11 @@
  **************************************************************/
 
  //(*Headers(PlayListItemDelayPanel)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/panel.h>
-//*)
+ #include <wx/panel.h>
+ #include <wx/sizer.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class PlayListItemDelay;
 

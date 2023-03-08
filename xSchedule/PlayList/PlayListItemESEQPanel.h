@@ -11,14 +11,14 @@
  **************************************************************/
 
  //(*Headers(PlayListItemESEQPanel)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/filepicker.h>
-#include <wx/spinctrl.h>
-#include <wx/panel.h>
-#include <wx/choice.h>
-//*)
+ #include <wx/choice.h>
+ #include <wx/filepicker.h>
+ #include <wx/panel.h>
+ #include <wx/sizer.h>
+ #include <wx/spinctrl.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class PlayListItemESEQ;
 class ESEQFilePickerCtrl;
@@ -34,14 +34,14 @@ class PlayListItemESEQPanel: public wxPanel
 		virtual ~PlayListItemESEQPanel();
 
 		//(*Declarations(PlayListItemESEQPanel)
-		wxChoice* Choice_BlendMode;
-		wxStaticText* StaticText2;
-		wxStaticText* StaticText1;
-		wxStaticText* StaticText3;
 		ESEQFilePickerCtrl* FilePickerCtrl_ESEQFile;
-		wxTextCtrl* TextCtrl_Delay;
+		wxChoice* Choice_BlendMode;
 		wxSpinCtrl* SpinCtrl_Priority;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
+		wxStaticText* StaticText3;
 		wxStaticText* StaticText4;
+		wxTextCtrl* TextCtrl_Delay;
 		//*)
 
 	protected:

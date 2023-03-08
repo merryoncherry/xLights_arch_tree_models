@@ -13,10 +13,10 @@
 #include "EventPanel.h"
 
 //(*Headers(EventFPPPanel)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/spinctrl.h>
 #include <wx/panel.h>
+#include <wx/sizer.h>
+#include <wx/spinctrl.h>
+#include <wx/stattext.h>
 //*)
 
 class EventFPPPanel: public EventPanel
@@ -30,10 +30,10 @@ class EventFPPPanel: public EventPanel
         virtual void Load(EventBase* event) override;
 
 		//(*Declarations(EventFPPPanel)
-		wxStaticText* StaticText2;
+		wxSpinCtrl* SpinCtrl_Major;
 		wxSpinCtrl* SpinCtrl_Minor;
 		wxStaticText* StaticText1;
-		wxSpinCtrl* SpinCtrl_Major;
+		wxStaticText* StaticText2;
 		//*)
 
 	protected:

@@ -43,9 +43,9 @@ DimWhiteDialog::DimWhiteDialog(wxWindow* parent, OutputManager* outputManager, s
     _outputManager = outputManager;
 
 	//(*Initialize(DimWhiteDialog)
-	wxFlexGridSizer* FlexGridSizer2;
 	wxBoxSizer* BoxSizer1;
 	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
 
 	Create(parent, id, _("Dim White"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("id"));
 	SetClientSize(wxDefaultSize);

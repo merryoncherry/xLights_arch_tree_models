@@ -11,14 +11,14 @@
  **************************************************************/
 
  //(*Headers(RemapDialog)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
-#include <wx/spinctrl.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/checkbox.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/spinctrl.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class OutputManager;
 
@@ -39,19 +39,19 @@ class RemapDialog: public wxDialog
 		virtual ~RemapDialog();
 
 		//(*Declarations(RemapDialog)
-		wxCheckBox* CheckBox_Enabled;
-		wxButton* Button_Ok;
-		wxTextCtrl* TextCtrl_Description;
-		wxSpinCtrl* SpinCtrl_Channels;
-		wxStaticText* StaticText2;
-		wxStaticText* StaticText_From;
-		wxStaticText* StaticText1;
-		wxStaticText* StaticText3;
-		wxTextCtrl* TextCtrl_FromChannel;
 		wxButton* Button_Cancel;
+		wxButton* Button_Ok;
+		wxCheckBox* CheckBox_Enabled;
+		wxSpinCtrl* SpinCtrl_Channels;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
+		wxStaticText* StaticText3;
 		wxStaticText* StaticText4;
-		wxTextCtrl* TextCtrl_ToChannel;
+		wxStaticText* StaticText_From;
 		wxStaticText* StaticText_To;
+		wxTextCtrl* TextCtrl_Description;
+		wxTextCtrl* TextCtrl_FromChannel;
+		wxTextCtrl* TextCtrl_ToChannel;
 		//*)
 
 	protected:

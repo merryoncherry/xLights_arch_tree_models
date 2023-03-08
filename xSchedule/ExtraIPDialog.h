@@ -11,12 +11,12 @@
  **************************************************************/
 
  //(*Headers(ExtraIPDialog)
-#include <wx/button.h>
-#include <wx/dialog.h>
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 #include "ScheduleOptions.h"
 

@@ -11,14 +11,14 @@
  **************************************************************/
 
  //(*Headers(GammaDialog)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
-#include <wx/spinctrl.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/checkbox.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/spinctrl.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class OutputManager;
 
@@ -42,22 +42,22 @@ class GammaDialog: public wxDialog
 		virtual ~GammaDialog();
 
 		//(*Declarations(GammaDialog)
-		wxStaticText* StaticText_StartChannel;
-		wxCheckBox* CheckBox_Enabled;
+		wxButton* Button_Cancel;
 		wxButton* Button_Ok;
-		wxStaticText* StaticText_G;
-		wxTextCtrl* TextCtrl_Description;
+		wxCheckBox* CheckBox_Enabled;
 		wxCheckBox* CheckBox_Simple;
-		wxStaticText* StaticText2;
-		wxStaticText* StaticText_Simple;
-		wxStaticText* StaticText_R;
 		wxSpinCtrl* SpinCtrl_Nodes;
 		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
 		wxStaticText* StaticText3;
-		wxTextCtrl* TextCtrl_B;
-		wxTextCtrl* TextCtrl_G;
-		wxButton* Button_Cancel;
 		wxStaticText* StaticText_B;
+		wxStaticText* StaticText_G;
+		wxStaticText* StaticText_R;
+		wxStaticText* StaticText_Simple;
+		wxStaticText* StaticText_StartChannel;
+		wxTextCtrl* TextCtrl_B;
+		wxTextCtrl* TextCtrl_Description;
+		wxTextCtrl* TextCtrl_G;
 		wxTextCtrl* TextCtrl_R;
 		wxTextCtrl* TextCtrl_Simple;
 		wxTextCtrl* TextCtrl_StartChannel;

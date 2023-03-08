@@ -74,6 +74,7 @@ PlayListItemPluginPanel::PlayListItemPluginPanel(wxWindow* parent, PlayListItemP
 	FlexGridSizer1->SetSizeHints(this);
 
 	Connect(ID_TEXTCTRL3,wxEVT_COMMAND_TEXT_UPDATED,(wxObjectEventFunction)&PlayListItemPluginPanel::OnTextCtrl_NameText);
+	//Connect(ID_TEXTCTRL4,wxEVT_COMMAND_TEXT_UPDATED,(wxObjectEventFunction)&PlayListItemPluginPanel::OnTextCtrl_FNameText);
 	Connect(ID_TEXTCTRL2,wxEVT_COMMAND_TEXT_UPDATED,(wxObjectEventFunction)&PlayListItemPluginPanel::OnTextCtrl_DelayText);
 	//*)
 

@@ -11,15 +11,15 @@
  **************************************************************/
 
  //(*Headers(PlayListSimpleDialog)
-#include <wx/button.h>
-#include <wx/dialog.h>
-#include <wx/filedlg.h>
-#include <wx/notebook.h>
-#include <wx/panel.h>
-#include <wx/sizer.h>
-#include <wx/splitter.h>
-#include <wx/treectrl.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/dialog.h>
+ #include <wx/filedlg.h>
+ #include <wx/notebook.h>
+ #include <wx/panel.h>
+ #include <wx/sizer.h>
+ #include <wx/splitter.h>
+ #include <wx/treectrl.h>
+ //*)
 
 class OutputManager;
 class PlayList;

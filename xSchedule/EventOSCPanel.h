@@ -13,11 +13,11 @@
 #include "EventPanel.h"
 
 //(*Headers(EventOSCPanel)
+#include <wx/choice.h>
+#include <wx/panel.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
-#include <wx/panel.h>
-#include <wx/choice.h>
 //*)
 
 class EventOSCPanel: public EventPanel
@@ -31,14 +31,14 @@ class EventOSCPanel: public EventPanel
         virtual void Load(EventBase* event) override;
 
 		//(*Declarations(EventOSCPanel)
-		wxTextCtrl* TextCtrl_Path;
-		wxStaticText* StaticText2;
 		wxChoice* Choice_Parm1Type;
-		wxStaticText* StaticText1;
-		wxStaticText* StaticText3;
-		wxChoice* Choice_Parm3Type;
 		wxChoice* Choice_Parm2Type;
+		wxChoice* Choice_Parm3Type;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
+		wxStaticText* StaticText3;
 		wxStaticText* StaticText4;
+		wxTextCtrl* TextCtrl_Path;
 		//*)
 
 	protected:

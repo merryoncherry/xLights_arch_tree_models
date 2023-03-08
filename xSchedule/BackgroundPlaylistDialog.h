@@ -11,10 +11,10 @@
  **************************************************************/
 
 //(*Headers(BackgroundPlaylistDialog)
-#include <wx/listctrl.h>
-#include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
+#include <wx/listctrl.h>
+#include <wx/sizer.h>
 //*)
 
 #include <list>
@@ -32,8 +32,8 @@ class BackgroundPlaylistDialog: public wxDialog
 		virtual ~BackgroundPlaylistDialog();
 
 		//(*Declarations(BackgroundPlaylistDialog)
-		wxButton* Button_Ok;
 		wxButton* Button_Cancel;
+		wxButton* Button_Ok;
 		wxListView* ListView_Playlists;
 		//*)
 

@@ -51,8 +51,8 @@ PlayListItemTestPanel::PlayListItemTestPanel(wxWindow* parent, OutputManager* ou
     _test = test;
 
 	//(*Initialize(PlayListItemTestPanel)
-	wxFlexGridSizer* FlexGridSizer2;
 	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
 
 	Create(parent, id, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("id"));
 	FlexGridSizer1 = new wxFlexGridSizer(0, 2, 0, 0);

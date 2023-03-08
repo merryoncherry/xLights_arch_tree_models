@@ -11,13 +11,13 @@
  **************************************************************/
 
 //(*Headers(PlayListItemImagePanel)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
+#include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/filepicker.h>
 #include <wx/panel.h>
-#include <wx/button.h>
+#include <wx/sizer.h>
+#include <wx/stattext.h>
+#include <wx/textctrl.h>
 //*)
 
 class PlayListItemImage;
@@ -36,16 +36,16 @@ class PlayListItemImagePanel: public wxPanel
 		virtual ~PlayListItemImagePanel();
 
 		//(*Declarations(PlayListItemImagePanel)
-		wxStaticText* StaticText2;
-		wxStaticText* StaticText_Position;
-		wxStaticText* StaticText1;
 		ImageFilePickerCtrl* FilePickerCtrl_ImageFile;
-		wxStaticText* StaticText3;
+		wxButton* Button_PositionWindow;
+		wxCheckBox* CheckBox_SuppressVirtualMatrix;
 		wxCheckBox* CheckBox_Topmost;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
+		wxStaticText* StaticText3;
+		wxStaticText* StaticText_Position;
 		wxTextCtrl* TextCtrl_Delay;
 		wxTextCtrl* TextCtrl_Duration;
-		wxCheckBox* CheckBox_SuppressVirtualMatrix;
-		wxButton* Button_PositionWindow;
 		//*)
 
 	protected:

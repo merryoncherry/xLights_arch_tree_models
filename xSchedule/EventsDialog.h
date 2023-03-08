@@ -11,10 +11,10 @@
  **************************************************************/
 
 //(*Headers(EventsDialog)
-#include <wx/listctrl.h>
-#include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
+#include <wx/listctrl.h>
+#include <wx/sizer.h>
 //*)
 
 class OutputManager;
@@ -34,10 +34,10 @@ class EventsDialog: public wxDialog
 		virtual ~EventsDialog();
 
 		//(*Declarations(EventsDialog)
-		wxButton* Button_Delete;
-		wxButton* Button_Edit;
 		wxButton* Button_Add;
 		wxButton* Button_Close;
+		wxButton* Button_Delete;
+		wxButton* Button_Edit;
 		wxListView* ListView_Events;
 		//*)
 

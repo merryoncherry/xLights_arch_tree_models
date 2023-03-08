@@ -11,12 +11,12 @@
  **************************************************************/
 
  //(*Headers(PlayListItemDimPanel)
-#include <wx/panel.h>
-#include <wx/sizer.h>
-#include <wx/spinctrl.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-//*)
+ #include <wx/panel.h>
+ #include <wx/sizer.h>
+ #include <wx/spinctrl.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class OutputManager;
 class PlayListItemDim;

@@ -11,17 +11,17 @@
  **************************************************************/
 
  //(*Headers(EventDialog)
-#include <wx/notebook.h>
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/splitter.h>
-#include <wx/panel.h>
-#include <wx/choice.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
-#include <wx/choicebk.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/choice.h>
+ #include <wx/choicebk.h>
+ #include <wx/dialog.h>
+ #include <wx/notebook.h>
+ #include <wx/panel.h>
+ #include <wx/sizer.h>
+ #include <wx/splitter.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class OutputManager;
 class EventBase;
@@ -38,22 +38,22 @@ class EventDialog: public wxDialog
         void ValidateWindow();
 
 		//(*Declarations(EventDialog)
-		wxChoice* Choice_Command;
-		wxButton* Button_Ok;
-		wxTextCtrl* TextCtrl_Name;
-		wxStaticText* StaticText2;
-		wxTextCtrl* TextCtrl_P2;
-		wxStaticText* StaticText1;
-		wxStaticText* StaticText3;
-		wxPanel* Panel3;
-		wxStaticText* StaticText5;
 		wxButton* Button_Cancel;
+		wxButton* Button_Ok;
+		wxChoice* Choice_Command;
 		wxChoicebook* Choicebook_EventType;
-		wxTextCtrl* TextCtrl_P3;
 		wxPanel* Panel2;
+		wxPanel* Panel3;
 		wxSplitterWindow* SplitterWindow1;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
+		wxStaticText* StaticText3;
 		wxStaticText* StaticText4;
+		wxStaticText* StaticText5;
+		wxTextCtrl* TextCtrl_Name;
 		wxTextCtrl* TextCtrl_P1;
+		wxTextCtrl* TextCtrl_P2;
+		wxTextCtrl* TextCtrl_P3;
 		//*)
 
 	protected:

@@ -13,11 +13,11 @@
 #include "EventPanel.h"
 
 //(*Headers(EventARTNetPanel)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/spinctrl.h>
-#include <wx/panel.h>
 #include <wx/choice.h>
+#include <wx/panel.h>
+#include <wx/sizer.h>
+#include <wx/spinctrl.h>
+#include <wx/stattext.h>
 //*)
 
 class EventARTNetPanel: public EventPanel
@@ -33,11 +33,11 @@ class EventARTNetPanel: public EventPanel
 		//(*Declarations(EventARTNetPanel)
 		wxChoice* Choice_Test;
 		wxSpinCtrl* SpinCtrl_Channel;
-		wxStaticText* StaticText2;
 		wxSpinCtrl* SpinCtrl_Universe;
-		wxStaticText* StaticText1;
-		wxStaticText* StaticText3;
 		wxSpinCtrl* SpinCtrl_Value;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
+		wxStaticText* StaticText3;
 		wxStaticText* StaticText4;
 		//*)
 

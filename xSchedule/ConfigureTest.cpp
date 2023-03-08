@@ -71,7 +71,7 @@ ConfigureTest::ConfigureTest(wxWindow* parent, TestOptions* testOptions, wxWindo
 	SpinCtrl3 = new wxSpinCtrl(this, ID_SPINCTRL3, _T("500"), wxDefaultPosition, wxDefaultSize, 0, 0, 30000, 500, _T("ID_SPINCTRL3"));
 	SpinCtrl3->SetValue(_T("500"));
 	FlexGridSizer1->Add(SpinCtrl3, 1, wxALL|wxEXPAND, 5);
-	FlexGridSizer1->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer1->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	FlexGridSizer2 = new wxFlexGridSizer(0, 2, 0, 0);
 	Button_Ok = new wxButton(this, ID_BUTTON1, _("Ok"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
 	Button_Ok->SetDefault();

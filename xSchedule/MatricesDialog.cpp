@@ -37,9 +37,9 @@ MatricesDialog::MatricesDialog(wxWindow* parent, OutputManager* outputManager, s
     _outputManager = outputManager;
 
 	//(*Initialize(MatricesDialog)
-	wxFlexGridSizer* FlexGridSizer2;
 	wxBoxSizer* BoxSizer1;
 	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
 
 	Create(parent, id, _("Matrices"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER|wxMAXIMIZE_BOX, _T("id"));
 	SetClientSize(wxDefaultSize);

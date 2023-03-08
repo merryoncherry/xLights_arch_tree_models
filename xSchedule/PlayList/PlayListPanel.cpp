@@ -54,7 +54,7 @@ PlayListPanel::PlayListPanel(wxWindow* parent, PlayList* playlist, wxWindowID id
 	CheckBox_LastStepOnce = new wxCheckBox(this, ID_CHECKBOX2, _("Last step once only"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX2"));
 	CheckBox_LastStepOnce->SetValue(false);
 	FlexGridSizer1->Add(CheckBox_LastStepOnce, 1, wxALL|wxEXPAND, 5);
-	FlexGridSizer1->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer1->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	CheckBox_AlwaysShuffle = new wxCheckBox(this, ID_CHECKBOX3, _("Always Shuffle"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX3"));
 	CheckBox_AlwaysShuffle->SetValue(false);
 	FlexGridSizer1->Add(CheckBox_AlwaysShuffle, 1, wxALL|wxEXPAND, 5);

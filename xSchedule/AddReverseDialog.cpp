@@ -55,9 +55,9 @@ AddReverseDialog::AddReverseDialog(wxWindow* parent, OutputManager* outputManage
     _outputManager = outputManager;
 
 	//(*Initialize(AddReverseDialog)
-	wxFlexGridSizer* FlexGridSizer2;
 	wxBoxSizer* BoxSizer1;
 	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
 
 	Create(parent, id, _("Reverse Nodes"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("id"));
 	SetClientSize(wxDefaultSize);

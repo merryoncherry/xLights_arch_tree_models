@@ -9,9 +9,9 @@
  **************************************************************/
 
  //(*InternalHeaders(EventStatePanel)
-#include <wx/intl.h>
-#include <wx/string.h>
-//*)
+ #include <wx/intl.h>
+ #include <wx/string.h>
+ //*)
 
 #include "EventStatePanel.h"
 #include "events/EventState.h"

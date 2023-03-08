@@ -37,8 +37,8 @@ EventsDialog::EventsDialog(wxWindow* parent, OutputManager* outputManager, Sched
     _scheduleOptions = scheduleOptions;
 
 	//(*Initialize(EventsDialog)
-	wxFlexGridSizer* FlexGridSizer2;
 	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
 
 	Create(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX|wxMAXIMIZE_BOX, _T("id"));
 	SetClientSize(wxDefaultSize);

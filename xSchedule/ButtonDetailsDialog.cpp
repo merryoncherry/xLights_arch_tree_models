@@ -40,8 +40,8 @@ END_EVENT_TABLE()
 ButtonDetailsDialog::ButtonDetailsDialog(wxWindow* parent, CommandManager* commandManager, std::string& label, std::string& command, std::string& color, std::string& parameter, char& hotkey, wxWindowID id,const wxPoint& pos,const wxSize& size) : _commandManager(commandManager), _label(label), _parameter(parameter), _command(command), _color(color), _hotkey(hotkey)
 {
 	//(*Initialize(ButtonDetailsDialog)
-	wxFlexGridSizer* FlexGridSizer2;
 	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
 
 	Create(parent, id, _("Button Details"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER|wxMAXIMIZE_BOX, _T("id"));
 	SetClientSize(wxDefaultSize);

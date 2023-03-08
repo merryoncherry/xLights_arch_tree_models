@@ -65,7 +65,7 @@ PlayListItemAllOffPanel::PlayListItemAllOffPanel(wxWindow* parent, OutputManager
 	SpinCtrl_AllSet = new wxSpinCtrl(this, ID_SPINCTRL1, _T("0"), wxDefaultPosition, wxDefaultSize, 0, 0, 255, 0, _T("ID_SPINCTRL1"));
 	SpinCtrl_AllSet->SetValue(_T("0"));
 	FlexGridSizer1->Add(SpinCtrl_AllSet, 1, wxALL|wxEXPAND, 5);
-	FlexGridSizer1->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer1->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	CheckBox_FadeToZero = new wxCheckBox(this, ID_CHECKBOX2, _("Fade to zero"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX2"));
 	CheckBox_FadeToZero->SetValue(false);
 	FlexGridSizer1->Add(CheckBox_FadeToZero, 1, wxALL|wxEXPAND, 5);

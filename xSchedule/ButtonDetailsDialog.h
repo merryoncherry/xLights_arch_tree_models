@@ -11,13 +11,13 @@
  **************************************************************/
 
  //(*Headers(ButtonDetailsDialog)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/choice.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/choice.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class CommandManager;
 
@@ -38,18 +38,18 @@ class ButtonDetailsDialog: public wxDialog
 		virtual ~ButtonDetailsDialog();
 
 		//(*Declarations(ButtonDetailsDialog)
-		wxChoice* Choice_Command;
+		wxButton* Button_Cancel;
 		wxButton* Button_Ok;
-		wxStaticText* StaticText2;
+		wxChoice* Choice1;
+		wxChoice* Choice_Command;
 		wxChoice* Choice_Hotkey;
 		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
 		wxStaticText* StaticText3;
-		wxTextCtrl* TextCtrl_Parameters;
-		wxStaticText* StaticText5;
-		wxButton* Button_Cancel;
-		wxTextCtrl* TextCtrl_Label;
 		wxStaticText* StaticText4;
-		wxChoice* Choice1;
+		wxStaticText* StaticText5;
+		wxTextCtrl* TextCtrl_Label;
+		wxTextCtrl* TextCtrl_Parameters;
 		//*)
 
 	protected:

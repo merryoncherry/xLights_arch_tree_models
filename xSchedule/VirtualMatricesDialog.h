@@ -11,11 +11,11 @@
  **************************************************************/
 
  //(*Headers(VirtualMatricesDialog)
-#include <wx/listctrl.h>
-#include <wx/sizer.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/dialog.h>
+ #include <wx/listctrl.h>
+ #include <wx/sizer.h>
+ //*)
 
 #include <list>
 
@@ -41,12 +41,12 @@ class VirtualMatricesDialog: public wxDialog
 		virtual ~VirtualMatricesDialog();
 
 		//(*Declarations(VirtualMatricesDialog)
-		wxButton* Button_Ok;
-		wxButton* Button_Delete;
-		wxButton* Button_Cancel;
-		wxListView* ListView1;
-		wxButton* Button_Edit;
 		wxButton* Button_Add;
+		wxButton* Button_Cancel;
+		wxButton* Button_Delete;
+		wxButton* Button_Edit;
+		wxButton* Button_Ok;
+		wxListView* ListView1;
 		//*)
 
 	protected:

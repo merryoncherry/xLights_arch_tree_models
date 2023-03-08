@@ -11,14 +11,14 @@
  **************************************************************/
 
  //(*Headers(DeadChannelDialog)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
-#include <wx/choice.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/checkbox.h>
+ #include <wx/choice.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class OutputManager;
 
@@ -37,15 +37,15 @@ class DeadChannelDialog: public wxDialog
 		virtual ~DeadChannelDialog();
 
 		//(*Declarations(DeadChannelDialog)
-		wxStaticText* StaticText_StartChannel;
-		wxCheckBox* CheckBox_Enabled;
-		wxButton* Button_Ok;
-		wxTextCtrl* TextCtrl_Description;
-		wxStaticText* StaticText2;
-		wxStaticText* StaticText1;
-		wxStaticText* StaticText3;
-		wxChoice* Choice_Channel;
 		wxButton* Button_Cancel;
+		wxButton* Button_Ok;
+		wxCheckBox* CheckBox_Enabled;
+		wxChoice* Choice_Channel;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
+		wxStaticText* StaticText3;
+		wxStaticText* StaticText_StartChannel;
+		wxTextCtrl* TextCtrl_Description;
 		wxTextCtrl* TextCtrl_StartChannel;
 		//*)
 

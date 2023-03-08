@@ -57,9 +57,9 @@ ColourOrderDialog::ColourOrderDialog(wxWindow* parent, OutputManager* outputMana
     _outputManager = outputManager;
 
 	//(*Initialize(ColourOrderDialog)
-	wxFlexGridSizer* FlexGridSizer2;
 	wxBoxSizer* BoxSizer1;
 	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
 
 	Create(parent, id, _("Reorder Colors"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("id"));
 	SetClientSize(wxDefaultSize);

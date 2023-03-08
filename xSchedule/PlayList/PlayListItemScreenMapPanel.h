@@ -11,14 +11,14 @@
  **************************************************************/
 
  //(*Headers(PlayListItemScreenMapPanel)
-#include <wx/checkbox.h>
-#include <wx/choice.h>
-#include <wx/panel.h>
-#include <wx/sizer.h>
-#include <wx/spinctrl.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-//*)
+ #include <wx/checkbox.h>
+ #include <wx/choice.h>
+ #include <wx/panel.h>
+ #include <wx/sizer.h>
+ #include <wx/spinctrl.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class PlayListItemScreenMap;
 class OutlineWindow;

@@ -11,13 +11,13 @@
  **************************************************************/
 
  //(*Headers(PlayListItemTestPanel)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/spinctrl.h>
-#include <wx/panel.h>
-#include <wx/choice.h>
-//*)
+ #include <wx/choice.h>
+ #include <wx/panel.h>
+ #include <wx/sizer.h>
+ #include <wx/spinctrl.h>
+ #include <wx/stattext.h>
+ #include <wx/textctrl.h>
+ //*)
 
 class OutputManager;
 class PlayListItemTest;
@@ -34,23 +34,23 @@ class PlayListItemTestPanel: public wxPanel
 		virtual ~PlayListItemTestPanel();
 
 		//(*Declarations(PlayListItemTestPanel)
-		wxStaticText* StaticText_StartChannel;
-		wxTextCtrl* TextCtrl_Name;
-		wxSpinCtrl* SpinCtrl_Channels;
-		wxStaticText* StaticText2;
-		wxStaticText* StaticText6;
-		wxStaticText* StaticText8;
 		wxChoice* Choice_Mode;
+		wxSpinCtrl* SpinCtrl_Channels;
 		wxSpinCtrl* SpinCtrl_Value1;
-		wxStaticText* StaticText1;
-		wxStaticText* StaticText3;
-		wxTextCtrl* TextCtrl_FrameDuration;
 		wxSpinCtrl* SpinCtrl_Value2;
-		wxStaticText* StaticText5;
-		wxStaticText* StaticText7;
-		wxTextCtrl* TextCtrl_StartChannel;
-		wxTextCtrl* TextCtrl_Duration;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText2;
+		wxStaticText* StaticText3;
 		wxStaticText* StaticText4;
+		wxStaticText* StaticText5;
+		wxStaticText* StaticText6;
+		wxStaticText* StaticText7;
+		wxStaticText* StaticText8;
+		wxStaticText* StaticText_StartChannel;
+		wxTextCtrl* TextCtrl_Duration;
+		wxTextCtrl* TextCtrl_FrameDuration;
+		wxTextCtrl* TextCtrl_Name;
+		wxTextCtrl* TextCtrl_StartChannel;
 		//*)
 
 	protected:

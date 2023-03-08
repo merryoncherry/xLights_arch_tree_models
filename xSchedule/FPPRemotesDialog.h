@@ -11,11 +11,11 @@
  **************************************************************/
 
  //(*Headers(FPPRemotesDialog)
-#include <wx/sizer.h>
-#include <wx/listbox.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/dialog.h>
+ #include <wx/listbox.h>
+ #include <wx/sizer.h>
+ //*)
 
 #include <list>
 
@@ -28,11 +28,11 @@ class FPPRemotesDialog: public wxDialog
         std::list<std::string> GetRemotes();
 
 		//(*Declarations(FPPRemotesDialog)
-		wxListBox* ListBox_Remotes;
-		wxButton* Button_Delete;
-		wxButton* Button_Edit;
 		wxButton* Button_Add;
 		wxButton* Button_Close;
+		wxButton* Button_Delete;
+		wxButton* Button_Edit;
+		wxListBox* ListBox_Remotes;
 		//*)
 
 	protected:

@@ -9,9 +9,9 @@
  **************************************************************/
 
  //(*InternalHeaders(EventMIDIPanel)
-#include <wx/intl.h>
-#include <wx/string.h>
-//*)
+ #include <wx/intl.h>
+ #include <wx/string.h>
+ //*)
 
 #include "EventMIDIPanel.h"
 #include "events/EventMIDI.h"
@@ -74,7 +74,7 @@ EventMIDIPanel::EventMIDIPanel(wxWindow* parent,wxWindowID id,const wxPoint& pos
 	Choice_TestData1->Append(_("On Change"));
 	Choice_TestData1->SetSelection( Choice_TestData1->Append(_("Any")) );
 	FlexGridSizer1->Add(Choice_TestData1, 1, wxALL|wxEXPAND, 5);
-	FlexGridSizer1->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer1->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	SpinCtrl_Data1 = new wxSpinCtrl(this, ID_SPINCTRL1, _T("0"), wxDefaultPosition, wxDefaultSize, 0, 0, 127, 0, _T("ID_SPINCTRL1"));
 	SpinCtrl_Data1->SetValue(_T("0"));
 	FlexGridSizer1->Add(SpinCtrl_Data1, 1, wxALL|wxEXPAND, 5);
@@ -90,7 +90,7 @@ EventMIDIPanel::EventMIDIPanel(wxWindow* parent,wxWindowID id,const wxPoint& pos
 	Choice_TestData2->Append(_("On Change"));
 	Choice_TestData2->SetSelection( Choice_TestData2->Append(_("Any")) );
 	FlexGridSizer1->Add(Choice_TestData2, 1, wxALL|wxEXPAND, 5);
-	FlexGridSizer1->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer1->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	SpinCtrl_Data2 = new wxSpinCtrl(this, ID_SPINCTRL2, _T("0"), wxDefaultPosition, wxDefaultSize, 0, 0, 127, 0, _T("ID_SPINCTRL2"));
 	SpinCtrl_Data2->SetValue(_T("0"));
 	FlexGridSizer1->Add(SpinCtrl_Data2, 1, wxALL|wxEXPAND, 5);

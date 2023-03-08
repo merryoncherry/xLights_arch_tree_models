@@ -64,7 +64,7 @@ PlayListItemSetColourPanel::PlayListItemSetColourPanel(wxWindow* parent, OutputM
 	FlexGridSizer1->Add(StaticText3, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
 	ColourPickerCtrl1 = new wxColourPickerCtrl(this, ID_COLOURPICKERCTRL1, wxColour(0,0,0), wxDefaultPosition, wxDefaultSize, wxCLRP_SHOW_LABEL, wxDefaultValidator, _T("ID_COLOURPICKERCTRL1"));
 	FlexGridSizer1->Add(ColourPickerCtrl1, 1, wxALL|wxEXPAND, 5);
-	FlexGridSizer1->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer1->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	CheckBox_FadeToBlack = new wxCheckBox(this, ID_CHECKBOX2, _("Fade to black"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX2"));
 	CheckBox_FadeToBlack->SetValue(false);
 	FlexGridSizer1->Add(CheckBox_FadeToBlack, 1, wxALL|wxEXPAND, 5);
