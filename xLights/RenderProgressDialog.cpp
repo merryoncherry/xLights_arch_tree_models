@@ -11,10 +11,10 @@
 #include "RenderProgressDialog.h"
 
 //(*InternalHeaders(RenderProgressDialog)
+#include <wx/button.h>
+#include <wx/intl.h>
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
-#include <wx/intl.h>
-#include <wx/button.h>
 #include <wx/string.h>
 //*)
 

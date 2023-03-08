@@ -11,10 +11,10 @@
  **************************************************************/
 
  //(*Headers(SkullConfigDialog)
-#include <wx/checkbox.h>
-#include <wx/dialog.h>
-#include <wx/sizer.h>
-//*)
+ #include <wx/checkbox.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ //*)
 
 class SkullConfigDialog: public wxDialog
 {

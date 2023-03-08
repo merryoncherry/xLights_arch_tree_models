@@ -33,7 +33,7 @@ END_EVENT_TABLE()
 SplashDialog::SplashDialog(wxWindow* parent,wxWindowID id,const wxPoint& pos,const wxSize& size)
 {
 	//(*Initialize(SplashDialog)
-	Create(parent, id, _("xLights"), wxDefaultPosition, wxDefaultSize, wxSIMPLE_BORDER|wxSTATIC_BORDER|wxNO_BORDER|wxFULL_REPAINT_ON_RESIZE, _T("id"));
+	Create(parent, id, _("xLights"), wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE|wxBORDER_STATIC|wxBORDER_NONE|wxFULL_REPAINT_ON_RESIZE, _T("id"));
 	SetClientSize(wxSize(773,247));
 	Move(wxDefaultPosition);
 	Center();

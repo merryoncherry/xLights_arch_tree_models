@@ -717,7 +717,7 @@ VendorModelDialog::VendorModelDialog(wxWindow* parent, const std::string& showFo
     CheckBox_DontDownload = new wxCheckBox(PanelVendor, ID_CHECKBOX1, _("Don\'t download this vendors list of models"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
     CheckBox_DontDownload->SetValue(false);
     FlexGridSizer4->Add(CheckBox_DontDownload, 1, wxALL|wxEXPAND, 5);
-    StaticBitmap_VendorImage = new wxStaticBitmap(PanelVendor, ID_STATICBITMAP1, wxNullBitmap, wxDefaultPosition, wxSize(256,128), wxSIMPLE_BORDER, _T("ID_STATICBITMAP1"));
+    StaticBitmap_VendorImage = new wxStaticBitmap(PanelVendor, ID_STATICBITMAP1, wxNullBitmap, wxDefaultPosition, wxSize(256,128), 0, _T("ID_STATICBITMAP1"));
     StaticBitmap_VendorImage->SetMinSize(wxSize(256,128));
     FlexGridSizer4->Add(StaticBitmap_VendorImage, 1, wxALL|wxEXPAND, 5);
     TextCtrl_VendorDetails = new wxTextCtrl(PanelVendor, ID_TEXTCTRL1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_LEFT, wxDefaultValidator, _T("ID_TEXTCTRL1"));
@@ -727,11 +727,11 @@ VendorModelDialog::VendorModelDialog(wxWindow* parent, const std::string& showFo
     FlexGridSizer5->AddGrowableRow(0);
     StaticText6 = new wxStaticText(PanelVendor, ID_STATICTEXT8, _("Facebook:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT8"));
     FlexGridSizer5->Add(StaticText6, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
-    HyperlinkCtrl_Facebook = new wxHyperlinkCtrl(PanelVendor, ID_HYPERLINKCTRL4, _("https://xlights.org"), wxEmptyString, wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_LEFT|wxNO_BORDER, _T("ID_HYPERLINKCTRL4"));
+    HyperlinkCtrl_Facebook = new wxHyperlinkCtrl(PanelVendor, ID_HYPERLINKCTRL4, _("https://xlights.org"), wxEmptyString, wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_LEFT|wxBORDER_NONE, _T("ID_HYPERLINKCTRL4"));
     FlexGridSizer5->Add(HyperlinkCtrl_Facebook, 1, wxALL|wxEXPAND, 5);
     StaticText2 = new wxStaticText(PanelVendor, ID_STATICTEXT4, _("Website:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT4"));
     FlexGridSizer5->Add(StaticText2, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
-    HyperlinkCtrl_Website = new wxHyperlinkCtrl(PanelVendor, ID_HYPERLINKCTRL2, _("https://xlights.org"), wxEmptyString, wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_LEFT|wxNO_BORDER, _T("ID_HYPERLINKCTRL2"));
+    HyperlinkCtrl_Website = new wxHyperlinkCtrl(PanelVendor, ID_HYPERLINKCTRL2, _("https://xlights.org"), wxEmptyString, wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_LEFT|wxBORDER_NONE, _T("ID_HYPERLINKCTRL2"));
     FlexGridSizer5->Add(HyperlinkCtrl_Website, 1, wxALL|wxEXPAND, 5);
     FlexGridSizer4->Add(FlexGridSizer5, 1, wxALL|wxEXPAND, 5);
     PanelVendor->SetSizer(FlexGridSizer4);
@@ -747,7 +747,7 @@ VendorModelDialog::VendorModelDialog(wxWindow* parent, const std::string& showFo
     FlexGridSizer7->AddGrowableRow(0);
     Button_Prior = new wxButton(ItemImagePanel, ID_BUTTON2, _("<"), wxDefaultPosition, wxSize(30,-1), 0, wxDefaultValidator, _T("ID_BUTTON2"));
     FlexGridSizer7->Add(Button_Prior, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    StaticBitmap_ModelImage = new wxStaticBitmap(ItemImagePanel, ID_STATICBITMAP2, wxNullBitmap, wxDefaultPosition, wxSize(256,256), wxSIMPLE_BORDER, _T("ID_STATICBITMAP2"));
+    StaticBitmap_ModelImage = new wxStaticBitmap(ItemImagePanel, ID_STATICBITMAP2, wxNullBitmap, wxDefaultPosition, wxSize(256,256), 0, _T("ID_STATICBITMAP2"));
     StaticBitmap_ModelImage->SetMinSize(wxSize(256,256));
     FlexGridSizer7->Add(StaticBitmap_ModelImage, 1, wxALL|wxEXPAND, 5);
     Button_Next = new wxButton(ItemImagePanel, ID_BUTTON3, _(">"), wxDefaultPosition, wxSize(30,-1), 0, wxDefaultValidator, _T("ID_BUTTON3"));
@@ -762,7 +762,7 @@ VendorModelDialog::VendorModelDialog(wxWindow* parent, const std::string& showFo
     FlexGridSizer8->AddGrowableCol(1);
     StaticText5 = new wxStaticText(Panel_Item, ID_STATICTEXT7, _("Web Link:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT7"));
     FlexGridSizer8->Add(StaticText5, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
-    HyperlinkCtrl_ModelWebLink = new wxHyperlinkCtrl(Panel_Item, ID_HYPERLINKCTRL3, _("https://xlights.org"), wxEmptyString, wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_LEFT|wxNO_BORDER, _T("ID_HYPERLINKCTRL3"));
+    HyperlinkCtrl_ModelWebLink = new wxHyperlinkCtrl(Panel_Item, ID_HYPERLINKCTRL3, _("https://xlights.org"), wxEmptyString, wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_LEFT|wxBORDER_NONE, _T("ID_HYPERLINKCTRL3"));
     FlexGridSizer8->Add(HyperlinkCtrl_ModelWebLink, 1, wxALL|wxEXPAND, 5);
     FlexGridSizer6->Add(FlexGridSizer8, 1, wxALL|wxEXPAND, 5);
     Button_InsertModel = new wxButton(Panel_Item, ID_BUTTON1, _("Insert Model"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));

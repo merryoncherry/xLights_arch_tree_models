@@ -11,9 +11,9 @@
  **************************************************************/
 
 //(*Headers(UpdaterDialog)
+#include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/sizer.h>
-#include <wx/button.h>
 #include <wx/stattext.h>
 //*)
 
@@ -28,9 +28,9 @@ class UpdaterDialog: public wxDialog
 
 		//(*Declarations(UpdaterDialog)
 		wxButton* ButtonUpDownload;
-		wxStaticText* StaticTextUpdateLabel;
 		wxButton* ButtonUpdateIgnore;
 		wxButton* ButtonUpdateSkip;
+		wxStaticText* StaticTextUpdateLabel;
 		//*)
 
 	protected:

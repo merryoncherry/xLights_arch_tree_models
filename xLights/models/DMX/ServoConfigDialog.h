@@ -11,12 +11,12 @@
  **************************************************************/
 
  //(*Headers(ServoConfigDialog)
-#include <wx/checkbox.h>
-#include <wx/dialog.h>
-#include <wx/sizer.h>
-#include <wx/spinctrl.h>
-#include <wx/stattext.h>
-//*)
+ #include <wx/checkbox.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/spinctrl.h>
+ #include <wx/stattext.h>
+ //*)
 
 class ServoConfigDialog : public wxDialog
 {

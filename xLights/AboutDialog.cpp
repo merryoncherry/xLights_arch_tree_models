@@ -38,7 +38,7 @@ AboutDialog::AboutDialog(wxWindow* parent,wxWindowID id,const wxPoint& pos,const
 	MainSizer->AddGrowableCol(0);
 	MainSizer->AddGrowableRow(1);
 	IconSizer = new wxFlexGridSizer(0, 3, 0, 0);
-	IconBitmap = new wxStaticBitmap(this, ID_STATICBITMAP1, wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("ID_STATICBITMAP1"));
+	IconBitmap = new wxStaticBitmap(this, ID_STATICBITMAP1, wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE, _T("ID_STATICBITMAP1"));
 	IconBitmap->SetMinSize(wxSize(128,128));
 	IconSizer->Add(IconBitmap, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 0);
 	MainSizer->Add(IconSizer, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 10);
@@ -48,14 +48,14 @@ AboutDialog::AboutDialog(wxWindow* parent,wxWindowID id,const wxPoint& pos,const
 	FlexGridSizer3->Add(StaticText1, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	VersionLabel = new wxStaticText(this, ID_STATICTEXT1, _("Version:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT1"));
 	FlexGridSizer3->Add(VersionLabel, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-	FlexGridSizer3->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer3->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	LegalTextLabel = new wxStaticText(this, ID_STATICTEXT2, _("LegalText"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT2"));
 	LegalTextLabel->SetMaxSize(wxSize(400,-1));
 	FlexGridSizer3->Add(LegalTextLabel, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	FlexGridSizer4 = new wxFlexGridSizer(0, 1, 0, 0);
-	PrivacyHyperlinkCtrl = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL1, _("Privacy Policy"), _("https://xlights.org/privacy-policy/"), wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE|wxNO_BORDER, _T("ID_HYPERLINKCTRL1"));
+	PrivacyHyperlinkCtrl = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL1, _("Privacy Policy"), _("https://xlights.org/privacy-policy/"), wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL1"));
 	FlexGridSizer4->Add(PrivacyHyperlinkCtrl, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-	EULAHyperlinkCtrl = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL2, _("https://xlights.org/privacy-policy/"), wxEmptyString, wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE|wxNO_BORDER, _T("ID_HYPERLINKCTRL2"));
+	EULAHyperlinkCtrl = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL2, _("https://xlights.org/privacy-policy/"), wxEmptyString, wxDefaultPosition, wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL2"));
 	EULAHyperlinkCtrl->Hide();
 	FlexGridSizer4->Add(EULAHyperlinkCtrl, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	FlexGridSizer3->Add(FlexGridSizer4, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 0);

@@ -265,6 +265,8 @@ SeqSettingsDialog::SeqSettingsDialog(wxWindow* parent, xLightsXmlFile* file_to_h
     FlexGridSizer3->Add(BlendingCheckBox, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     FlexGridSizer4->Add(FlexGridSizer3, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
     PanelInfo->SetSizer(FlexGridSizer4);
+    FlexGridSizer4->Fit(PanelInfo);
+    FlexGridSizer4->SetSizeHints(PanelInfo);
     PanelMetaData = new wxPanel(Notebook_Seq_Settings, ID_PANEL1, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL1"));
     FlexGridSizer_Timing_Page = new wxFlexGridSizer(0, 2, 0, 0);
     StaticText_Xml_Author = new wxStaticText(PanelMetaData, ID_STATICTEXT_Xml_Author, _("Author:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT_Xml_Author"));
@@ -300,6 +302,8 @@ SeqSettingsDialog::SeqSettingsDialog(wxWindow* parent, xLightsXmlFile* file_to_h
     TextCtrl_Xml_Comment = new wxTextCtrl(PanelMetaData, ID_TEXTCTRL_Xml_Comment, wxEmptyString, wxDefaultPosition, wxDLG_UNIT(PanelMetaData,wxSize(150,-1)), 0, wxDefaultValidator, _T("ID_TEXTCTRL_Xml_Comment"));
     FlexGridSizer_Timing_Page->Add(TextCtrl_Xml_Comment, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     PanelMetaData->SetSizer(FlexGridSizer_Timing_Page);
+    FlexGridSizer_Timing_Page->Fit(PanelMetaData);
+    FlexGridSizer_Timing_Page->SetSizeHints(PanelMetaData);
     PanelTimings = new wxPanel(Notebook_Seq_Settings, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL2"));
     FlexGridSizer8 = new wxFlexGridSizer(0, 1, 0, 0);
     FlexGridSizer8->AddGrowableCol(0);
@@ -315,6 +319,8 @@ SeqSettingsDialog::SeqSettingsDialog(wxWindow* parent, xLightsXmlFile* file_to_h
     wxSize __SpacerSize_3 = wxDLG_UNIT(PanelTimings,wxSize(-1,12));
     FlexGridSizer8->Add(__SpacerSize_3.GetWidth(),__SpacerSize_3.GetHeight(),1, wxALL|wxEXPAND, 5);
     PanelTimings->SetSizer(FlexGridSizer8);
+    FlexGridSizer8->Fit(PanelTimings);
+    FlexGridSizer8->SetSizeHints(PanelTimings);
     Panel_DataLayers = new wxPanel(Notebook_Seq_Settings, ID_PANEL4, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL4"));
     FlexGridSizer9 = new wxFlexGridSizer(0, 1, 0, 0);
     FlexGridSizer9->AddGrowableCol(0);
@@ -345,6 +351,8 @@ SeqSettingsDialog::SeqSettingsDialog(wxWindow* parent, xLightsXmlFile* file_to_h
     FlexGridSizer11->Add(Button_Reimport, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     FlexGridSizer9->Add(FlexGridSizer11, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Panel_DataLayers->SetSizer(FlexGridSizer9);
+    FlexGridSizer9->Fit(Panel_DataLayers);
+    FlexGridSizer9->SetSizeHints(Panel_DataLayers);
     Notebook_Seq_Settings->AddPage(PanelInfo, _("Info / Media"), false);
     Notebook_Seq_Settings->AddPage(PanelMetaData, _("Meta Data"), false);
     Notebook_Seq_Settings->AddPage(PanelTimings, _("Timings"), false);
@@ -376,6 +384,7 @@ SeqSettingsDialog::SeqSettingsDialog(wxWindow* parent, xLightsXmlFile* file_to_h
     FlexGridSizer7->Add(Button_Close, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     FlexGridSizer1->Add(FlexGridSizer7, 1, wxLEFT|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
     SetSizer(FlexGridSizer1);
+    FlexGridSizer1->Fit(this);
     FlexGridSizer1->SetSizeHints(this);
 
     Connect(ID_CHOICE_Xml_Seq_Type,wxEVT_COMMAND_CHOICE_SELECTED,(wxObjectEventFunction)&SeqSettingsDialog::OnChoice_Xml_Seq_TypeSelect);

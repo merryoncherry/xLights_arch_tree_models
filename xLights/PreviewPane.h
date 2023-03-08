@@ -11,9 +11,9 @@
  **************************************************************/
 
 //(*Headers(PreviewPane)
-#include <wx/sizer.h>
-#include <wx/panel.h>
 #include <wx/dialog.h>
+#include <wx/panel.h>
+#include <wx/sizer.h>
 //*)
 
 class ModelPreview;

@@ -11,9 +11,9 @@
  **************************************************************/
 
 //(*Headers(SelectTimingsDialog)
-#include <wx/sizer.h>
 #include <wx/checklst.h>
 #include <wx/dialog.h>
+#include <wx/sizer.h>
 //*)
 
 class SelectTimingsDialog: public wxDialog

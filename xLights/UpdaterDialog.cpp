@@ -9,8 +9,8 @@
  **************************************************************/
  
 //(*InternalHeaders(UpdaterDialog)
-#include <wx/string.h>
 #include <wx/intl.h>
+#include <wx/string.h>
 //*)
 
 #include <wx/config.h>
@@ -34,8 +34,8 @@ END_EVENT_TABLE()
 UpdaterDialog::UpdaterDialog(wxWindow* parent,wxWindowID id)
 {
 	//(*Initialize(UpdaterDialog)
-	wxBoxSizer* BoxSizer2;
 	wxBoxSizer* BoxSizer1;
+	wxBoxSizer* BoxSizer2;
 
 	Create(parent, wxID_ANY, _("xLights Update Available"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("wxID_ANY"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);

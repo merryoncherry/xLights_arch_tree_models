@@ -67,7 +67,7 @@ SuperStarImportDialog::SuperStarImportDialog(wxWindow* parent,wxWindowID id,cons
 	FlexGridSizer3->Add(FlexGridSizer4, 1, wxALL|wxEXPAND, 5);
 	FlexGridSizer5 = new wxFlexGridSizer(0, 5, 0, 0);
 	FlexGridSizer5->AddGrowableCol(0);
-	FlexGridSizer5->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer5->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	StaticText37 = new wxStaticText(this, ID_STATICTEXT24, _("X Size:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT24"));
 	FlexGridSizer5->Add(StaticText37, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
 	TextCtrl_SS_X_Size = new wxTextCtrl(this, ID_TEXTCTRL_SS_X_Size, _("12"), wxDefaultPosition, wxSize(50,-1), wxTE_CENTRE, wxDefaultValidator, _T("ID_TEXTCTRL_SS_X_Size"));
@@ -76,7 +76,7 @@ SuperStarImportDialog::SuperStarImportDialog(wxWindow* parent,wxWindowID id,cons
 	FlexGridSizer5->Add(StaticText44, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	TextCtrl_SS_X_Offset = new wxTextCtrl(this, ID_TEXTCTRL_SS_X_Offset, _("0"), wxDefaultPosition, wxSize(50,-1), wxTE_CENTRE, wxDefaultValidator, _T("ID_TEXTCTRL_SS_X_Offset"));
 	FlexGridSizer5->Add(TextCtrl_SS_X_Offset, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, wxDLG_UNIT(this,wxSize(5,0)).GetWidth());
-	FlexGridSizer5->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer5->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	StaticText41 = new wxStaticText(this, ID_STATICTEXT40, _("Y Size:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT40"));
 	FlexGridSizer5->Add(StaticText41, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
 	TextCtrl_SS_Y_Size = new wxTextCtrl(this, ID_TEXTCTRL_SS_Y_Size, _("50"), wxDefaultPosition, wxSize(50,-1), wxTE_CENTRE, wxDefaultValidator, _T("ID_TEXTCTRL_SS_Y_Size"));

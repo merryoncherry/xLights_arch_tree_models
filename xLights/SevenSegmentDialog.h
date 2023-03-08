@@ -11,10 +11,10 @@
  **************************************************************/
 
 //(*Headers(SevenSegmentDialog)
-#include <wx/sizer.h>
 #include <wx/checkbox.h>
-#include <wx/statbmp.h>
 #include <wx/dialog.h>
+#include <wx/sizer.h>
+#include <wx/statbmp.h>
 //*)
 
 class SevenSegmentDialog: public wxDialog
@@ -25,13 +25,13 @@ class SevenSegmentDialog: public wxDialog
 		virtual ~SevenSegmentDialog();
 
 		//(*Declarations(SevenSegmentDialog)
-		wxCheckBox* CheckBox_Thousands;
-		wxCheckBox* CheckBox_Hundreds;
-		wxCheckBox* CheckBox_Tens;
-		wxCheckBox* CheckBox_Ones;
-		wxCheckBox* CheckBox_Decimal;
-		wxStaticBitmap* StaticBitmap_7Segment;
 		wxCheckBox* CheckBox_Colon;
+		wxCheckBox* CheckBox_Decimal;
+		wxCheckBox* CheckBox_Hundreds;
+		wxCheckBox* CheckBox_Ones;
+		wxCheckBox* CheckBox_Tens;
+		wxCheckBox* CheckBox_Thousands;
+		wxStaticBitmap* StaticBitmap_7Segment;
 		//*)
 
 	protected:

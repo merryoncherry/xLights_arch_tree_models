@@ -11,8 +11,8 @@
 #include "SevenSegmentDialog.h"
 
 //(*InternalHeaders(SevenSegmentDialog)
-#include <wx/intl.h>
 #include <wx/button.h>
+#include <wx/intl.h>
 #include <wx/string.h>
 //*)
 
@@ -37,8 +37,8 @@ END_EVENT_TABLE()
 SevenSegmentDialog::SevenSegmentDialog(wxWindow* parent,wxWindowID id,const wxPoint& pos,const wxSize& size)
 {
 	//(*Initialize(SevenSegmentDialog)
-	wxFlexGridSizer* FlexGridSizer2;
 	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
 	wxStdDialogButtonSizer* StdDialogButtonSizer1;
 
 	Create(parent, id, _("Select Labels to Include:"), wxDefaultPosition, wxDefaultSize, wxCAPTION, _T("id"));
@@ -71,7 +71,7 @@ SevenSegmentDialog::SevenSegmentDialog(wxWindow* parent,wxWindowID id,const wxPo
 	CheckBox_Ones->SetToolTip(_("1\'s"));
 	FlexGridSizer2->Add(CheckBox_Ones, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	FlexGridSizer1->Add(FlexGridSizer2, 1, wxALL|wxEXPAND, 5);
-	StaticBitmap_7Segment = new wxStaticBitmap(this, ID_STATICBITMAP1, wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxSIMPLE_BORDER, _T("ID_STATICBITMAP1"));
+	StaticBitmap_7Segment = new wxStaticBitmap(this, ID_STATICBITMAP1, wxNullBitmap, wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICBITMAP1"));
 	FlexGridSizer1->Add(StaticBitmap_7Segment, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	StdDialogButtonSizer1 = new wxStdDialogButtonSizer();
 	StdDialogButtonSizer1->AddButton(new wxButton(this, wxID_OK, wxEmptyString));

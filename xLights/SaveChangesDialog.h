@@ -11,9 +11,9 @@
  **************************************************************/
 
 //(*Headers(SaveChangesDialog)
+#include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/sizer.h>
-#include <wx/button.h>
 #include <wx/stattext.h>
 //*)
 
@@ -27,10 +27,10 @@ class SaveChangesDialog: public wxDialog
         bool GetSaveChanges() { return mSaveChanges; }
 
 		//(*Declarations(SaveChangesDialog)
-		wxButton* Button_SaveChanges;
 		wxButton* Button_Cancel;
-		wxStaticText* StaticText1;
 		wxButton* Button_DiscardChanges;
+		wxButton* Button_SaveChanges;
+		wxStaticText* StaticText1;
 		wxStaticText* StaticText2;
 		//*)
 

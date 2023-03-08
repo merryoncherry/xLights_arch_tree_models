@@ -11,12 +11,12 @@
  **************************************************************/
 
  //(*Headers(BulkEditColourPickerDialog)
-#include <wx/button.h>
-#include <wx/clrpicker.h>
-#include <wx/dialog.h>
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/clrpicker.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/stattext.h>
+ //*)
 
 class BulkEditColourPickerDialog: public wxDialog
 {

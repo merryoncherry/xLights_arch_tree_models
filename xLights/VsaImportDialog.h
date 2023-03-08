@@ -11,13 +11,13 @@
  **************************************************************/
 
 //(*Headers(VsaImportDialog)
+#include <wx/button.h>
+#include <wx/choice.h>
+#include <wx/dialog.h>
+#include <wx/gbsizer.h>
+#include <wx/grid.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
-#include <wx/grid.h>
-#include <wx/choice.h>
-#include <wx/gbsizer.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
 //*)
 
 class SequenceElements;
@@ -35,16 +35,16 @@ class VsaImportDialog: public wxDialog
 		void Init(VSAFile* file, bool allModels);
 
 		//(*Declarations(VsaImportDialog)
-		wxChoice* ChoiceSetModels;
-		wxButton* Button_Ok;
-		wxGridBagSizer* GridBagSizer1;
-		wxFlexGridSizer* FlexGridSizer3;
-		wxStaticText* StaticText40;
-		wxFlexGridSizer* FlexGridSizer2;
-		wxStaticText* StaticText1;
 		EzGrid* ChannelMapGrid;
 		wxButton* Button_Cancel;
+		wxButton* Button_Ok;
+		wxChoice* ChoiceSetModels;
+		wxFlexGridSizer* FlexGridSizer2;
+		wxFlexGridSizer* FlexGridSizer3;
 		wxFlexGridSizer* SizerMap;
+		wxGridBagSizer* GridBagSizer1;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText40;
 		//*)
 
         SequenceElements *mSequenceElements;

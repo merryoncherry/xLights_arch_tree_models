@@ -11,9 +11,9 @@
 #include "PaletteMgmtDialog.h"
 
 //(*InternalHeaders(PaletteMgmtDialog)
-#include <wx/string.h>
-#include <wx/intl.h>
 #include <wx/font.h>
+#include <wx/intl.h>
+#include <wx/string.h>
 //*)
 
 #include "UtilFunctions.h"
@@ -38,9 +38,9 @@ END_EVENT_TABLE()
 PaletteMgmtDialog::PaletteMgmtDialog(wxWindow* parent,wxWindowID id,const wxPoint& pos,const wxSize& size)
 {
     //(*Initialize(PaletteMgmtDialog)
+    wxBoxSizer* BoxSizer1;
     wxFlexGridSizer* FlexGridSizer1;
     wxFlexGridSizer* FlexGridSizer3;
-    wxBoxSizer* BoxSizer1;
     wxStdDialogButtonSizer* StdDialogButtonSizer1;
 
     Create(parent, wxID_ANY, _("Color Palettes"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("wxID_ANY"));
