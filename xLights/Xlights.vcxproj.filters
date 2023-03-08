@@ -1015,7 +1015,13 @@
     <ClCompile Include="utils\ip_utils.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\Curl.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="DuplicateDialog.cpp" />
+    <ClCompile Include="models\DMX\DmxColorAbilityCMY.cpp">
+      <Filter>Models\DMX</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BatchRenderDialog.h" />
@@ -1297,7 +1303,6 @@
       <Filter>Models</Filter>
     </ClInclude>
     <ClInclude Include="ImportPreviewsModelsDialog.h" />
-    <ClInclude Include="..\xSchedule\xSMSDaemon\Curl.h" />
     <ClInclude Include="ShaderDownloadDialog.h" />
     <ClInclude Include="outputs\ZCPP.h">
       <Filter>Outputs</Filter>
@@ -2038,7 +2043,13 @@
     <ClInclude Include="utils\ip_utils.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="utils\Curl.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="DuplicateDialog.h" />
+    <ClInclude Include="models\DMX\DmxColorAbilityCMY.h">
+      <Filter>Models\DMX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Models">

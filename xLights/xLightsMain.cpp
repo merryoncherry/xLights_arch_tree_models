@@ -1779,7 +1779,11 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id) :
 #ifndef NDEBUG
     logger_base.debug("xLights Crash Menu item not removed.");
 #ifdef _MSC_VER
-    Notebook1->SetBackgroundColour(*wxGREEN);
+    if (wxSystemSettings::GetAppearance().IsDark()) {
+        Notebook1->SetBackgroundColour(wxColour(0x006000));
+    } else {
+        Notebook1->SetBackgroundColour(*wxGREEN);
+    }
 #endif
 #else
     // only keep the crash option if the special option is set
@@ -2126,6 +2130,19 @@ void xLightsFrame::DoPostStartupCommands() {
 #endif
         if (_userEmail == "") CollectUserEmail();
         if (_userEmail != "noone@nowhere.xlights.org") logger_base.debug("User email address: <email>%s</email>", (const char*)_userEmail.c_str());
+        
+#ifdef __WXMSW__
+        int verMaj = -1;
+        int verMin = -1;
+        wxOperatingSystemId o = wxGetOsVersion(&verMaj, &verMin);
+        static bool hasWarned = false;
+        if (verMaj < 8 && !hasWarned) {
+            hasWarned = true;
+            wxMessageBox("Windows 7 has known issues rendering some effects.  Support for Windows 7 may be removed entirely soon.",
+                         "Windows Version",
+                          wxICON_INFORMATION | wxCENTER | wxOK);
+        }
+#endif
     }
 }
 
@@ -2196,7 +2213,6 @@ void xLightsFrame::OnAbout(wxCommandEvent& event)
     dlg.MainSizer->SetSizeHints(&dlg);
 
     if (IsFromAppStore()) {
-        dlg.PrivacyHyperlinkCtrl->SetURL("http://kulplights.com/xlights/privacy_policy.html");
         dlg.EULAHyperlinkCtrl->SetLabel("End User License Agreement");
         dlg.EULAHyperlinkCtrl->SetURL("http://kulplights.com/xlights/eula.html");
         dlg.EULAHyperlinkCtrl->Show();

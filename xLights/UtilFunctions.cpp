@@ -32,7 +32,7 @@
 #include "../xSchedule/wxJSON/json_defs.h"
 #include "../xSchedule/wxJSON/jsonreader.h"
 #include "../xSchedule/wxJSON/jsonval.h"
-#include "../xSchedule/xSMSDaemon/Curl.h"
+#include "utils/Curl.h"
 
 #include <mutex>
 #include <string_view>
@@ -526,7 +526,10 @@ std::string UnXmlSafe(const wxString &res)
         r2.Replace("&amp;", "&");
         return r2.ToStdString();
     }
-    return res.ToStdString();
+    // MoC - ToStdString is not as const as it claims, and mutates a temp
+    //   structure in the string in a non-threadsafe way.  UnXmlSafe is
+    //   sometimes called by multiple threads against the same string, so copy it.
+    return res.Clone().ToStdString();
 }
 
 std::string XmlSafe(const std::string& s)
@@ -1430,29 +1433,21 @@ void DumpBinary(uint8_t* buffer, size_t sz)
 
 wxColor CyanOrBlue()
 {
-#ifndef __WXMSW__
     if (wxSystemSettings::GetAppearance().IsDark()) {
         // In Dark Mode blue is hard to read
         return *wxCYAN;
     } else {
-#endif
         return *wxBLUE;
-#ifndef __WXMSW__
     }
-#endif
 }
 wxColor LightOrMediumGrey()
 {
-#ifndef __WXMSW__
     if (wxSystemSettings::GetAppearance().IsDark()) {
         static const wxColor medGray(128, 128, 128);
         return medGray;
     } else {
-#endif
         return *wxLIGHT_GREY;
-#ifndef __WXMSW__
     }
-#endif
 }
 void CleanupIpAddress(wxString& IpAddr)
 {
@@ -1484,8 +1479,26 @@ wxString CompressNodes(const wxString& nodes)
     int last = -1;
     auto as = wxSplit(s, ',');
 
+    // There is no difference between empty row and row with one blank pixel (shrug)
+    // We will take removal of the last comma approach
+
     for (const auto& i : as)
     {
+        if (i.empty()) {
+            // Flush out start/last if any
+            if (start != -1) {
+                if (last != start) {
+                    res += wxString::Format("%d-%d,", start, last);
+                } else {
+                    res += wxString::Format("%d,", start);
+                }
+            }
+            // Add empty and separator
+            res += ",";
+            start = last = -1;
+            dir = 0;
+            continue;
+        }
         if (start == -1)
         {
             start = wxAtoi(i);
@@ -1507,8 +1520,7 @@ wxString CompressNodes(const wxString& nodes)
                 }
                 else
                 {
-                    if (res != "") res += ",";
-                    res += wxString::Format("%d", start);
+                    res += wxString::Format("%d,", start);
                     start = j;
                     dir = 0;
                 }
@@ -1521,8 +1533,7 @@ wxString CompressNodes(const wxString& nodes)
                 }
                 else
                 {
-                    if (res != "") res += ",";
-                    res += wxString::Format("%d-%d", start, last);
+                    res += wxString::Format("%d-%d,", start, last);
                     start = j;
                     dir = 0;
                 }
@@ -1535,16 +1546,17 @@ wxString CompressNodes(const wxString& nodes)
     {
         // nothing to do
     }
-    if (start == last)
+    else if (start == last)
     {
-        if (res != "") res += ",";
-        res += wxString::Format("%d", start);
+        res += wxString::Format("%d,", start);
     }
     else
     {
-        if (res != "") res += ",";
-        res += wxString::Format("%d-%d", start, last);
+        res += wxString::Format("%d-%d,", start, last);
     }
+
+    if (!res.empty())
+        res = res.substr(0, res.length() - 1); // Chop last comma
 
     return res;
 }
@@ -1555,6 +1567,7 @@ wxString ExpandNodes(const wxString& nodes)
 
     auto as = wxSplit(nodes, ',');
 
+    bool first = true;
     for (const auto& i : as)
     {
         if (i.Contains("-"))
@@ -1568,20 +1581,20 @@ wxString ExpandNodes(const wxString& nodes)
                 {
                     for (int j = start; j <= end; j++)
                     {
-                        if (res != "") res += ",";
+                        if (!first || res != "") res += ",";
                         res += wxString::Format("%d", j);
                     }
                 }
                 else if (start == end)
                 {
-                    if (res != "") res += ",";
+                    if (!first || res != "") res += ",";
                     res += wxString::Format("%d", start);
                 }
                 else
                 {
                     for (int j = start; j >= end; j--)
                     {
-                        if (res != "") res += ",";
+                        if (!first || res != "") res += ",";
                         res += wxString::Format("%d", j);
                     }
                 }
@@ -1589,9 +1602,10 @@ wxString ExpandNodes(const wxString& nodes)
         }
         else
         {
-            if (res != "") res += ",";
+            if (!first || res != "") res += ",";
             res += i;
         }
+        first = false;
     }
     return res;
 }

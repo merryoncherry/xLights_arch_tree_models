@@ -2218,7 +2218,7 @@ public:
                     const wxImage *img)
         : wxImageFileProperty(label, name, ""), lastFileName(value)
     {
-
+        SetAttribute(wxPG_FILE_WILDCARD, "Image files|*.png;*.bmp;*.jpg;*.gif;*.jpeg|All files (*.*)|*.*");
         SetValueFromString(value);
         if (img != nullptr) {
             setImage(*img);
@@ -2338,11 +2338,11 @@ void LayoutPanel::showBackgroundProperties()
             background = new wxImage(backgroundFile);
         }
     }
-    wxPGProperty* p = propertyEditor->Append(new xlImageProperty("Background Image",
+    wxPGProperty* prop = propertyEditor->Append(new xlImageProperty("Background Image",
         "BkgImage",
         previewBackgroundFile,
         background));
-    p->SetAttribute(wxPG_FILE_WILDCARD, "Image files|*.png;*.bmp;*.jpg;*.gif;*.jpeg|All files (*.*)|*.*");
+
     propertyEditor->Append(new wxBoolProperty("Fill", "BkgFill", previewBackgroundScaled))->SetAttribute("UseCheckbox", 1);
     if (currentLayoutGroup == "Default" || currentLayoutGroup == "All Models" || currentLayoutGroup == "Unassigned") {
         wxPGProperty* prop = propertyEditor->Append(new wxUIntProperty("Width", "BkgSizeWidth", modelPreview->GetVirtualCanvasWidth()));
@@ -2354,7 +2354,7 @@ void LayoutPanel::showBackgroundProperties()
         prop->SetAttribute("Max", 16384);
         prop->SetEditor("SpinCtrl");
     }
-    wxPGProperty* prop = propertyEditor->Append(new wxUIntProperty("Brightness", "BkgBrightness", previewBackgroundBrightness));
+    prop = propertyEditor->Append(new wxUIntProperty("Brightness", "BkgBrightness", previewBackgroundBrightness));
     prop->SetAttribute("Min", 0);
     prop->SetAttribute("Max", 100);
     prop->SetEditor("SpinCtrl");
@@ -2735,6 +2735,7 @@ void LayoutPanel::OnButtonSavePreviewClick(wxCommandEvent& event)
     SaveEffects();
     if (xlights->IsControllersAndLayoutTabSaveLinked()) {
         xlights->SaveNetworksFile();
+        xlights->UpdateLayoutSave(); // SaveEffects tried to do this, but if the saves are linked it is marked dirty til nets are saved.
     }
 }
 
@@ -3505,6 +3506,7 @@ void LayoutPanel::FinalizeModel()
             {
                 prog = new wxProgressDialog("Model download", "Downloading models ...", 100, this, wxPD_APP_MODAL | wxPD_AUTO_HIDE);
                 prog->Show();
+                prog->CenterOnParent();
             }
             auto oldNewModel = _newModel;
             auto oldam = modelPreview->GetAdditionalModel();
@@ -5660,6 +5662,7 @@ void LayoutPanel::SetTreeSubModelSelected(Model* model, bool isPrimary) {
 }
 
 void LayoutPanel::CheckModelForOverlaps(Model* model) {
+    // this is the channel range of the clicked on model
     int mStart = model->GetNumberFromChannelString(model->ModelStartChannel);
     int mEnd = model->GetLastChannel();
 
@@ -5670,20 +5673,13 @@ void LayoutPanel::CheckModelForOverlaps(Model* model) {
             ModelTreeData *data = dynamic_cast<ModelTreeData*>(TreeListViewModels->GetItemData(item));
             Model *mm = data != nullptr ? data->GetModel() : nullptr;
             if (mm != nullptr && mm != selectedBaseObject) {
+                // this is the channel range of the model we are checking
                 int startChan = mm->GetNumberFromChannelString(mm->ModelStartChannel);
                 int endChan = mm->GetLastChannel();
-                if ((startChan >= mStart) && (endChan <= mEnd)) {
-                    mm->Overlapping = true;
-                }
-                else if ((startChan >= mStart) && (startChan <= mEnd)) {
-                    mm->Overlapping = true;
-                }
-                else if ((endChan >= mStart) && (endChan <= mEnd)) {
-                    mm->Overlapping = true;
-                }
-                else {
-                    mm->Overlapping = false;
-                }
+
+                mm->Overlapping = ((mStart <= startChan && mEnd >= startChan) ||
+                                   (mStart <= endChan && mEnd >= endChan) ||
+                                   (mStart >= startChan && mEnd <= endChan));
             }
         }
     }
