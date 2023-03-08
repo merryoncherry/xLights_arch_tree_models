@@ -42,6 +42,7 @@
 #include "PixelBuffer.h"
 #include "../VideoReader.h"
 #include "../FindDataPanel.h"
+#include "../DuplicateDialog.h"
 
 #include <log4cpp/Category.hh>
 
@@ -94,6 +95,7 @@ const long EffectsGrid::ID_GRID_MNU_ALIGN_MATCH_DURATION = wxNewId();
 const long EffectsGrid::ID_GRID_MNU_ALIGN_START_TIMES_SHIFT = wxNewId();
 const long EffectsGrid::ID_GRID_MNU_ALIGN_END_TIMES_SHIFT = wxNewId();
 const long EffectsGrid::ID_GRID_MNU_SPLIT_EFFECT = wxNewId();
+const long EffectsGrid::ID_GRID_MNU_DUPLICATE_EFFECT = wxNewId();
 
 int findDataEffect::GetStrand() const
 {
@@ -158,7 +160,8 @@ std::string findDataEffect::GetStrandSubmodel() const
             SubModelElement* sm = dynamic_cast<SubModelElement*>(e);
             return sm->GetName();
         } else if (e->GetType() == ElementType::ELEMENT_TYPE_STRAND) {
-            return wxString::Format("Strand %d", GetStrand() + 1).ToStdString();
+            const std::string STRAND = "Strand ";
+            return STRAND + std::to_string(GetStrand() + 1);
         }
     } else if (dl != nullptr) {
         return "";
@@ -235,6 +238,15 @@ EffectLayer* EffectsGrid::FindOpenLayer(Element* elem, int startTimeMS, int endT
     return layer;
 }
 
+void EffectsGrid::PlayLoopedEffect(Effect* eff, bool loop = false)
+{
+    ((MainSequencer*)mParent)->PanelWaveForm->SetSelectedInterval(eff->GetStartTimeMS(), eff->GetEndTimeMS());
+    Draw();
+
+    wxCommandEvent playEvent(loop ? EVT_SEQUENCE_REPLAY_SECTION : EVT_PLAY_SEQUENCE);
+    wxPostEvent(mParent, playEvent);
+}
+
 void EffectsGrid::mouseLeftDClick(wxMouseEvent& event)
 {
     int update_time = -1;
@@ -301,14 +313,14 @@ void EffectsGrid::mouseLeftDClick(wxMouseEvent& event)
                 }
             }
         } else {
-            // we have double clicked on an effect - highlight that part of the waveform
-            ((MainSequencer*)mParent)->PanelWaveForm->SetSelectedInterval(selectedEffect->GetStartTimeMS(), selectedEffect->GetEndTimeMS());
-            Draw();
             // and play it play mode is active
             if (mTimingPlayOnDClick) {
-                wxCommandEvent playEvent(EVT_PLAY_SEQUENCE);
-                wxPostEvent(mParent, playEvent);
+                PlayLoopedEffect(selectedEffect);
             } else {
+                // we have double clicked on an effect - highlight that part of the waveform
+                ((MainSequencer*)mParent)->PanelWaveForm->SetSelectedInterval(selectedEffect->GetStartTimeMS(), selectedEffect->GetEndTimeMS());
+                Draw();
+
                 if (update_time > -1) {
                     UpdateTimePosition(update_time);
                 }
@@ -363,6 +375,11 @@ void EffectsGrid::rightClick(wxMouseEvent& event)
         if (mSelectedEffect == nullptr || MultipleEffectsSelected() || (mSelectedEffect->GetEndTimeMS() - mSelectedEffect->GetStartTimeMS() <= mSequenceElements->GetFrameMS()))
         {
             menu_split->Enable(false);
+        }
+
+        wxMenuItem* menu_duplicate = mnuLayer.Append(ID_GRID_MNU_DUPLICATE_EFFECT, "Duplicate");
+        if (mSelectedEffect == nullptr || (mSelectedEffect->GetEndTimeMS() - mSelectedEffect->GetStartTimeMS() <= mSequenceElements->GetFrameMS())) {
+            menu_duplicate->Enable(false);
         }
 
         // Undo
@@ -749,7 +766,10 @@ void EffectsGrid::OnGridPopup(wxCommandEvent& event)
                 mSelectedEffect->SetSelected(EFFECT_SELECTED);
             }
         }
-    }    
+    } else if (id == ID_GRID_MNU_DUPLICATE_EFFECT) {
+        logger_base.debug("OnGridPopup - DUPLICATE_EFFECT");
+        DuplicateSelectedEffects();
+    }
     else if (id == ID_GRID_MNU_PRESETS)
     {
         logger_base.debug("OnGridPopup - PRESETS");
@@ -1717,7 +1737,7 @@ void EffectsGrid::ApplyButtonPressToSelected(const std::string& effectName, cons
     }
 }
 
-void EffectsGrid::RemapSelectedDMXEffectValues(const std::vector<std::pair<int, int>>& pairs)
+void EffectsGrid::RemapSelectedDMXEffectValues(const std::vector<std::tuple<int, int, float, int>>& dmxmappings)
 {
     Element* lastModel = nullptr;
     RangeAccumulator rangeAccumulator;
@@ -1748,7 +1768,7 @@ void EffectsGrid::RemapSelectedDMXEffectValues(const std::vector<std::pair<int, 
             // skip timing rows
         }
         else {
-            mSequenceElements->GetEffectLayer(row)->RemapSelectedDMXEffectValues(this, mSequenceElements->get_undo_mgr(), pairs, xlights->GetEffectManager(), rangeAccumulator);
+            mSequenceElements->GetEffectLayer(row)->RemapSelectedDMXEffectValues(this, mSequenceElements->get_undo_mgr(), dmxmappings, xlights->GetEffectManager(), rangeAccumulator);
         }
     }
 
@@ -2279,8 +2299,8 @@ std::string EffectsGrid::TruncateEffectSettings(SettingsMap settings, std::strin
         if (startBrightness != endBrightness) {
             int newStartBrightness = (endBrightness - startBrightness) * startPos + startBrightness;
             int newEndBrightness = (endBrightness - startBrightness) * endPos + startBrightness;
-            settings["E_TEXTCTRL_Eff_On_Start"] = wxString::Format("%i", newStartBrightness);
-            settings["E_TEXTCTRL_Eff_On_End"] = wxString::Format("%i", newEndBrightness);
+            settings["E_TEXTCTRL_Eff_On_Start"] = std::to_string(newStartBrightness);
+            settings["E_TEXTCTRL_Eff_On_End"] = std::to_string(newEndBrightness);
         }
     }
     else if (name == "Twinkle") {
@@ -2365,7 +2385,7 @@ void EffectsGrid::TruncateEffect(EffectLayer* el, Effect* eff, int startMS, int 
 
             if (startBrightness != endBrightness) {
                 int newEndBrightness = (endBrightness - startBrightness) * endPos + startBrightness;
-                eff->GetSettings()["E_TEXTCTRL_Eff_On_End"] = wxString::Format("%i", newEndBrightness);
+                eff->GetSettings()["E_TEXTCTRL_Eff_On_End"] = std::to_string(newEndBrightness);
                 eff->IncrementChangeCount();
                 RaiseSelectedEffectChanged(eff, false, true);
             }
@@ -2396,7 +2416,7 @@ void EffectsGrid::TruncateEffect(EffectLayer* el, Effect* eff, int startMS, int 
 
             if (startBrightness != endBrightness) {
                 int newStartBrightness = (endBrightness - startBrightness) * startPos + startBrightness;
-                eff->GetSettings()["E_TEXTCTRL_Eff_On_Start"] = wxString::Format("%i", newStartBrightness);
+                eff->GetSettings()["E_TEXTCTRL_Eff_On_Start"] = std::to_string(newStartBrightness);
                 eff->IncrementChangeCount();
                 RaiseSelectedEffectChanged(eff, false, true);
             }
@@ -2552,8 +2572,8 @@ Effect* EffectsGrid::CreatePartialACEffect(EffectLayer* el, ACTYPE type, int sta
         if (midBrightness == -1) {
             SettingsMap settings;
             if (startBrightness != 100 || endBrightness != 100) {
-                settings["E_TEXTCTRL_Eff_On_End"] = wxString::Format("%i", endBrightness);
-                settings["E_TEXTCTRL_Eff_On_Start"] = wxString::Format("%i", startBrightness);
+                settings["E_TEXTCTRL_Eff_On_End"] = std::to_string(endBrightness);
+                settings["E_TEXTCTRL_Eff_On_Start"] = std::to_string(startBrightness);
             }
             Effect* ef = DuplicateAndTruncateEffect(el, settings, palette, "On", startMS, endMS, partialStart, partialEnd);
             if (res == nullptr) res = ef;
@@ -2562,8 +2582,8 @@ Effect* EffectsGrid::CreatePartialACEffect(EffectLayer* el, ACTYPE type, int sta
             SettingsMap settings;
             int mid = TimeLine::RoundToMultipleOfPeriod((startMS + endMS) / 2, mSequenceElements->GetFrequency());
             if (startBrightness != 100 || midBrightness != 100) {
-                settings["E_TEXTCTRL_Eff_On_End"] = wxString::Format("%i", midBrightness);
-                settings["E_TEXTCTRL_Eff_On_Start"] = wxString::Format("%i", startBrightness);
+                settings["E_TEXTCTRL_Eff_On_End"] = std::to_string(midBrightness);
+                settings["E_TEXTCTRL_Eff_On_Start"] = std::to_string(startBrightness);
             }
             if (partialStart < mid) {
                 Effect* ef = DuplicateAndTruncateEffect(el, settings, palette, "On", startMS, endMS, partialStart, std::min(mid, partialEnd));
@@ -2572,8 +2592,8 @@ Effect* EffectsGrid::CreatePartialACEffect(EffectLayer* el, ACTYPE type, int sta
 
             settings.clear();
             if (endBrightness != 100 || midBrightness != 100) {
-                settings["E_TEXTCTRL_Eff_On_End"] = wxString::Format("%i", endBrightness);
-                settings["E_TEXTCTRL_Eff_On_Start"] = wxString::Format("%i", midBrightness);
+                settings["E_TEXTCTRL_Eff_On_End"] = std::to_string(endBrightness);
+                settings["E_TEXTCTRL_Eff_On_Start"] = std::to_string(midBrightness);
             }
             if (partialEnd > mid) {
                 Effect* ef = DuplicateAndTruncateEffect(el, settings, palette, "On", startMS, endMS, std::max(mid, partialStart), partialEnd);
@@ -2586,8 +2606,8 @@ Effect* EffectsGrid::CreatePartialACEffect(EffectLayer* el, ACTYPE type, int sta
             SettingsMap settings;
             settings["E_CHECKBOX_On_Shimmer"] = "1";
             if (startBrightness != 100 || endBrightness != 100) {
-                settings["E_TEXTCTRL_Eff_On_End"] = wxString::Format("%i", endBrightness);
-                settings["E_TEXTCTRL_Eff_On_Start"] = wxString::Format("%i", startBrightness);
+                settings["E_TEXTCTRL_Eff_On_End"] = std::to_string(endBrightness);
+                settings["E_TEXTCTRL_Eff_On_Start"] = std::to_string(startBrightness);
             }
             Effect* ef = DuplicateAndTruncateEffect(el, settings, palette, "On", startMS, endMS, partialStart, partialEnd);
             if (res == nullptr) res = ef;
@@ -2597,8 +2617,8 @@ Effect* EffectsGrid::CreatePartialACEffect(EffectLayer* el, ACTYPE type, int sta
             settings["E_CHECKBOX_On_Shimmer"] = "1";
             int mid = TimeLine::RoundToMultipleOfPeriod((startMS + endMS) / 2, mSequenceElements->GetFrequency());
             if (startBrightness != 100 || midBrightness != 100) {
-                settings["E_TEXTCTRL_Eff_On_End"] = wxString::Format("%i", midBrightness);
-                settings["E_TEXTCTRL_Eff_On_Start"] = wxString::Format("%i", startBrightness);
+                settings["E_TEXTCTRL_Eff_On_End"] = std::to_string(midBrightness);
+                settings["E_TEXTCTRL_Eff_On_Start"] = std::to_string(startBrightness);
             }
             if (partialStart < mid) {
                 Effect* ef = DuplicateAndTruncateEffect(el, settings, palette, "On", startMS, endMS, partialStart, std::min(mid, partialEnd));
@@ -2608,8 +2628,8 @@ Effect* EffectsGrid::CreatePartialACEffect(EffectLayer* el, ACTYPE type, int sta
             settings.clear();
             settings["E_CHECKBOX_On_Shimmer"] = "1";
             if (endBrightness != 100 || midBrightness != 100) {
-                settings["E_TEXTCTRL_Eff_On_End"] = wxString::Format("%i", endBrightness);
-                settings["E_TEXTCTRL_Eff_On_Start"] = wxString::Format("%i", midBrightness);
+                settings["E_TEXTCTRL_Eff_On_End"] = std::to_string(endBrightness);
+                settings["E_TEXTCTRL_Eff_On_Start"] = std::to_string(midBrightness);
             }
             if (partialEnd > mid) {
                 Effect* ef = DuplicateAndTruncateEffect(el, settings, palette, "On", startMS, endMS, std::max(mid, partialStart), partialEnd);
@@ -2623,7 +2643,7 @@ Effect* EffectsGrid::CreatePartialACEffect(EffectLayer* el, ACTYPE type, int sta
             if (startBrightness == endBrightness) {
                 // Intensity
                 if (startBrightness != 100) {
-                    settings["C_SLIDER_Brightness"] = wxString::Format("%i", startBrightness);
+                    settings["C_SLIDER_Brightness"] = std::to_string(startBrightness);
                 }
             }
             else {
@@ -3391,6 +3411,8 @@ void EffectsGrid::Resize(int position, bool offset, bool control)
 {
 
     if (mSequenceElements == nullptr) return;
+
+    if (!xlights->AbortRender()) return;
 
     int new_time = -1;
 
@@ -6716,4 +6738,31 @@ void EffectsGrid::PasteModelEffects(int row_number, bool allLayers)
     ((MainSequencer*)mParent)->Paste(true);
     mPartialCellSelected = true;
     ((MainSequencer*)mParent)->PanelRowHeadings->SetCanPaste(true);
+
+}
+
+void EffectsGrid::DuplicateSelectedEffects()
+{
+    DuplicateDialog dialog(mParent);
+
+    if (dialog.ShowModal() == wxID_OK) {
+         if (mSelectedEffect != nullptr) {
+            long start = mSelectedEffect->GetStartTimeMS();
+            long end = mSelectedEffect->GetEndTimeMS();
+            long length = end - start;
+
+            auto el = mSelectedEffect->GetParentEffectLayer();
+            long newstart = end;
+            for (int i = 0; i < dialog.GetCount(); ++i) {
+                newstart += (dialog.GetGap() * length);
+                newstart = mTimeline->RoundToMultipleOfPeriod(newstart, mSequenceElements->GetFrequency());
+                long newEnd = mTimeline->RoundToMultipleOfPeriod(newstart + length, mSequenceElements->GetFrequency());
+                if (!el->HasEffectsInTimeRange(newstart, newEnd)) {
+                    Effect* newef = el->AddEffect(0, xlights->GetEffectManager().GetEffectName(mSelectedEffect->GetEffectIndex()), mSelectedEffect->GetSettingsAsString(), mSelectedEffect->GetPaletteAsString(), newstart, newEnd, EFFECT_SELECTED, false);
+                    mSequenceElements->get_undo_mgr().CaptureAddedEffect(el->GetParentElement()->GetName(), el->GetIndex(), newef->GetID());
+                }                
+                newstart = newEnd;
+            }            
+        }
+    }
 }
