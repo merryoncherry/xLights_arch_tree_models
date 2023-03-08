@@ -27,10 +27,12 @@
 #include "xLightsVersion.h"
 #include "ExternalHooks.h"
 
+//#include "string_utils.h"
+
 #include "../xSchedule/wxJSON/json_defs.h"
 #include "../xSchedule/wxJSON/jsonreader.h"
 #include "../xSchedule/wxJSON/jsonval.h"
-#include "../xSchedule/xSMSDaemon/Curl.h"
+#include "utils/Curl.h"
 
 #include <mutex>
 #include <string_view>
@@ -60,7 +62,7 @@
 #define thread_local __thread
 #endif
 
-static std::map<std::string, std::string> __resolvedIPMap;
+
 
 void DisplayError(const std::string& err, wxWindow* win)
 {
@@ -524,7 +526,10 @@ std::string UnXmlSafe(const wxString &res)
         r2.Replace("&amp;", "&");
         return r2.ToStdString();
     }
-    return res.ToStdString();
+    // MoC - ToStdString is not as const as it claims, and mutates a temp
+    //   structure in the string in a non-threadsafe way.  UnXmlSafe is
+    //   sometimes called by multiple threads against the same string, so copy it.
+    return res.Clone().ToStdString();
 }
 
 std::string XmlSafe(const std::string& s)
@@ -1238,94 +1243,6 @@ bool IsEmailValid(const std::string& email)
     return false;
 }
 
-bool IsIPValid(const std::string& ip)
-{
-    wxString ips = wxString(ip).Trim(false).Trim(true);
-    if (ips == "") {
-        return false;
-    }
-    else {
-        static wxRegEx regxIPAddr("^(([0-9]{1}|[0-9]{2}|[0-1][0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]{1}|[0-9]{2}|[0-1][0-9]{2}|2[0-4][0-9]|25[0-5])$");
-
-        if (regxIPAddr.Matches(ips)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool IsIPValidOrHostname(const std::string& ip, bool iponly)
-{
-    if (IsIPValid(ip)) {
-        return true;
-    }
-
-    static wxRegEx regxIPAddr("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$");
-
-    wxString ips = wxString(ip).Trim(false).Trim(true);
-    if (regxIPAddr.Matches(ips)) {
-        return true;
-    }
-    
-    return false;
-}
-
-std::string CleanupIP(const std::string& ip)
-{
-    bool hasChar = false;
-    bool hasDot = false;
-    //hostnames need at least one char in it if fully qualified
-    //if not fully qualified (no .), then the hostname only COULD be just numeric
-    for (size_t y = 0; y < ip.length(); y++) {
-        char x = ip[y];
-        if ((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z') || x == '-') {
-            hasChar = true;
-        }
-        if (x == '.') {
-            hasDot = true;
-        }
-    }
-    if (hasChar || !hasDot) {
-        //hostname, not ip, don't mangle it
-        return ip;
-    }
-    wxString IpAddr(ip.c_str());
-    static wxRegEx leadingzero1("(^0+)(?:[1-9]|0\\.)", wxRE_ADVANCED);
-    if (leadingzero1.Matches(IpAddr)) {
-        wxString s0 = leadingzero1.GetMatch(IpAddr, 0);
-        wxString s1 = leadingzero1.GetMatch(IpAddr, 1);
-        leadingzero1.ReplaceFirst(&IpAddr, "" + s0.Right(s0.size() - s1.size()));
-    }
-    static wxRegEx leadingzero2("(\\.0+)(?:[1-9]|0\\.|0$)", wxRE_ADVANCED);
-    while (leadingzero2.Matches(IpAddr)) { // need to do it several times because the results overlap
-        wxString s0 = leadingzero2.GetMatch(IpAddr, 0);
-        wxString s1 = leadingzero2.GetMatch(IpAddr, 1);
-        leadingzero2.ReplaceFirst(&IpAddr, "." + s0.Right(s0.size() - s1.size()));
-    }
-    return IpAddr.ToStdString();
-}
-
-std::string ResolveIP(const std::string& ip)
-{
-    // Dont resolve partially entered ip addresses as these resolve into unexpected addresses
-    if (IsIPValid(ip) || (ip == "MULTICAST") || ip == "" || StartsWith(ip, ".") || (ip[0] >= '0' && ip[0] <= '9')) {
-        return ip;
-    }
-    const std::string& resolvedIp = __resolvedIPMap[ip];
-    if (resolvedIp == "") {
-        wxIPV4address add;
-        add.Hostname(ip);
-        std::string r = add.IPAddress();
-        if (r == "0.0.0.0") {
-            r = ip;
-        }
-        __resolvedIPMap[ip] = r;
-        return __resolvedIPMap[ip];
-    }
-    return resolvedIp;
-}
-
 int GetxFadePort(int xfp)
 {
     if (xfp == 0) return 0;
@@ -1516,29 +1433,21 @@ void DumpBinary(uint8_t* buffer, size_t sz)
 
 wxColor CyanOrBlue()
 {
-#ifndef __WXMSW__
     if (wxSystemSettings::GetAppearance().IsDark()) {
         // In Dark Mode blue is hard to read
         return *wxCYAN;
     } else {
-#endif
         return *wxBLUE;
-#ifndef __WXMSW__
     }
-#endif
 }
 wxColor LightOrMediumGrey()
 {
-#ifndef __WXMSW__
     if (wxSystemSettings::GetAppearance().IsDark()) {
         static const wxColor medGray(128, 128, 128);
         return medGray;
     } else {
-#endif
         return *wxLIGHT_GREY;
-#ifndef __WXMSW__
     }
-#endif
 }
 void CleanupIpAddress(wxString& IpAddr)
 {
@@ -1570,8 +1479,26 @@ wxString CompressNodes(const wxString& nodes)
     int last = -1;
     auto as = wxSplit(s, ',');
 
+    // There is no difference between empty row and row with one blank pixel (shrug)
+    // We will take removal of the last comma approach
+
     for (const auto& i : as)
     {
+        if (i.empty()) {
+            // Flush out start/last if any
+            if (start != -1) {
+                if (last != start) {
+                    res += wxString::Format("%d-%d,", start, last);
+                } else {
+                    res += wxString::Format("%d,", start);
+                }
+            }
+            // Add empty and separator
+            res += ",";
+            start = last = -1;
+            dir = 0;
+            continue;
+        }
         if (start == -1)
         {
             start = wxAtoi(i);
@@ -1593,8 +1520,7 @@ wxString CompressNodes(const wxString& nodes)
                 }
                 else
                 {
-                    if (res != "") res += ",";
-                    res += wxString::Format("%d", start);
+                    res += wxString::Format("%d,", start);
                     start = j;
                     dir = 0;
                 }
@@ -1607,8 +1533,7 @@ wxString CompressNodes(const wxString& nodes)
                 }
                 else
                 {
-                    if (res != "") res += ",";
-                    res += wxString::Format("%d-%d", start, last);
+                    res += wxString::Format("%d-%d,", start, last);
                     start = j;
                     dir = 0;
                 }
@@ -1621,16 +1546,17 @@ wxString CompressNodes(const wxString& nodes)
     {
         // nothing to do
     }
-    if (start == last)
+    else if (start == last)
     {
-        if (res != "") res += ",";
-        res += wxString::Format("%d", start);
+        res += wxString::Format("%d,", start);
     }
     else
     {
-        if (res != "") res += ",";
-        res += wxString::Format("%d-%d", start, last);
+        res += wxString::Format("%d-%d,", start, last);
     }
+
+    if (!res.empty())
+        res = res.substr(0, res.length() - 1); // Chop last comma
 
     return res;
 }
@@ -1641,6 +1567,7 @@ wxString ExpandNodes(const wxString& nodes)
 
     auto as = wxSplit(nodes, ',');
 
+    bool first = true;
     for (const auto& i : as)
     {
         if (i.Contains("-"))
@@ -1654,20 +1581,20 @@ wxString ExpandNodes(const wxString& nodes)
                 {
                     for (int j = start; j <= end; j++)
                     {
-                        if (res != "") res += ",";
+                        if (!first || res != "") res += ",";
                         res += wxString::Format("%d", j);
                     }
                 }
                 else if (start == end)
                 {
-                    if (res != "") res += ",";
+                    if (!first || res != "") res += ",";
                     res += wxString::Format("%d", start);
                 }
                 else
                 {
                     for (int j = start; j >= end; j--)
                     {
-                        if (res != "") res += ",";
+                        if (!first || res != "") res += ",";
                         res += wxString::Format("%d", j);
                     }
                 }
@@ -1675,9 +1602,10 @@ wxString ExpandNodes(const wxString& nodes)
         }
         else
         {
-            if (res != "") res += ",";
+            if (!first || res != "") res += ",";
             res += i;
         }
+        first = false;
     }
     return res;
 }
@@ -1738,4 +1666,25 @@ void ReverseNodes(std::map<std::string, std::string> & nodes, int max)
         if(newNodeArray.size() > 0)
             line.second = CompressNodes(wxJoin(newNodeArray, ','));
     }
+}
+
+// returns true if the string contains what looks like a floating point number
+bool IsFloat(const std::string& number)
+{
+    // it cant be blank
+    if (number == "")
+        return false;
+    // if it contains a - it must be the first character and there must only be one of them
+    if (CountChar(number, '-') > 1 || (Contains(number, "-") && number[0] != '-'))
+        return false;
+    // it must contain zero or 1 '.'
+    if (CountChar(number, '.') > 1)
+        return false;
+    // all other characters must be 0-9
+    for (const auto it : number)
+    {
+        if (it != '.' && it != '-' && (it < '0' || it > '9'))
+            return false;
+    }
+    return true;
 }

@@ -33,7 +33,7 @@ template <class CTX>
 class ContextPool {
 public:
 
-    ContextPool(std::function<CTX* ()> alloc, std::string type = ""): allocator(alloc), _type(type) {
+    ContextPool(std::function<CTX*()> alloc, std::string type = ""): allocator(alloc), _type(type) {
     }
     ~ContextPool() {
         while (!contexts.empty()) {
@@ -42,7 +42,11 @@ public:
             contexts.pop();
         }
     }
-
+    void PreAlloc(int num) {
+        for (int x = 0; x < num; x++) {
+            ReleaseContext(allocator());
+        }
+    }
     CTX *GetContext() {
         // This seems odd but manually releasing the lock causes hard crashes on Visual Studio
         bool contextsEmpty = false;
@@ -70,7 +74,7 @@ public:
 private:
     std::mutex lock;
     std::queue<CTX*> contexts;
-    std::function<CTX* ()> allocator;
+    std::function<CTX*()> allocator;
     std::string _type;
 };
 
@@ -80,41 +84,17 @@ static ContextPool<PathDrawingContext> *PATH_CONTEXT_POOL = nullptr;
 void DrawingContext::Initialize(wxWindow *parent) {
     if (TEXT_CONTEXT_POOL == nullptr) {
         TEXT_CONTEXT_POOL = new ContextPool<TextDrawingContext>([parent]() {
-            if (wxThread::IsMain()) {
-                return new TextDrawingContext(10, 10 ,false);
-            } else {
-                std::mutex mtx;
-                std::condition_variable signal;
-                std::unique_lock<std::mutex> lck(mtx);
-                TextDrawingContext *tdc;
-                parent->CallAfter([&mtx, &signal, &tdc]() {
-                    std::unique_lock<std::mutex> lck(mtx);
-                    tdc = new TextDrawingContext(10, 10 ,false);
-                    signal.notify_all();
-                });
-                signal.wait(lck);
-                return tdc;
-            }
+            // atomic reference counting, can create this on background thread
+            return new TextDrawingContext(10, 10 ,false);
         });
+        //TEXT_CONTEXT_POOL->PreAlloc(10);
     }
     if (PATH_CONTEXT_POOL == nullptr) {
         PATH_CONTEXT_POOL = new ContextPool<PathDrawingContext>([parent]() {
-            if (wxThread::IsMain()) {
-                return new PathDrawingContext(10, 10 ,false);
-            } else {
-                std::mutex mtx;
-                std::condition_variable signal;
-                std::unique_lock<std::mutex> lck(mtx);
-                PathDrawingContext *tdc;
-                parent->CallAfter([&mtx, &signal, &tdc]() {
-                    std::unique_lock<std::mutex> lck(mtx);
-                    tdc = new PathDrawingContext(10, 10 ,false);
-                    signal.notify_all();
-                });
-                signal.wait(lck);
-                return tdc;
-            }
+            // atomic reference counting, can create this on background thread
+            return new PathDrawingContext(10, 10 ,false);
         });
+        //PATH_CONTEXT_POOL->PreAlloc(5);
     }
 }
 
@@ -323,6 +303,37 @@ PathDrawingContext::PathDrawingContext(int BufferWi, int BufferHt, bool allowSha
 
 PathDrawingContext::~PathDrawingContext() {}
 
+// MoC - March 2023
+// The wx font map is not thread safe in some cases, effects using
+//   it from background threads need to mutex each other (and ideally
+//   the event loop thread but meh.  This is not the best place (WX
+//   would be a better place), but this is better than no place.
+//
+// The first step here was centralizing the access methods, putting a
+//   lock around them then became possible.  
+//   Per dkulp, we could, in the future, pre-populate the cache from the
+//   main thread, or we could use CallAfter or similar to do the font
+//   lookup on the main thread, which may be incrementally better than
+//   just a lock shared between background threads.
+std::mutex FONT_MAP_LOCK;
+
+std::map<std::string, wxFontInfo> FONT_MAP_TXT;
+std::map<std::string, wxFontInfo> FONT_MAP_SHP;
+
+class FontMapLock
+{
+    std::unique_lock<std::mutex> lk;
+
+public:
+    FontMapLock() :
+        lk(FONT_MAP_LOCK)
+    {}
+
+    ~FontMapLock()
+    {}
+};
+
+
 TextDrawingContext::TextDrawingContext(int BufferWi, int BufferHt, bool allowShared)
 #ifdef __WXMSW__
     : DrawingContext(BufferWi, BufferHt, allowShared, true)
@@ -530,7 +541,7 @@ void PathDrawingContext::FillPath(wxGraphicsPath& path, wxPolygonFillMode fillSt
     gc->FillPath(path, fillStyle);
 }
 
-void TextDrawingContext::SetFont(wxFontInfo& font, const xlColor& color)
+void TextDrawingContext::SetFont(const wxFontInfo& font, const xlColor& color)
 {
     if (gc != nullptr) {
         int style = wxFONTFLAG_NOT_ANTIALIASED;
@@ -556,7 +567,8 @@ void TextDrawingContext::SetFont(wxFontInfo& font, const xlColor& color)
         if (style != fontStyle
             || font.GetPixelSize().y != fontSize
             || font.GetFaceName() != fontName
-            || color != fontColor) {
+            || color != fontColor)
+        {
             this->font = gc->CreateFont(font.GetPixelSize().y, font.GetFaceName(), style, color.asWxColor());
 
 #ifdef __WXMSW__
@@ -594,13 +606,76 @@ void TextDrawingContext::SetFont(wxFontInfo& font, const xlColor& color)
          lf.lfQuality,
          lf.lfPitchAndFamily,
          lf.lfFaceName);*/
-        wxString s = f.GetNativeFontInfoDesc();
-        s.Replace(";2;",";3;",false);
-        f.SetNativeFontInfo(s);
+        {
+            FontMapLock lk;
+            wxString s = f.GetNativeFontInfoDesc();
+            s.Replace(";2;", ";3;", false);
+            f.SetNativeFontInfo(s);
+        }
     #endif
         dc->SetFont(f);
         dc->SetTextForeground(color.asWxColor());
     }
+}
+
+const wxFontInfo& TextDrawingContext::GetTextFont(const std::string& FontString)
+{
+    FontMapLock locker;
+
+    if (FONT_MAP_TXT.find(FontString) == FONT_MAP_TXT.end()) {
+        static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+        if (!FontString.empty()) {
+            logger_base.debug("Loading font %s.", (const char*)FontString.c_str());
+            wxFont font(FontString);
+            font.SetNativeFontInfoUserDesc(FontString);
+
+            // we want "Arial 8" to be 8 pixels high and not depend on the System DPI
+            wxFontInfo info(wxSize(0, font.GetPointSize()));
+            info.FaceName(font.GetFaceName());
+            if (font.GetWeight() == wxFONTWEIGHT_BOLD) {
+                info.Bold();
+            } else if (font.GetWeight() == wxFONTWEIGHT_LIGHT) {
+                info.Light();
+            }
+            if (font.GetUnderlined()) {
+                info.Underlined();
+            }
+            if (font.GetStrikethrough()) {
+                info.Strikethrough();
+            }
+            info.AntiAliased(false);
+            info.Encoding(font.GetEncoding());
+            FONT_MAP_TXT[FontString] = info;
+            logger_base.debug("    Added to font map.");
+        } else {
+            wxFontInfo info(wxSize(0, 12));
+            info.AntiAliased(false);
+            FONT_MAP_TXT[FontString] = info;
+        }
+    }
+    return FONT_MAP_TXT[FontString];
+}
+
+const wxFontInfo& TextDrawingContext::GetShapeFont(const std::string& font)
+{
+    FontMapLock locker;
+    if (FONT_MAP_SHP.find(font) == FONT_MAP_SHP.end()) {
+        wxFont ff(font);
+        ff.SetNativeFontInfoUserDesc(font); // This needs FontMapLock above
+
+        wxFontInfo _font = wxFontInfo(wxSize(0, 12));
+        wxString face = ff.GetFaceName();
+        if (face == WIN_NATIVE_EMOJI_FONT || face == OSX_NATIVE_EMOJI_FONT || face == LINUX_NATIVE_EMOJI_FONT) {
+            _font.FaceName(NATIVE_EMOJI_FONT);
+        } else {
+            _font.FaceName(face);
+        }
+        _font.Light();
+        _font.AntiAliased(false);
+        _font.Encoding(ff.GetEncoding());
+        FONT_MAP_SHP[font] = _font;
+    }
+    return FONT_MAP_SHP[font];
 }
 
 void TextDrawingContext::DrawText(const wxString &msg, int x, int y, double rotation) {
@@ -1023,7 +1098,7 @@ void RenderBuffer::SetNodePixel(int nodeNum, const xlColor &color, bool dmx_igno
     }
 }
 
-void RenderBuffer::CopyNodeColorsToPixels(std::vector<bool> &done) {
+void RenderBuffer::CopyNodeColorsToPixels(std::vector<uint8_t> &done) {
     parallel_for(0, Nodes.size(), [&](int n) {
         xlColor c;
         Nodes[n]->GetColor(c);
@@ -1035,7 +1110,6 @@ void RenderBuffer::CopyNodeColorsToPixels(std::vector<bool> &done) {
                 done[y*BufferWi+x] = true;
             }
         }
-
     }, 500);
 }
 
@@ -1506,7 +1580,7 @@ RenderBuffer::RenderBuffer(RenderBuffer& buffer) : pixelVector(buffer.pixels, &b
     _nodeBuffer = buffer._nodeBuffer;
     BufferHt = buffer.BufferHt;
     BufferWi = buffer.BufferWi;
-    infoCache = buffer.infoCache;
+    cur_model = buffer.cur_model;
 
     pixels = &pixelVector[0];
     _textDrawingContext = buffer._textDrawingContext;
@@ -1517,7 +1591,6 @@ RenderBuffer::RenderBuffer(RenderBuffer& buffer) : pixelVector(buffer.pixels, &b
 void RenderBuffer::Forget()
 {
     // Forget some stuff as this is a fake render buffer and we dont want it destroyed
-    infoCache.clear();
     _textDrawingContext = nullptr;
     _pathDrawingContext = nullptr;
 }

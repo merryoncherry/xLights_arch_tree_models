@@ -467,7 +467,7 @@ public:
     }
 
     wxString GetwxStatus() {
-        std::string n = statusSubmodel == -1 ? name : subModelInfos[statusSubmodel]->element->GetFullName();
+        std::string n = (statusSubmodel == -1 || statusSubmodel >= subModelInfos.size()) ? name : subModelInfos[statusSubmodel]->element->GetFullName();
         switch (statusType) {
         case 0:
             return statusMsg;
@@ -627,7 +627,7 @@ public:
 
                     // I have to calc the output here to apply blend, rotozoom and transitions
                     buffer->CalcOutput(frame, vl, layer);
-                    std::vector<bool> done(rb.GetPixelCount());
+                    std::vector<uint8_t> done(rb.GetPixelCount());
                     rb.CopyNodeColorsToPixels(done);
                     // now fill in any spaces in the buffer that don't have nodes mapped to them
                     parallel_for(0, rb.BufferHt, [&rb, &buffer, &done, &vl, frame](int y) {
@@ -741,6 +741,7 @@ public:
                 SetGenericStatus("%s: Starting frame %d ", frame, true, true);
 
                 if (abort) {
+                    rowToRender->SetDirtyRange(frame * seqData->FrameTime(), endFrame * seqData->FrameTime());
                     break;
                 }
 
@@ -756,6 +757,10 @@ public:
                     wxStopWatch sw;
                     SetWaitingStatus(frame);
                     maxFrameBeforeCheck = waitForFrame(frame);
+                    if (abort) {
+                        rowToRender->SetDirtyRange(frame * seqData->FrameTime(), endFrame * seqData->FrameTime());
+                        break;
+                    }
                     if (sw.Time() > 500) {
                         renderLog.info("Model %s rendering frame %d waited %dms waiting for other models to finish.", (const char *)(mainModelInfo.element != nullptr) ? mainModelInfo.element->GetName().c_str() : "", frame, sw.Time());
                     }
@@ -764,12 +769,21 @@ public:
                 bool cleared = ProcessFrame(frame, rowToRender, mainModelInfo, mainBuffer, -1, supportsModelBlending);
                 if (!subModelInfos.empty()) {
                     for (const auto& a : subModelInfos) {
+                        if (abort) {
+                            rowToRender->SetDirtyRange(frame * seqData->FrameTime(), endFrame * seqData->FrameTime());
+                            break;
+                        }
                         EffectLayerInfo *info = a;
                         ProcessFrame(frame, info->element, *info, info->buffer.get(), info->strand, supportsModelBlending ? true : cleared);
                     }
                 }
+
                 if (!nodeBuffers.empty()) {
                     for (const auto& it : nodeBuffers) {
+                        if (abort) {
+                            rowToRender->SetDirtyRange(frame * seqData->FrameTime(), endFrame * seqData->FrameTime());
+                            break;
+                        }
                         SNPair node = it.first;
                         PixelBufferClass *buffer = it.second.get();
 
@@ -929,9 +943,9 @@ private:
     volatile int statusFrame;
     SettingsMap *statusMap;
     volatile int statusLayer;
-    volatile int statusSubmodel;
-    volatile int statusStrand;
-    volatile int statusNode;
+    volatile int statusSubmodel = -1;
+    volatile int statusStrand = -1;
+    volatile int statusNode = -1;
     log4cpp::Category &renderLog;
 
     wxGauge *gauge;
@@ -1603,6 +1617,11 @@ void xLightsFrame::RenderDirtyModels() {
 bool xLightsFrame::AbortRender(int maxTimeMS)
 {
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+    static bool inAbort = false;
+    if (inAbort) {
+        return false;
+    }
+    inAbort = true;
     logger_base.info("Aborting rendering ...");
     int abortCount = 0;
     for (auto rpi : renderProgressInfo) {
@@ -1622,15 +1641,24 @@ bool xLightsFrame::AbortRender(int maxTimeMS)
     int loops = 0;
     while (!renderProgressInfo.empty() && loops < maxLoops) {
         loops++;
+        RenderMainThreadEffects(); // make sure main thread effects are rendered
         wxMilliSleep(10);
-        wxYield(); // not sure this is advisable ... but it makes the app look responsive
         UpdateRenderStatus(); // a side effect is to clean up renderProgressInfo
+        if (!renderProgressInfo.empty() && loops > 25) {
+            wxYield(); // not sure this is advisable ... but it makes the app look responsive
+            // only do this if it's taking more than 250ms to abort.  Less than 250ms and ui will
+            // still be "responsive enough" and MOST of the time it should abort in under 250ms.
+            // The yeild COULD end up sending more mouse events and such which could trigger
+            // more aborts or have events prcessed out of order.   Thus, avoid the yield for most
+            // cases.
+        }
         if (loops % 200 == 0) {
             logger_base.info("    Waiting for renderers to abort. %d left.", (int)renderProgressInfo.size());
         }
     }
     logger_base.info("    Aborting renderers ... Done");
-    return abortCount != 0;
+    inAbort = false;
+    return renderProgressInfo.empty();
 }
 
 void xLightsFrame::RenderGridToSeqData(std::function<void()>&& callback) {
@@ -2114,6 +2142,8 @@ bool xLightsFrame::RenderEffectFromMap(bool suppress, Effect* effectObj, int lay
                                 newBuffer = new RenderBuffer(*rb);
                                 oldBuffer = rb;
                                 rb = newBuffer;
+                                rb->needToInit = oldBuffer->needToInit;
+                                rb->infoCache = oldBuffer->infoCache;
                             }
 
                             wxStopWatch sw;
@@ -2136,7 +2166,11 @@ bool xLightsFrame::RenderEffectFromMap(bool suppress, Effect* effectObj, int lay
                             if (suppress && oldBuffer != nullptr) {
                                 oldBuffer->needToInit = rb->needToInit;
                                 oldBuffer->infoCache = rb->infoCache;
+                                rb->infoCache.clear();
                                 delete newBuffer;
+                                rb = oldBuffer;
+                                newBuffer = nullptr;
+                                oldBuffer = nullptr;
                             }
                         }
                         });

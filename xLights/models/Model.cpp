@@ -49,6 +49,7 @@
 #include "../ExternalHooks.h"
 #include "CustomModel.h"
 #include "RulerObject.h"
+#include "../utils/ip_utils.h"
 
 #include <log4cpp/Category.hh>
 
@@ -2222,12 +2223,14 @@ void Model::AddFace(wxXmlNode* n)
 {
     ParseFaceInfo(n, faceInfo);
     Model::WriteFaceInfo(ModelXml, faceInfo);
+    UpdateFaceInfoNodes();
 }
 
 void Model::AddState(wxXmlNode* n)
 {
     ParseStateInfo(n, stateInfo);
     Model::WriteStateInfo(ModelXml, stateInfo);
+    UpdateStateInfoNodes();
 }
 
 void Model::ImportShadowModels(wxXmlNode* n, xLightsFrame* xlights)
@@ -2310,7 +2313,86 @@ wxString Model::SerialiseFace() const
     return res;
 }
 
-void Model::ParseStateInfo(wxXmlNode *f, std::map<std::string, std::map<std::string, std::string> > &stateInfo) {
+void Model::UpdateFaceInfoNodes()
+{
+    faceInfoNodes.clear();
+    for (const auto& it : faceInfo) {
+        if (faceInfo[it.first]["Type"] == "NodeRange") {
+            for (const auto& it2 : it.second) {
+                if (it2.first != "Type" && !Contains(it2.first, "Color") && it2.second != "") {
+                    std::list<int> nodes;
+                    auto wtkz = wxStringTokenizer(it2.second, ",");
+                    while (wtkz.HasMoreTokens()) {
+                        wxString valstr = wtkz.GetNextToken();
+
+                        int start, end;
+                        if (valstr.Contains("-")) {
+                            int idx = valstr.Index('-');
+                            start = wxAtoi(valstr.Left(idx));
+                            end = wxAtoi(valstr.Right(valstr.size() - idx - 1));
+                            if (end < start) {
+                                std::swap(start, end);
+                            }
+                        } else {
+                            start = end = wxAtoi(valstr);
+                        }
+                        if (start > end) {
+                            start = end;
+                        }
+                        start--;
+                        end--;
+                        for (int n = start; n <= end; n++) {
+                            nodes.push_back(n);
+                        }
+                    }
+                    faceInfoNodes[it.first][it2.first] = nodes;
+                }
+            }
+        }
+    }
+}
+
+void Model::UpdateStateInfoNodes()
+{
+    stateInfoNodes.clear();
+    for (const auto& it : stateInfo) {
+        if (stateInfo[it.first]["Type"] == "NodeRange") {
+            for (const auto& it2 : it.second) {
+                if (it2.first != "Type" && !Contains(it2.first, "Color") && it2.second != "") {
+                    std::list<int> nodes;
+                    auto wtkz = wxStringTokenizer(it2.second, ",");
+                    while (wtkz.HasMoreTokens()) {
+                        wxString valstr = wtkz.GetNextToken();
+
+                        int start, end;
+                        if (valstr.Contains("-")) {
+                            int idx = valstr.Index('-');
+                            start = wxAtoi(valstr.Left(idx));
+                            end = wxAtoi(valstr.Right(valstr.size() - idx - 1));
+                            if (end < start) {
+                                std::swap(start, end);
+                            }
+                        } else {
+                            start = end = wxAtoi(valstr);
+                        }
+                        if (start > end) {
+                            start = end;
+                        }
+                        start--;
+                        end--;
+                        for (int n = start; n <= end; n++) {
+                            nodes.push_back(n);
+                        }
+                    }
+                    stateInfoNodes[it.first][it2.first] = nodes;
+                }
+            }
+        }
+    }
+}
+
+void Model::ParseStateInfo(wxXmlNode* f, std::map<std::string, std::map<std::string, std::string>>& stateInfo)
+{
     std::string name = f->GetAttribute("Name", "SingleNode").ToStdString();
     std::string type = f->GetAttribute("Type", "SingleNode").ToStdString();
     if (name == "") {
@@ -2549,7 +2631,7 @@ bool Model::IsValidStartChannelString() const
         {
             wxString ip = parts[0].substr(1);
             Output* o = modelManager.GetOutputManager()->GetOutput(wxAtoi(parts[1]), ip.ToStdString());
-            if (IsIPValidOrHostname(ip.ToStdString()) && o != nullptr &&
+            if (ip_utils::IsIPValidOrHostname(ip.ToStdString()) && o != nullptr &&
                 (parts[2].Trim(true).Trim(false).IsNumber() && wxAtol(parts[2]) > 0 && !parts[2].Contains('.')))
             {
                 return true;
@@ -2946,6 +3028,9 @@ void Model::SetFromXml(wxXmlNode* ModelNode, bool zb)
         }
         f = f->GetNext();
     }
+
+    UpdateFaceInfoNodes();
+    UpdateStateInfoNodes();
 
     wxString cc = ModelNode->GetAttribute("ControllerConnection").ToStdString();
     if (cc != "") {

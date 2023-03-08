@@ -259,7 +259,7 @@ void InitialiseLogging(bool fromMain)
                     if (it->isNoticeEnabled()) levels += "NOTICE ";
                     if (it->isWarnEnabled()) levels += "WARN ";
 
-                    logger_base.info("    %s : %s", (const char*)it->getName().c_str(), (const char*)levels.c_str());
+                    logger_base.info("    %s : %s", it->getName().c_str(), levels.c_str());
                     if (apps != "")
                     {
                         logger_base.info("         " + apps);
@@ -318,8 +318,8 @@ bool xScheduleApp::OnInit()
 #ifdef __WXMSW__
     logger_base.debug("xSchedule module handle 0x%llx", ::GetModuleHandle(nullptr));
     logger_base.debug("xSchedule wxTheApp 0x%llx", wxTheApp);
+    MSWEnableDarkMode();
 #endif
-
     DumpConfig();
 
     static const wxCmdLineEntryDesc cmdLineDesc[] =

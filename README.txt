@@ -11,7 +11,95 @@ Issue Tracker is found here: www.github.com/smeighan/xLights/issues
 
 XLIGHTS/NUTCRACKER RELEASE NOTES
 ---------------------------------
-   -- bug (gil).   Fix start channel bug when PolyLine Lights/Node is greater than 1
+2023.03 February 22, 2023
+   -- enh (dkulp)  Add ability to create "FPP Command Preset" and "FPP Effects" timing tracks and save that in fseq files (FPP 7)
+   -- enh (dkulp)  Add FPPConnect upload of fseq/media to FPP7
+   -- enh (keith)  Change jukebox to play the sequence looped for the effect duration rather than just selecting the effect
+   -- enh (merryoncherry) New 5x5 Font for text effect
+   -- bug (merryoncherry) Fix icons for Import Effects panel not matching model
+   -- bug (merryoncherry) Fix save icon remaining pink if saving linked network/models
+   -- bug (keith)  Overlap checks does not always identify model
+   -- bug (scott)  Fix crash when switching from player
+   -- bug (scott)  Allow Serial Outputs On Virtual Matrix
+   -- bug (keith)  Fix crash when setting smart remote type on a port with no models.
+   -- bug (scott)  Fix F##v4 upload
+2023.02 February 01, 2023
+   -- enh (scott)  Add "dark mode" for Windows
+   -- enh (lutz)   Add Effect Duration to the variables available to shaders
+   -- enh (dkulp)  Allow xcontroller variants to specify which "ConfigDriver" they need.  Not based soley on vendor.
+   -- enh (keith)  Fix #3687 add optional frameMS and view parameters to xlDo newsequence
+   -- enh (scott)  Add Wally's WB48
+   -- enh (dkulp)  Add Warning about potential removal of OpenGL 1.x/2.x
+   -- enh (dkulp)  Add Warning about potential removal of Windows 7 support
+   -- enh (dkulp)  Add Warning about potential removal of FPP <6 support
+   -- bug (dkulp)  Fix Twinkly output on M1 Macs
+   -- bug (keith)  Fix crash when dropping sketch effect
+   -- bug (scott)  Hopefully fix IP/Host Validation
+   -- bug (dkulp)  Fix duplication of media dirs if flip back/forth of tabs in preferences panel
+   -- bug (dkulp)  Fix DDP packet data type to match spec
+   -- bug (dkulp)  Prevent visualizer from opening up if Output to lights is on (prevents some crashes)
+2023.01 January 05, 2023
+   -- enh (dkulp)  Speed up aborting of rendering so UI tasks can complete quicker
+   -- bug (dkulp)  Fix Aborted rendering not marking ranges as "Dirty" so they render properly later
+   -- bug (dkulp)  Fix some crashes with resizing/moving effects and timing marks
+   -- enh (dkulp)  Update to latest wxWidgets+patches so Scott can play with Dark Mode on Windows
+2022.26 December 29, 2022
+   -- enh (scott)  Added ability to duplicate or "tile" an effect
+   -- bug (dkulp)  macOS - Fix some issues in SubModel dialog where everythingn will grey out after deleting a submodel
+   -- bug (dkulp)  Fix some crashes if supress frames is used at the beginning of an effect
+   -- bug (dkulp)  Fix memory leak with GIF images
+   -- bug (gil)    Fix mutex deadlock and fix hitting wxassert in the debugger when importing sequences with timing tracks
+   -- bug (dkulp)  Fix memory leak in faces effect with images on Matrices
+   -- bug (dkulp)  Fix memory leak in video reader
+   -- bug (dkulp)  Fix memory leak in MusicEffect
+2022.25 December 16, 2022
+   -- enh (Shelby) Bunch of Vixen 3 import enhancements to aid migration from Vixen 3
+   -- enh (scott)  Add date modified to Batch Render dialog
+   -- enh (scott)  Save size/position of Batch Render dialog
+   -- enh (scott)  Add ESP32-AE+ variants
+   -- enh (keith)  Increase maximum size of background images to 4K
+   -- bug (dkulp)  Fix crash in GPU renderer if too many commands are submitted at once
+   -- bug (keith)  Fix second and subsequent strings on multi string models which are shadowed not showing the visual cue that they are shadowed
+   -- bug (gil)    Fix model handle size with low zoom settings
+   -- bug (scott)  Use Node Name and Strand names on effect export
+   -- bug (keith)  Fix Visualizer printing dark when OS is in Dark mode
+   -- bug (dkulp)  Fix crash with twinkly export on macOS
+2022.24 December 1, 2022
+   -- enh (keith)  SubModel creation - allow user to press space when a cell is the active cell to "double click" on the cell
+   -- enh (keith)  Improve some face/state effect render times
+   -- enh (dkulp)  macOS - Add "Open New Instance" to Doc icon
+   -- enh (keith)  Allow removal of Sketch effect background image
+   -- enh (keith)  Allow keyboard delete of a preset
+   -- enh (scott)  CustomModel dialog - allow h/v flip of selected area
+   -- enh (keith)  Expand fan effect radius
+   -- enh (scott)  Added search to Face Download Dialog
+   -- enh (scott)  Added support for QuinLED-Dig-Octa
+   -- bug (gil)    Fix bug when drop sizes set negative. Introduced in 2022.22 when fixing drop size set to 0 bug
+   -- bug (dkulp)  Fix crash in render on Linux
+   -- bug (scott)  Fix upload to Dragon controllers
+   -- bug (keith)  Bulk Edit Combo box does not work as a combo box
+   -- bug (keith)  FPP Connect uses different method to determine FSEQ location than save sequence
+   -- bug (keith)  Put warnings in log when zip extract filenames exceed MAX_PATH
+   -- bug (keith)  Add more logging to Twinkly enable
+   -- bug (keith)  Fix crash on render model to LCB
+2022.23 November 17, 2022
+   -- enh (keith)  Upgraded to newer Visual Studio, hopefully fixes some image issues
+   -- enh (dkulp)  Add Shader filename in log if shader cannot be compiled to make debugging shader issues easier
+   -- enh (dkulp)  Finer grained FixFiles locking results in faster startup when bouncing back/forth between Windows/macOS
+   -- enh (keith)  Add a default camera to groups and handle using it when selecting per preview render buffers
+   -- enh (MrPaulAR) Add serial outputs to visualizer to some Pi based controllers
+   -- enh (keith)  Add Mattos Designs controller
+   -- enh (KMojek) Add "Reverse Fades" checkbox to ColorWashPanel
+   -- enh (merryoncherry) Import custom model - add submodels to groups
+   -- bug (keith)  Export model does not allow selection of groups containing submodels of the model being exported
+   -- bug (keith)  Sketch effect background image not included in packaged sequences
+   -- bug (scott)  Fix hinkspix upload if only using SR ID of B,C,D on 16SR.
+   -- bug (scott)  Fix model sorting in import dialog
+   -- bug (scott)  Fix SVG import from packaged sequences
+   -- bug (scott)  Fix ExperienceLights upload color order
+   -- bug (dkulp)  Fix crash in Shader effect if shader is not a proper shader or is using invalid unicode characters
+   -- bug (dkulp)  Fix hang on sequence close with RenderCache enabled
+   -- bug (gil)    Fix start channel bug when PolyLine Lights/Node is greater than 1
 2022.22 November 7, 2022
    -- enh (gil)    Refactored several huge sections of code in PolyLine reducing the complexity of the code
    -- enh (keith)  Add a way to add show players and pure media players to the controller tab
