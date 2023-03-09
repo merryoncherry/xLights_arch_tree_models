@@ -222,7 +222,6 @@
 																	<object class="wxGrid" name="ID_GRID1" subclass="StretchGrid" variable="NodesGrid" member="yes">
 																		<cols>1</cols>
 																		<rows>5</rows>
-																		<labelrowheight>18</labelrowheight>
 																		<defaultcolsize>160</defaultcolsize>
 																		<collabels>
 																			<item>Node Ranges</item>
@@ -280,7 +279,7 @@
 																		<label>Add Row</label>
 																		<handler function="OnAddRowButtonClick" entry="EVT_BUTTON" />
 																	</object>
-																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxFIXED_MINSIZE</flag>
 																	<border>5</border>
 																	<option>1</option>
 																</object>
@@ -289,7 +288,7 @@
 																		<label>Delete Row</label>
 																		<handler function="OnDeleteRowButtonClick" entry="EVT_BUTTON" />
 																	</object>
-																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxFIXED_MINSIZE</flag>
 																	<border>5</border>
 																	<option>1</option>
 																</object>
@@ -298,7 +297,7 @@
 																		<label>^</label>
 																		<handler function="OnButton_MoveUpClick" entry="EVT_BUTTON" />
 																	</object>
-																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxFIXED_MINSIZE</flag>
 																	<border>5</border>
 																	<option>1</option>
 																</object>
@@ -307,7 +306,7 @@
 																		<label>v</label>
 																		<handler function="OnButton_MoveDownClick" entry="EVT_BUTTON" />
 																	</object>
-																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxFIXED_MINSIZE</flag>
 																	<border>5</border>
 																	<option>1</option>
 																</object>
@@ -316,7 +315,7 @@
 																		<label>Reverse Row</label>
 																		<handler function="OnButton_ReverseRowClick" entry="EVT_BUTTON" />
 																	</object>
-																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxFIXED_MINSIZE</flag>
 																	<border>5</border>
 																	<option>1</option>
 																</object>
@@ -325,7 +324,7 @@
 																		<label>Sort Row</label>
 																		<handler function="OnButton_SortRowClick" entry="EVT_BUTTON" />
 																	</object>
-																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxFIXED_MINSIZE</flag>
 																	<border>5</border>
 																	<option>1</option>
 																</object>
@@ -334,7 +333,7 @@
 																		<label>Draw Model</label>
 																		<handler function="OnButton_Draw_ModelClick" entry="EVT_BUTTON" />
 																	</object>
-																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																	<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxFIXED_MINSIZE</flag>
 																	<border>5</border>
 																	<option>1</option>
 																</object>
