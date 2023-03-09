@@ -160,7 +160,6 @@ ModelStateDialog::ModelStateDialog(wxWindow* parent, OutputManager* outputManage
 	SingleNodeGrid->SetMinSize(wxDLG_UNIT(CoroPanel,wxSize(-1,200)));
 	SingleNodeGrid->EnableEditing(true);
 	SingleNodeGrid->EnableGridLines(true);
-	SingleNodeGrid->SetColLabelSize(20);
 	SingleNodeGrid->SetDefaultColSize(150, true);
 	SingleNodeGrid->SetColLabelValue(0, _("State"));
 	SingleNodeGrid->SetColLabelValue(1, _("Nodes"));
@@ -191,7 +190,6 @@ ModelStateDialog::ModelStateDialog(wxWindow* parent, OutputManager* outputManage
 	NodeRangeGrid->SetMinSize(wxDLG_UNIT(NodeRangePanel,wxSize(-1,200)));
 	NodeRangeGrid->EnableEditing(true);
 	NodeRangeGrid->EnableGridLines(true);
-	NodeRangeGrid->SetColLabelSize(20);
 	NodeRangeGrid->SetDefaultColSize(150, true);
 	NodeRangeGrid->SetColLabelValue(0, _("State"));
 	NodeRangeGrid->SetColLabelValue(1, _("Nodes"));
@@ -265,6 +263,9 @@ ModelStateDialog::ModelStateDialog(wxWindow* parent, OutputManager* outputManage
     modelPreview->Connect(wxEVT_LEFT_DCLICK, (wxObjectEventFunction)&ModelStateDialog::OnPreviewLeftDClick, nullptr, this);
 
     StateTypeChoice->ChangeSelection(NODE_RANGE_STATE);
+
+    NodeRangeGrid->SetColLabelSize(int(1.5 * float(NodeRangeGrid->GetLabelFont().GetPixelSize().y)));
+    SingleNodeGrid->SetColLabelSize(int(1.5 * float(SingleNodeGrid->GetLabelFont().GetPixelSize().y)));
 
     FlexGridSizer1->Fit(this);
     FlexGridSizer1->SetSizeHints(this);

@@ -355,7 +355,6 @@ SubModelsDialog::SubModelsDialog(wxWindow* parent, OutputManager* om) :
 	Connect(wxID_ANY,wxEVT_INIT_DIALOG,(wxObjectEventFunction)&SubModelsDialog::OnInit);
 	//*)
 
-    wxFont gfont = NodesGrid->GetLabelFont();
     NodesGrid->SetColLabelSize(int(1.5 * float(NodesGrid->GetLabelFont().GetPixelSize().y)));
 
     Connect(ID_NOTEBOOK1, wxEVT_NOTEBOOK_PAGE_CHANGED, (wxObjectEventFunction)& SubModelsDialog::OnTypeNotebookPageChanged);
