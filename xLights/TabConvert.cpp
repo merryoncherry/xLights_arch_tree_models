@@ -1083,7 +1083,7 @@ std::string xLightsFrame::GetPresetIconFilename(const std::string& preset) const
 {
     wxString filename = preset + ".gif";
     filename.Replace("/", "_");
-    return (showDirectory + "/presets/" + filename).ToStdString();
+    return (showDirectory + wxFileName::GetPathSeparator() + "presets" + wxFileName::GetPathSeparator() + filename).ToStdString();
 }
 
 void xLightsFrame::CreatePresetIcons()
@@ -1428,7 +1428,7 @@ void xLightsFrame::WriteFalconPiFile(const wxString& filename, bool allowSparse)
                                    &mediaFilename, // media filename
                                    nullptr,
                                    filename);
-
+    write_params.elements = &_sequenceElements;
     if (allowSparse) {
         std::map<uint32_t, uint32_t> ranges;
         int numElements = _sequenceElements.GetElementCount();

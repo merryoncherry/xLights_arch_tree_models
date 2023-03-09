@@ -17,6 +17,7 @@
 #include "ControllerEthernet.h"
 #include "../OutputModelManager.h"
 #include "../SpecialOptions.h"
+#include "../utils/ip_utils.h"
 
 #include <log4cpp/Category.hh>
 
@@ -189,7 +190,7 @@ void ArtNetOutput::PrepareDiscovery(Discovery &discovery) {
         static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
         if (buffer[0] == 'A' && buffer[1] == 'r' && buffer[2] == 't' && buffer[3] == '-' && buffer[9] == 0x21) {
             logger_base.debug(" ArtNET Valid response.");
-            uint32_t channels = 512;
+            uint32_t channels = 510;
 
             auto ip = wxString::Format("%d.%d.%d.%d", (int)buffer[10], (int)buffer[11], (int)buffer[12], (int)buffer[13]);
             logger_base.debug("     From %s.", (const char *)ip.c_str());
@@ -293,7 +294,7 @@ bool ArtNetOutput::Open() {
     log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
 
     if (!_enabled) return true;
-    if (!IsIPValid(_resolvedIp)) return false;
+    if (!ip_utils::IsIPValid(_resolvedIp)) return false;
 
     _ok = IPOutput::Open();
 
