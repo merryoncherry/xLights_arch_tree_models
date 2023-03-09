@@ -107,7 +107,6 @@
 															<object class="wxGrid" name="ID_GRID_COROFACES" variable="SingleNodeGrid" member="yes">
 																<cols>2</cols>
 																<rows>13</rows>
-																<labelrowheight>20</labelrowheight>
 																<labelcolwidth>150</labelcolwidth>
 																<defaultcolsize>200</defaultcolsize>
 																<collabels>
@@ -195,7 +194,6 @@
 															<object class="wxGrid" name="ID_GRID3" variable="NodeRangeGrid" member="yes">
 																<cols>2</cols>
 																<rows>18</rows>
-																<labelrowheight>20</labelrowheight>
 																<labelcolwidth>150</labelcolwidth>
 																<defaultcolsize>200</defaultcolsize>
 																<collabels>
@@ -304,7 +302,6 @@
 															<object class="wxGrid" name="ID_GRID1" variable="MatrixModelsGrid" member="yes">
 																<cols>2</cols>
 																<rows>10</rows>
-																<labelrowheight>20</labelrowheight>
 																<labelcolwidth>150</labelcolwidth>
 																<defaultcolsize>200</defaultcolsize>
 																<collabels>

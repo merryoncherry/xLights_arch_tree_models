@@ -177,7 +177,6 @@ ModelFaceDialog::ModelFaceDialog(wxWindow* parent, OutputManager* outputManager,
 	SingleNodeGrid->SetMinSize(wxDLG_UNIT(CoroPanel,wxSize(-1,200)));
 	SingleNodeGrid->EnableEditing(true);
 	SingleNodeGrid->EnableGridLines(true);
-	SingleNodeGrid->SetColLabelSize(20);
 	SingleNodeGrid->SetRowLabelSize(150);
 	SingleNodeGrid->SetDefaultColSize(200, true);
 	SingleNodeGrid->SetColLabelValue(0, _("Nodes"));
@@ -224,7 +223,6 @@ ModelFaceDialog::ModelFaceDialog(wxWindow* parent, OutputManager* outputManager,
 	NodeRangeGrid->SetMinSize(wxDLG_UNIT(NodeRangePanel,wxSize(-1,200)));
 	NodeRangeGrid->EnableEditing(true);
 	NodeRangeGrid->EnableGridLines(true);
-	NodeRangeGrid->SetColLabelSize(20);
 	NodeRangeGrid->SetRowLabelSize(150);
 	NodeRangeGrid->SetDefaultColSize(200, true);
 	NodeRangeGrid->SetColLabelValue(0, _("Nodes"));
@@ -280,7 +278,6 @@ ModelFaceDialog::ModelFaceDialog(wxWindow* parent, OutputManager* outputManager,
 	MatrixModelsGrid->SetMinSize(wxDLG_UNIT(Matrix,wxSize(-1,200)));
 	MatrixModelsGrid->EnableEditing(true);
 	MatrixModelsGrid->EnableGridLines(true);
-	MatrixModelsGrid->SetColLabelSize(20);
 	MatrixModelsGrid->SetRowLabelSize(150);
 	MatrixModelsGrid->SetDefaultColSize(200, true);
 	MatrixModelsGrid->SetColLabelValue(0, _("Eyes Open"));
@@ -372,6 +369,10 @@ ModelFaceDialog::ModelFaceDialog(wxWindow* parent, OutputManager* outputManager,
     modelPreview->Connect(wxEVT_LEFT_DCLICK, (wxObjectEventFunction)&ModelFaceDialog::OnPreviewLeftDClick, nullptr, this);
 
     FaceTypeChoice->ChangeSelection(NODE_RANGE_FACE);
+
+    MatrixModelsGrid->SetColLabelSize(int(1.5 * float(MatrixModelsGrid->GetLabelFont().GetPixelSize().y)));
+    NodeRangeGrid->SetColLabelSize(int(1.5 * float(NodeRangeGrid->GetLabelFont().GetPixelSize().y)));
+    SingleNodeGrid->SetColLabelSize(int(1.5 * float(SingleNodeGrid->GetLabelFont().GetPixelSize().y)));
 
     FlexGridSizer1->Fit(this);
     FlexGridSizer1->SetSizeHints(this);
