@@ -10,6 +10,7 @@
  * License: https://github.com/smeighan/xLights/blob/master/License.txt
  **************************************************************/
 
+#include <atomic>
 #include <list>
 #include <map>
 #include <mutex>
@@ -29,7 +30,7 @@ class PlayList
 protected:
 
     #pragma region Member Variables
-    int _reentrancyCounter;
+    std::atomic<int> _reentrancyCounter;
     wxUint32 _id;
     std::list<PlayListStep*> _steps;
     std::list<PlayListStep*> _everySteps;
