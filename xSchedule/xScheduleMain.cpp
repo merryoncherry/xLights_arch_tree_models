@@ -745,9 +745,9 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
 
     // limit weirdness
     if (x < -100) x = 0;
-    if (x > 2000) x = 400;
+    if (x > 2000) x = 400; // w/ 4K this isn't that weird any more
     if (y < -100) y = 0;
-    if (y > 2000) y = 400;
+    if (y > 2000) y = 400; // w/ 4K this isn't that weird any more
 
     SetPosition(wxPoint(x, y));
     SetSize(w, h);

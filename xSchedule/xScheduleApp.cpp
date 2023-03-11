@@ -328,7 +328,11 @@ bool xScheduleApp::OnInit()
         { wxCMD_LINE_OPTION, "s", "show", "specify show directory" },
         { wxCMD_LINE_OPTION, "p", "playlist", "specify the playlist to play" },
         { wxCMD_LINE_SWITCH, "w", "wipe", "wipe settings clean" },
-        { wxCMD_LINE_NONE }
+        { wxCMD_LINE_OPTION, "t", "test", "test execute schedule over simulated time range" },
+        { wxCMD_LINE_OPTION, "j", "jsonlog", "log things that happen to json log file" },
+        { wxCMD_LINE_OPTION, "e", "events", "read and replay events from json log file" },
+        { wxCMD_LINE_OPTION, "f", "fseq", "write out xSchedule data to fseq file" },
+        { wxCMD_LINE_NONE },
     };
 
     bool parmfound = false;
