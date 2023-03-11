@@ -996,7 +996,7 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
 
                 logger_frame.debug("Frame: Output processing done %ldms", sw.Time());
 
-                if (outputframe && _brightness < 100)
+                if (outputframe && _brightness < 100) // outputframe is known true in this block
                 {
                     ApplyBrightness();
                 }
@@ -1070,7 +1070,7 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
                         auto it = _eventPlayLists.begin();
                         while (it != _eventPlayLists.end())
                         {
-                            if ((*it)->Frame(_buffer, _outputManager->GetTotalChannels(), true))
+                            if ((*it)->Frame(_buffer, _outputManager->GetTotalChannels(), true)) // MoC - Why is this not outputFrame?
                             {
                                 auto temp = it;
                                 ++it;

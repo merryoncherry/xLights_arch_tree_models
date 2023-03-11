@@ -339,6 +339,7 @@ bool xScheduleApp::OnInit()
     bool wipeSettings = false;
     wxString showDir;
     wxString playlist;
+    wxString testTimeRange, jsonLog, extEventsFile, fseqOutFile;
     wxCmdLineParser parser(cmdLineDesc, argc, argv);
     switch (parser.Parse()) {
     case -1:
@@ -359,6 +360,26 @@ bool xScheduleApp::OnInit()
         if (parser.Found("p", &playlist)) {
             parmfound = true;
             logger_base.info("-p: Playlist to play %s.", (const char*)playlist.c_str());
+        }
+        if (parser.Found("t", &testTimeRange)) {
+            parmfound = true;
+            logger_base.info("-t: Time range to test: %s.", (const char*)testTimeRange.c_str());
+            // TODO
+        }
+        if (parser.Found("j", &jsonLog)) {
+            parmfound = true;
+            logger_base.info("-j: JSON Log: %s.", (const char*)jsonLog.c_str());
+            // TODO
+        }
+        if (parser.Found("e", &extEventsFile)) {
+            parmfound = true;
+            logger_base.info("-e: Ext events file: %s.", (const char*)extEventsFile.c_str());
+            // TODO
+        }
+        if (parser.Found("f", &fseqOutFile)) {
+            parmfound = true;
+            logger_base.info("-f: FSEQ file to write: %s.", (const char*)fseqOutFile.c_str());
+            // TODO
         }
         if (!parmfound && parser.GetParamCount() > 0)
         {
