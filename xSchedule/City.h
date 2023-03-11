@@ -108,7 +108,7 @@ public:
 
         const float zenith = 90.83333333333333f;
 
-        wxDateTime res = wxDateTime::Now();
+        wxDateTime res = wxDateTime::Now(); // What's the use of now() vs the input date?  Try Test() routine
         res.SetHour(0);
         res.SetMinute(0);
         res.SetSecond(0);

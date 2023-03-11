@@ -18,6 +18,7 @@
 #include "../RunningSchedule.h"
 #include "PlayList.h"
 #include "PlayListStep.h"
+#include "../TimeMgt.h"
 
 int __playlistitemid = 0;
 
@@ -174,7 +175,7 @@ std::string PlayListItem::ReplaceTags(const std::string s) const
     wxString res = s;
     AudioManager* am = nullptr;
 
-    auto now = wxDateTime::Now();
+    auto now = TimeMgt::getSchedNowWx();
 
     res.Replace("\\n", "\n");
     res.Replace("\\t", "\t");

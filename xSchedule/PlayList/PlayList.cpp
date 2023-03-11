@@ -921,13 +921,13 @@ void PlayList::TogglePause()
     if (IsPaused())
     {
         logger_base.info("        Unpausing playlist %s.", (const char*)GetName().c_str());
-        _currentStep->AdjustTime(wxDateTime::Now() - _pauseTime);
+        _currentStep->AdjustTime(wxDateTime::Now() - _pauseTime); // TODO probably this one
         _pauseTime = wxDateTime(static_cast<time_t>(0));
     }
     else
     {
         logger_base.info("        Pausing playlist %s.", (const char*)GetName().c_str());
-        _pauseTime = wxDateTime::Now();
+        _pauseTime = wxDateTime::Now(); // TODO probably this one
     }
 
     _currentStep->Pause(IsPaused());
@@ -944,15 +944,14 @@ int PlayList::Suspend(bool suspend)
         {
             // unsuspend
             logger_base.info("         Playlist %s unsuspending.", (const char*)GetNameNoTime().c_str());
-            _currentStep->AdjustTime(wxDateTime::Now() - _suspendTime);
+            _currentStep->AdjustTime(wxDateTime::Now() - _suspendTime); // TODO probably this one
             _suspendTime = wxDateTime(static_cast<time_t>(0));
         }
         else if (suspend && !IsSuspended())
         {
             // suspend
             logger_base.info("         Playlist %s suspending.", (const char*)GetNameNoTime().c_str());
-            _suspendTime = wxDateTime::Now();
-
+            _suspendTime = wxDateTime::Now(); // TODO probably this one
         }
     }
 
