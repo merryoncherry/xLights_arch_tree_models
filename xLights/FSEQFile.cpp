@@ -630,7 +630,7 @@ V1FSEQFile::V1FSEQFile(const std::string& fn, FILE* file, const std::vector<uint
 
     //Use the last modified time for the uniqueId
     struct stat stats;
-    fstat(fileno(file), &stats);
+    fstat(_fileno(file), &stats);
     m_uniqueId = stats.st_mtime;
 }
 

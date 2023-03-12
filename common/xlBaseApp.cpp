@@ -255,8 +255,7 @@ void xlCrashHandler::SendReport(std::string const& appName, std::string const& l
     http.Connect("dankulp.com");
 
     static char const bound[] = "--------------------------b29a7c2fe47b9481";
-    wxDateTime now = wxDateTime::Now();
-    int millis = wxGetUTCTimeMillis().GetLo() % 1000;
+    wxDateTime now = wxDateTime::UNow();
 
     wxString ver = xlights_version_string + xlights_qualifier;
     ver.Trim();
@@ -264,7 +263,7 @@ void xlCrashHandler::SendReport(std::string const& appName, std::string const& l
         if (ver[x] == ' ') ver[x] = '-';
     }
 
-    wxString ts = wxString::Format("%04d-%02d-%02d_%02d-%02d-%02d-%03d", now.GetYear(), now.GetMonth()+1, now.GetDay(), now.GetHour(), now.GetMinute(), now.GetSecond(), millis);
+    wxString ts = wxString::Format("%04d-%02d-%02d_%02d-%02d-%02d-%03d", now.GetYear(), now.GetMonth()+1, now.GetDay(), now.GetHour(), now.GetMinute(), now.GetSecond(), now.GetMillisecond());
 
     wxString qualifier = GetBitness();
 #ifdef __WXOSX__

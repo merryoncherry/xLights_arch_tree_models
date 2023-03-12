@@ -426,6 +426,7 @@
     <ClCompile Include="SyncOSC.cpp" />
     <ClCompile Include="SyncSMPTE.cpp" />
     <ClCompile Include="ThreeToFourDialog.cpp" />
+    <ClCompile Include="TimeMgt.cpp" />
     <ClCompile Include="UserButton.cpp" />
     <ClCompile Include="VideoCache.cpp" />
     <ClCompile Include="VirtualMatricesDialog.cpp" />
@@ -674,6 +675,7 @@
     <ClInclude Include="SyncOSC.h" />
     <ClInclude Include="SyncSMPTE.h" />
     <ClInclude Include="ThreeToFourDialog.h" />
+    <ClInclude Include="TimeMgt.h" />
     <ClInclude Include="UserButton.h" />
     <ClInclude Include="VideoCache.h" />
     <ClInclude Include="VirtualMatricesDialog.h" />

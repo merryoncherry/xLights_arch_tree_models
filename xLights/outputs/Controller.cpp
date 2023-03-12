@@ -314,7 +314,7 @@ int32_t Controller::GetChannels() const {
 }
 
 bool Controller::ContainsChannels(uint32_t start, uint32_t end) const {
-    return end >= GetStartChannel() && start < GetEndChannel();
+    return int32_t(end) >= GetStartChannel() && int32_t(start) < GetEndChannel();
 }
 
 bool Controller::IsDirty() const {

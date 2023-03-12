@@ -229,9 +229,8 @@ void InitialiseLogging(bool fromMain)
                 log4cpp::PropertyConfigurator::configure(initFileName);
                 static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
 
-                wxDateTime now = wxDateTime::Now();
-                int millis = wxGetUTCTimeMillis().GetLo() % 1000;
-                wxString ts = wxString::Format("%04d-%02d-%02d_%02d-%02d-%02d-%03d", now.GetYear(), now.GetMonth(), now.GetDay(), now.GetHour(), now.GetMinute(), now.GetSecond(), millis);
+                wxDateTime now = wxDateTime::UNow();
+                wxString ts = wxString::Format("%04d-%02d-%02d_%02d-%02d-%02d-%03d", now.GetYear(), now.GetMonth()+1, now.GetDay(), now.GetHour(), now.GetMinute(), now.GetSecond(), now.GetMillisecond());
                 logger_base.info("Start Time: %s.", (const char*)ts.c_str());
 
                 logger_base.info("Current Working Directory: " + wxGetCwd());
