@@ -173,7 +173,7 @@ protected:
     int _score = 0;
     std::string _playerName;
     std::string _highScoreOwner;
-    wxLongLong _lastUpdatedMovement;
+    int64_t _lastUpdatedMovement;
     bool _gameRunning = false;
     int _bw = -1;
     int _bh = -1;
@@ -209,7 +209,7 @@ class Xyzzy : public XyzzyBase
     XyzzyPiece* _currentPiece;
     XyzzyPiece* _nextPiece;
     int _dropSpeed;
-    wxLongLong _fullTime;
+    int64_t _fullTime;
 
     void SaveHighScore();
     std::string GetNextPiece() const;

@@ -22,6 +22,8 @@
 #include "../xLights/UtilFunctions.h"
 #include "md5.h"
 
+#include "TimeMgt.h"
+
 #include <log4cpp/Category.hh>
 
 #undef WXUSINGDLL
@@ -73,7 +75,7 @@ void UpdateValid(HttpConnection& connection)
         wxArrayString li = wxSplit(*it, '|');
 
         if (li[0] == connection.Address().IPAddress()) {
-            li[1] = wxDateTime::Now().FormatISOCombined();
+            li[1] = TimeMgt::getRTCNowWx().FormatISOCombined();
             *it = li[0] + "|" + li[1];
             return;
         }
@@ -94,7 +96,7 @@ void AddToValid(HttpConnection& connection)
         }
     }
 
-    wxString security = connection.Address().IPAddress() + "|" + wxDateTime::Now().FormatISOCombined();
+    wxString security = connection.Address().IPAddress() + "|" + TimeMgt::getRTCNowWx().FormatISOCombined();
 
     logger_base.debug("Security: Adding record %s.", (const char*)security.c_str());
     __Loggedin.push_back(security);
@@ -119,7 +121,7 @@ bool CheckLoggedIn(HttpConnection& connection, const std::string& pass)
         wxArrayString li = wxSplit(it, '|');
         wxDateTime lastused;
         lastused.ParseISOCombined(li[1]);
-        if (wxDateTime::Now() - lastused > __loginTimeout * 60000) {
+        if (TimeMgt::getRTCNowWx() - lastused > __loginTimeout * 60000) {
             logger_base.debug("Security: Removing ip %s due to timout.", (const char*)li[0].c_str());
             toremove.push_back(it);
         }
@@ -132,7 +134,7 @@ bool CheckLoggedIn(HttpConnection& connection, const std::string& pass)
         wxArrayString li = wxSplit(*it, '|');
 
         if (li[0] == connection.Address().IPAddress()) {
-            li[1] = wxDateTime::Now().FormatISOCombined();
+            li[1] = TimeMgt::getRTCNowWx().FormatISOCombined();
             *it = li[0] + "|" + li[1];
             return true;
         }

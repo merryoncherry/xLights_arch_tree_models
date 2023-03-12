@@ -17,6 +17,7 @@
 #include <log4cpp/Category.hh>
 #include "xScheduleApp.h"
 #include "../xLights/UtilFunctions.h"
+#include "TimeMgt.h"
 
 #ifdef SHOWVIRTUALMATRIX
 #include "VirtualMatrix.h"
@@ -37,7 +38,7 @@ void XyzzyPiece::Rotate()
 
 void XyzzyBase::BaseReset()
 {
-    _lastUpdatedMovement = wxGetUTCTimeMillis();
+    _lastUpdatedMovement = TimeMgt::getSchedNowMsUTC();
     _gameRunning = false;
     _score = 0;
     _playerName = "";
@@ -773,7 +774,7 @@ bool Xyzzy::Action(const wxString& command, const wxString& parameters, wxString
             }
             _nextPiece = XyzzyPiece::CreatePiece();
             _fullTime = 0;
-            _lastUpdatedMovement = wxGetUTCTimeMillis();
+            _lastUpdatedMovement = TimeMgt::getSchedNowMsUTC();
             memset(_board, 0xFF, sizeof(_board));
             _dropSpeed = STARTSPEED;
             _score = 0;
@@ -1007,7 +1008,7 @@ bool Xyzzy2::Action(const wxString& command, const wxString& parameters, wxStrin
             _body.clear();
             _body.push_back(wxPoint(1, rand01() * _bh - 1));
             _body.push_back(wxPoint(0, _body.front().y));
-            _lastUpdatedMovement = wxGetUTCTimeMillis();
+            _lastUpdatedMovement = TimeMgt::getSchedNowMsUTC();
             _board.clear();
             _board.resize(_bw * _bh);
             for (auto& it : _board)
@@ -1502,9 +1503,9 @@ bool Xyzzy::AdvanceGame()
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     if (!_gameRunning) return false;
 
-    if (_fullTime != 0 && (wxGetUTCTimeMillis() - _fullTime) < PAUSEONCOMPLETEROWTIME)
+    if (_fullTime != 0 && (TimeMgt::getSchedNowMsUTC() - _fullTime) < PAUSEONCOMPLETEROWTIME)
     {
-        _lastUpdatedMovement = wxGetUTCTimeMillis();
+        _lastUpdatedMovement = TimeMgt::getSchedNowMsUTC();
         return true;
     }
 
@@ -1532,7 +1533,7 @@ bool Xyzzy::AdvanceGame()
     if (_currentPiece == nullptr)
     {
         _currentPiece = XyzzyPiece::CreatePiece();
-        _lastUpdatedMovement = wxGetUTCTimeMillis();
+        _lastUpdatedMovement = TimeMgt::getSchedNowMsUTC();
     }
 
     if (_nextPiece == nullptr)
@@ -1540,14 +1541,14 @@ bool Xyzzy::AdvanceGame()
         _nextPiece = XyzzyPiece::CreatePiece();
     }
 
-    auto elapsed = (wxGetUTCTimeMillis() - _lastUpdatedMovement).ToLong();
+    auto elapsed = TimeMgt::getSchedNowMsUTC() -_lastUpdatedMovement;
 
     if (elapsed > _dropSpeed)
     {
         if (TestMoveDown())
         {
             _currentPiece->MoveDown();
-            _lastUpdatedMovement = wxGetUTCTimeMillis();
+            _lastUpdatedMovement = TimeMgt::getSchedNowMsUTC();
             wxCommandEvent event(EVT_XYZZYEVENT);
             event.SetString("piecemoved");
             wxPostEvent(wxGetApp().GetTopWindow(), event);
@@ -1597,7 +1598,7 @@ bool Xyzzy2::AdvanceGame()
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     if (!_gameRunning) return false;
 
-    auto elapsed = (wxGetUTCTimeMillis() - _lastUpdatedMovement).ToLong();
+    auto elapsed = TimeMgt::getSchedNowMsUTC() -_lastUpdatedMovement;
 
     int frametime = 300;
     frametime -= _score * 5;
@@ -1605,7 +1606,7 @@ bool Xyzzy2::AdvanceGame()
 
     if (elapsed > frametime)
     {
-        _lastUpdatedMovement = wxGetUTCTimeMillis();
+        _lastUpdatedMovement = TimeMgt::getSchedNowMsUTC();
 
         wxPoint np = _body.front();
         switch (_direction)
@@ -1694,7 +1695,7 @@ void Xyzzy::CheckFullRow()
             for (int x = 0; x < _bw; ++x)
             {
                 _board[y * _bw + x] = 7;
-                _fullTime = wxGetUTCTimeMillis();
+                _fullTime = TimeMgt::getSchedNowMsUTC(); // In this file, ought to use event time I think
             }
         }
     }

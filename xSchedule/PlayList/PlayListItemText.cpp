@@ -21,6 +21,7 @@
 #include "../xScheduleMain.h"
 #include "../ScheduleManager.h"
 #include "../ScheduleOptions.h"
+#include "../TimeMgt.h"
 #include "utils/Curl.h"
 
 PlayListItemText::PlayListItemText(wxXmlNode* node) : PlayListItem(node)
@@ -297,7 +298,7 @@ wxString PlayListItemText::GetText(size_t ms)
 
     wxTimeSpan plicountdown = wxTimeSpan::Milliseconds(_durationMS - ms);
     wxTimeSpan plicountup = wxTimeSpan::Milliseconds(ms);
-    wxDateTime now = wxDateTime::Now();
+    wxDateTime now = TimeMgt::getSchedNowWx();
     wxTimeSpan countdown;
     int cds = 0;
 
@@ -316,10 +317,10 @@ wxString PlayListItemText::GetText(size_t ms)
         if (!targetDate.IsValid())
         {
             targetDate.ParseTime(_text);
-            targetDate.SetDay(wxDateTime::Now().GetDay());
-            targetDate.SetMonth(wxDateTime::Now().GetMonth());
-            targetDate.SetYear(wxDateTime::Now().GetYear());
-            if (targetDate.IsValid() && targetDate < wxDateTime::Now())
+            targetDate.SetDay(now.GetDay());
+            targetDate.SetMonth(now.GetMonth());
+            targetDate.SetYear(now.GetYear());
+            if (targetDate.IsValid() && targetDate < now)
             {
                 targetDate.Add(wxTimeSpan(24, 0, 0, 0));
             }
