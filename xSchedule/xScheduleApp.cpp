@@ -21,15 +21,17 @@
 #include <wx/file.h>
 #include <wx/msgdlg.h>
 
-#include "ScheduleManager.h"
-#include "../xLights/outputs/OutputManager.h"
-#include "../xLights/xLightsVersion.h"
 #include <wx/cmdline.h>
 #include <wx/confbase.h>
 #include <wx/debugrpt.h>
 #include <wx/filename.h>
 #include <wx/snglinst.h>
 #include <wx/stdpaths.h>
+
+#include "ScheduleManager.h"
+#include "TimeMgt.h"
+#include "../xLights/outputs/OutputManager.h"
+#include "../xLights/xLightsVersion.h"
 
 #ifdef _MSC_VER
 #ifdef _DEBUG
@@ -327,7 +329,7 @@ bool xScheduleApp::OnInit()
         { wxCMD_LINE_OPTION, "s", "show", "specify show directory" },
         { wxCMD_LINE_OPTION, "p", "playlist", "specify the playlist to play" },
         { wxCMD_LINE_SWITCH, "w", "wipe", "wipe settings clean" },
-        { wxCMD_LINE_OPTION, "t", "test", "test execute schedule over simulated time range" },
+        { wxCMD_LINE_OPTION, "t", "test", "test execute schedule over simulated time range (in local time)" },
         { wxCMD_LINE_OPTION, "j", "jsonlog", "log things that happen to json log file" },
         { wxCMD_LINE_OPTION, "e", "events", "read and replay events from json log file" },
         { wxCMD_LINE_OPTION, "f", "fseq", "write out xSchedule data to fseq file" },
@@ -363,7 +365,16 @@ bool xScheduleApp::OnInit()
         if (parser.Found("t", &testTimeRange)) {
             parmfound = true;
             logger_base.info("-t: Time range to test: %s.", (const char*)testTimeRange.c_str());
-            // TODO
+            auto st_end = wxSplit(testTimeRange, ';');
+            if (st_end.size() != 2) {
+                logger_base.info("Unrecognised date formats: %s.  Use start;end.", testTimeRange.c_str());
+                wxMessageBox("Unrecognised date formats on command line.", _("Command Line Options"));
+            } else {
+                wxDateTime start, end;
+                start.ParseFormat(st_end[0], wxDefaultDateTimeFormat);
+                end.ParseFormat(st_end[1], wxDefaultDateTimeFormat);
+                TimeMgt::setRunTimeRange(start, end, false);
+            }
         }
         if (parser.Found("j", &jsonLog)) {
             parmfound = true;
@@ -400,7 +411,7 @@ bool xScheduleApp::OnInit()
             delete _checker; // OnExit() won't be called if we return false
             _checker = nullptr;
 
-            // WOuld be nice to switch focuse here to the existing instance ... but that doesnt work ... this only sees windows in this process
+            // Would be nice to switch focuse here to the existing instance ... but that doesnt work ... this only sees windows in this process
             //wxWindow* x = FindWindowByLabel(_("xLights Scheduler"));
 
             wxMessageBox("Another instance of xSchedule is already running. A second instance not allowed. Exiting.");

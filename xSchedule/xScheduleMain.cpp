@@ -69,6 +69,7 @@
 #include "../xLights/outputs/ControllerEthernet.h"
 #include "../xLights/outputs/ControllerSerial.h"
 #include "RemoteModeConfigDialog.h"
+#include "TimeMgt.h"
 
 #include "../include/xs_save.xpm"
 #include "../include/xs_otlon.xpm"
@@ -369,7 +370,7 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
 
     OutputManager::SetInteractive(false);
     __schedule = nullptr;
-    _statusSetAt = wxDateTime::Now();
+    _statusSetAt = TimeMgt::getRTCNowWx();
     _nowebicon = wxBitmap(no_web_icon_24);
     _webicon = wxBitmap(web_icon_24);
     _slowicon = wxBitmap(slow_32);
@@ -1500,7 +1501,7 @@ void xScheduleFrame::On_timerTrigger(wxTimerEvent& event)
 
     if (__schedule == nullptr) return;
 
-    static long long lastms = wxGetLocalTimeMillis().GetValue() - 25;
+    static long long lastms = wxGetLocalTimeMillis().GetValue() - 25; // Needs work? or not relevant in test mode?
     long long now = wxGetLocalTimeMillis().GetValue();
     long long elapsed = (now - lastms);
 
@@ -1537,7 +1538,7 @@ void xScheduleFrame::On_timerTrigger(wxTimerEvent& event)
     }
     lastms = now;
 
-    wxDateTime frameStart = wxDateTime::UNow();
+    wxDateTime frameStart = wxDateTime::UNow(); // TODO time management - this diagnostic means something else in test mode
 
     int rate = __schedule->Frame(_timerOutputFrame, this);
 
@@ -1650,8 +1651,8 @@ void xScheduleFrame::UpdateSchedule()
     CorrectTimer(rate);
 
     // Ensure I am firing on the minute
-    if (wxDateTime::Now().GetSecond() != 0)     {
-        int time = (60 - wxDateTime::Now().GetSecond()) * 1000;
+    if (TimeMgt::getSchedNowWx().GetSecond() != 0) { // TODO - maybe take ms
+        int time = (60 - TimeMgt::getSchedNowWx().GetSecond()) * 1000;
         if (time == 0) time = 1;
         _timerSchedule.Start(time, false);
     }
@@ -1892,7 +1893,7 @@ void xScheduleFrame::OnButton_UserClick(wxCommandEvent& event)
 
 void xScheduleFrame::SetTempMessage(const std::string& msg)
 {
-    _statusSetAt = wxDateTime::Now();
+    _statusSetAt = TimeMgt::getRTCNowWx();
     StatusBar1->SetStatusText(msg);
 }
 
@@ -2100,7 +2101,7 @@ void xScheduleFrame::UpdateStatus(bool force)
 
     ListView_Running->Freeze();
 
-    if (StatusBar1->GetStatusText() != "" && (wxDateTime::Now() - _statusSetAt).GetMilliseconds() > 5000) {
+    if (StatusBar1->GetStatusText() != "" && (TimeMgt::getRTCNowWx() - _statusSetAt).GetMilliseconds() > 5000) { // TODO
         StatusBar1->SetStatusText("");
     }
 
@@ -2437,7 +2438,7 @@ void xScheduleFrame::UpdateStatus(bool force)
 
     Custom_Volume->SetValue(__schedule->GetVolume());
 
-    StaticText_Time->SetLabel(wxDateTime::Now().FormatTime());
+    StaticText_Time->SetLabel(TimeMgt::getRTCNowWx().FormatTime());
 
     SendStatus();
 

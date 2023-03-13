@@ -49,4 +49,13 @@ namespace TimeMgt
     /// Clear off the time override
     /// </summary>
     void clearTimeOverride();
+
+    /// <summary>
+    /// Stash away the directivs to run a simulated time range (e.g. test purposes)
+    ///   rather than the real system time
+    /// </summary>
+    /// <param name="start">Simulated run start time</param>
+    /// <param name="end">Simulated run end time</param>
+    /// <param name="accelerated">If true, run accelerated, rather than real time speed</param>
+    void setRunTimeRange(const wxDateTime& start, const wxDateTime& end, bool accelerated = false);
 }

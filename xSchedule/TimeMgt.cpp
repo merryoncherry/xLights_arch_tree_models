@@ -8,8 +8,21 @@ namespace TimeMgt
 {
     static std::mutex overridemtx;
 
-    bool overridden = false;
-    wxDateTime overrideTime; // Currently kept as UTC
+    // This is the time to return from sched calls below
+    // It doesn't change with time unless we are told.
+    // It may or may not be close to the real world time depending
+    //   on whether we're just stabilizing the current time, or
+    //   doing a test/simulation of another time interval
+    static bool overridden = false;
+    static wxDateTime overrideTime;
+
+    // This is for pretending it is a different time
+    //   than it really is... test/simulation/rehearsal purposes
+    static bool runTimeRange = false;
+    static wxDateTime rtrStart, rtrEnd;
+    static wxDateTime startedAt;
+    static wxLongLong timeDelta = 0;
+    static bool accelerated;
 
     wxDateTime getSchedNowWx()
     {
@@ -22,7 +35,7 @@ namespace TimeMgt
             }
         }
 
-        return wxDateTime::Now();
+        return wxDateTime::Now().Subtract(timeDelta);
     }
     wxDateTime getSchedUNowWx()
     {
@@ -32,7 +45,7 @@ namespace TimeMgt
                 return overrideTime.ToTimezone(wxDateTime::TZ::Local);
         }
 
-        return wxDateTime::UNow();
+        return wxDateTime::UNow().Subtract(timeDelta);
     }
 
     wxDateTime getSchedUNowWxUTC()
@@ -43,7 +56,7 @@ namespace TimeMgt
                 return overrideTime;
         }
 
-        return wxDateTime::UNow().ToUTC();
+        return wxDateTime::UNow().ToUTC().Subtract(timeDelta);
     }
 
     int64_t getSchedNowMs()
@@ -53,7 +66,7 @@ namespace TimeMgt
             if (overridden)
                 return overrideTime.ToTimezone(wxDateTime::TZ::Local).GetValue().GetValue();
         }       
-        return wxGetLocalTimeMillis().GetValue();
+        return (wxGetLocalTimeMillis()-timeDelta).GetValue();
     }
     int64_t getSchedNowMsUTC()
     {
@@ -62,24 +75,24 @@ namespace TimeMgt
             if (overridden)
                 return overrideTime.GetValue().GetValue();
         }
-        return wxGetLocalTimeMillis().GetValue();
+        return (wxGetLocalTimeMillis()-timeDelta).GetValue();
     }
 
     wxDateTime getRTCNowWx()
     {
-        return wxDateTime::Now();
+        return wxDateTime::Now().Subtract(timeDelta);
     }
     wxDateTime getRTCUNowWx()
     {
-        return wxDateTime::UNow();
+        return wxDateTime::UNow().Subtract(timeDelta);
     }
     int64_t getRTCNowMs()
     {
-        return wxGetLocalTimeMillis().GetValue();
+        return (wxGetLocalTimeMillis()-timeDelta).GetValue();
     }
     int64_t getRTCNowMsUTC()
     {
-        return wxGetUTCTimeMillis().GetValue();
+        return (wxGetUTCTimeMillis()-timeDelta).GetValue();
     }
 
     void setTimeOverrideUTC(const wxDateTime& t)
@@ -93,6 +106,7 @@ namespace TimeMgt
         std::lock_guard lk(overridemtx);
         overrideTime.Set(time_t(millis/1000));
         overrideTime.SetMillisecond(millis % 1000);
+        overrideTime = wxDateTime(wxLongLongNative(millis));
         overridden = true;
     }
 
@@ -100,5 +114,16 @@ namespace TimeMgt
     {
         std::lock_guard lk(overridemtx);
         overridden = false;
+    }
+
+    void setRunTimeRange(const wxDateTime& start, const wxDateTime& end, bool accelerate)
+    {
+        runTimeRange = true;
+        rtrStart = start;
+        rtrEnd = end;
+        startedAt = wxDateTime::UNow();
+        auto diff = startedAt - rtrStart;
+        timeDelta = diff.GetValue();
+        accelerated = accelerate;
     }
 }
