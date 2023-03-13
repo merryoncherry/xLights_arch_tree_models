@@ -371,8 +371,9 @@ bool xScheduleApp::OnInit()
                 wxMessageBox("Unrecognised date formats on command line.", _("Command Line Options"));
             } else {
                 wxDateTime start, end;
-                start.ParseFormat(st_end[0], wxDefaultDateTimeFormat);
-                end.ParseFormat(st_end[1], wxDefaultDateTimeFormat);
+                start.ParseFormat(st_end[0], "%Y-%m-%d %H:%M:%S");
+                end.ParseFormat(st_end[1], "%Y-%m-%d %H:%M:%S");
+                logger_base.info("Running time window %s - %s; not accelerated", start.FormatISOCombined(' ').c_str(), end.FormatISOCombined(' ').c_str());
                 TimeMgt::setRunTimeRange(start, end, false);
             }
         }
