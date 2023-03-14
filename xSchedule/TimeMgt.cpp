@@ -126,4 +126,12 @@ namespace TimeMgt
         timeDelta = diff.GetValue();
         accelerated = accelerate;
     }
+
+    bool shouldEndRun()
+    {
+        if (!runTimeRange) {
+            return false;
+        }
+        return getSchedUNowWx() >= rtrEnd;
+    }
 }

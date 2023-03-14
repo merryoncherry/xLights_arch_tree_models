@@ -1674,6 +1674,11 @@ void xScheduleFrame::UpdateSchedule()
 
 void xScheduleFrame::On_timerScheduleTrigger(wxTimerEvent& event)
 {
+    if (TimeMgt::shouldEndRun()) {
+        wxCommandEvent event(EVT_QUIT);
+        wxPostEvent(this, event);
+        return;
+    }
     if (__schedule->IsFPPRemoteOrMaster())     {
         SyncFPP::Ping(__schedule->IsSlave(), __schedule->GetForceLocalIP());
     }

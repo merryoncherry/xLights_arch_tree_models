@@ -58,4 +58,10 @@ namespace TimeMgt
     /// <param name="end">Simulated run end time</param>
     /// <param name="accelerated">If true, run accelerated, rather than real time speed</param>
     void setRunTimeRange(const wxDateTime& start, const wxDateTime& end, bool accelerated = false);
+
+    /// <summary>
+    /// Check if current time or set time indicates a run should end
+    /// </summary>
+    /// <returns></returns>
+    bool shouldEndRun();
 }
