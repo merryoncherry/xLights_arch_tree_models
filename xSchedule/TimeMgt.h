@@ -26,6 +26,14 @@ namespace TimeMgt
     wxDateTime getSchedUNowWxUTC();
     int64_t getSchedNowMs();
     int64_t getSchedNowMsUTC();
+    inline wxLongLong getSchedNowMsWxll()  // This is not an intended API and will get deleted
+    {
+        return wxLongLong(getSchedNowMs());
+    }
+    inline wxLongLong getSchedNowMsUTCWxll()   // This is not an intended API and will get deleted
+    {
+        return wxLongLong(getSchedNowMsUTC());
+    }
 
     /// <summary>
     /// Get time from real-time clock

@@ -49,6 +49,7 @@
 #include "../xLights/outputs/Controller.h"
 #include "OutputProcessExcludeDim.h"
 #include "../xLights/Parallel.h"
+#include "TimeMgt.h"
 
 #include <memory>
 
@@ -79,7 +80,7 @@ ScheduleManager::ScheduleManager(xScheduleFrame* frame, const std::string& showD
     _immediatePlay = nullptr;
     _scheduleOptions = nullptr;
     _showDir = showDir;
-    _startTime = wxGetUTCTimeMillis().GetLo();
+    _startTime = TimeMgt::getSchedNowMsUTCWxll().GetLo(); // TODO
     _outputManager = nullptr;
     _buffer = nullptr;
     _brightness = 100;
@@ -844,7 +845,7 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
 
     if (IsTest())
     {
-        long msec = wxGetUTCTimeMillis().GetLo() - _startTime;
+        long msec = TimeMgt::getSchedNowMsUTCWxll().GetLo() - _startTime; // TODO
 
         if (outputframe)
         {
@@ -891,7 +892,7 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
                 rate = running->GetFrameMS();
             }
 
-            long msec = wxGetUTCTimeMillis().GetLo() - _startTime;
+            long msec = TimeMgt::getSchedNowMsUTCWxll().GetLo() - _startTime; // TODO
 
             if (outputframe)
             {
