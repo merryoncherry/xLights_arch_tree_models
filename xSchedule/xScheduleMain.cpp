@@ -1501,8 +1501,8 @@ void xScheduleFrame::On_timerTrigger(wxTimerEvent& event)
 
     if (__schedule == nullptr) return;
 
-    static long long lastms = wxGetLocalTimeMillis().GetValue() - 25; // Needs work? or not relevant in test mode?
-    long long now = wxGetLocalTimeMillis().GetValue();
+    static long long lastms = TimeMgt::getSchedNowMs() - 25; // TODO Needs work? or not relevant in test mode?  A measure of the handling time is worth it later
+    long long now = TimeMgt::getSchedNowMs();
     long long elapsed = (now - lastms);
 
     logger_frame.info("Timer: Start frame elapsed %lld now %lld last %lld", elapsed, now, lastms);
@@ -1533,31 +1533,31 @@ void xScheduleFrame::On_timerTrigger(wxTimerEvent& event)
             else {
                 logger_frame.debug("Timer: Frame interval greater than 200%% of what it should have been [%d] %d : So far %u", _timer.GetInterval() * 2, (int)(now - lastms), longFrames);
             }
-            _lastSlow = wxGetUTCTimeMillis();
+            _lastSlow = TimeMgt::getSchedNowMsUTCWxll();
         }
     }
     lastms = now;
 
-    wxDateTime frameStart = wxDateTime::UNow(); // TODO time management - this diagnostic means something else in test mode
+    wxDateTime frameStart = TimeMgt::getSchedUNowWx(); // TODO time management - this diagnostic means something else in test mode where we might want to do render performance
 
     int rate = __schedule->Frame(_timerOutputFrame, this);
 
 #ifndef WEBOVERLOAD
-    if (last != wxDateTime::Now().GetSecond() && _timerOutputFrame)
+    if (last != TimeMgt::getSchedNowWx().GetSecond() && _timerOutputFrame)
 #endif
     {
         // This log message must be commented out before release!!!
         //logger_frame.debug("    Check schedule");
 
         // update the UI every second
-        last = wxDateTime::Now().GetSecond();
+        last = TimeMgt::getSchedNowWx().GetSecond();
         wxCommandEvent event2(EVT_SCHEDULECHANGED);
         wxPostEvent(this, event2);
     }
 
     CorrectTimer(rate);
 
-    wxDateTime frameEnd = wxDateTime::UNow();
+    wxDateTime frameEnd = TimeMgt::getSchedUNowWx();
     long ms = (frameEnd - frameStart).GetMilliseconds().ToLong();
 
     if (ms > _timer.GetInterval())
@@ -3230,7 +3230,7 @@ void xScheduleFrame::UpdateUI(bool force)
             }
         }
 
-        if (wxGetUTCTimeMillis() - _lastSlow < SLOW_FOR_MS) {
+        if (TimeMgt::getSchedNowMsUTCWxll() - _lastSlow < SLOW_FOR_MS) {
             if (!_slowDisplayed) {
                 StaticBitmap_Slow->SetBitmap(_slowicon);
                 _slowDisplayed = true;

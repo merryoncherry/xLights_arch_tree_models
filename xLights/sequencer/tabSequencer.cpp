@@ -2328,7 +2328,7 @@ bool xLightsFrame::TimerRgbSeq(long msec)
     StartGraphicsSyncPoint();
 
 #if 0
-    std::array<uint32_t, 20> timePoints;
+    std::array<int64_t, 20> timePoints;
     int currTimePoint = 0;
 #define DO_PRINT_TIMINGS
 #define RecordTimingCheckpoint() timePoints[currTimePoint++] = wxGetUTCTimeMillis().GetLo()
@@ -2428,7 +2428,7 @@ bool xLightsFrame::TimerRgbSeq(long msec)
     }
     EndGraphicsSyncPoint();
 #ifdef DO_PRINT_TIMINGS
-    timePoints[currTimePoint++] = wxGetUTCTimeMillis().GetLo();
+    timePoints[currTimePoint++] = wxGetUTCTimeMillis().GetValue();
     printf("Frame %d \n", frame);
     for (int x = 1; x < currTimePoint; x++) {
         int r = timePoints[x];

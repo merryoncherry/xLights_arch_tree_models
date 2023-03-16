@@ -46,6 +46,7 @@
 #include "../../xLights/UtilFunctions.h"
 #include "../../xLights/FSEQFile.h"
 #include "../ScheduleOptions.h"
+#include "../TimeMgt.h"
 
 #include <wx/filename.h>
 #include <wx/xml/xml.h>
@@ -539,7 +540,7 @@ bool PlayListStep::Frame(uint8_t* buffer, size_t size, bool outputframe)
     }
     else
     {
-        frameMS = wxGetUTCTimeMillis().GetLo() - _startTime;
+        frameMS = TimeMgt::getSchedNowMsUTCWxll().GetLo() - _startTime; // Generally will remove GetLo TODO
     }
 
     //logger_base.debug("Step %s frame %ld start.", (const char *)GetNameNoTime().c_str(), (long)frameMS);
@@ -587,7 +588,7 @@ void PlayListStep::Start(int loops)
     logger_base.info("         ######## Playlist step %s starting.", (const char*)GetNameNoTime().c_str());
 
     _loops = loops;
-    _startTime = wxGetUTCTimeMillis().GetLo();
+    _startTime = TimeMgt::getSchedNowMsUTCWxll().GetLo();
     {
         ReentrancyCounter rec(_reentrancyCounter);
         for (auto it: _items)
@@ -603,7 +604,7 @@ void PlayListStep::Pause(bool pause)
 
     if (pause)
     {
-        _pause = wxGetUTCTimeMillis().GetLo();
+        _pause = TimeMgt::getSchedNowMsUTCWxll().GetLo(); // Needs work
         logger_base.info("                  Playlist step %s pausing.", (const char*)GetNameNoTime().c_str());
     }
     else
@@ -632,8 +633,10 @@ void PlayListStep::Advance(int seconds)
     }
 
     _startTime -= seconds * 1000;
-    if (_startTime > wxGetUTCTimeMillis().GetLo()) _startTime = wxGetUTCTimeMillis().GetLo();
-    if (wxGetUTCTimeMillis().GetLo() - _startTime > GetLengthMS()) _startTime = wxGetUTCTimeMillis().GetLo() - GetLengthMS();
+    if (_startTime > TimeMgt::getSchedNowMsUTCWxll().GetLo())
+        _startTime = TimeMgt::getSchedNowMsUTCWxll().GetLo();
+    if (TimeMgt::getSchedNowMsUTCWxll().GetLo() - _startTime > GetLengthMS())
+        _startTime = TimeMgt::getSchedNowMsUTCWxll().GetLo() - GetLengthMS();
 }
 
 std::string PlayListStep::GetFSEQTimeStamp() const
@@ -667,7 +670,7 @@ void PlayListStep::Suspend(bool suspend)
     {
         if (suspend)
         {
-            _suspend = wxGetUTCTimeMillis().GetLo();
+            _suspend = TimeMgt::getSchedNowMsUTCWxll().GetLo();
             logger_base.info("                  Playlist step %s suspending.", (const char*)GetNameNoTime().c_str());
         }
         else
@@ -691,7 +694,7 @@ void PlayListStep::Restart()
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.info("Playlist step %s restarting.", (const char*)GetNameNoTime().c_str());
 
-    _startTime = wxGetUTCTimeMillis().GetLo();
+    _startTime = TimeMgt::getSchedNowMsUTCWxll().GetLo();
     {
         ReentrancyCounter rec(_reentrancyCounter);
         for (auto it : _items)
@@ -727,7 +730,7 @@ size_t PlayListStep::GetPosition()
     }
     else
     {
-        auto now = wxGetUTCTimeMillis().GetLo();
+        auto now = TimeMgt::getSchedNowMsUTCWxll().GetLo();
         if (_pause == 0)
         {
             if (_suspend == 0)
@@ -1195,7 +1198,7 @@ bool PlayListStep::SetPosition(size_t frame, size_t ms)
         // Set position should handled it
     }
     else {
-        auto now = wxGetUTCTimeMillis().GetLo();
+        auto now = TimeMgt::getSchedNowMsUTCWxll().GetLo();
         if (_pause == 0) {
             if (_suspend == 0) {
                 _startTime = now - ms;

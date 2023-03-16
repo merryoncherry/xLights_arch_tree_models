@@ -11,6 +11,7 @@
 #include "SMSMessage.h"
 #include "SMSDaemonOptions.h"
 #include "MagicWord.h"
+#include "../TimeMgt.h"
 
 class SMSService;
 
@@ -86,7 +87,7 @@ class SMSService
         void Retrieved()
         {
             std::lock_guard<std::recursive_mutex> lock(_threadLock);
-            _lastRetrieved = wxDateTime::Now();
+            _lastRetrieved = TimeMgt::getSchedNowWx();
         }
         void StartThread(uint32_t interval)
         {
@@ -461,7 +462,7 @@ class SMSService
             for (auto m : msgs)
             {
                 SMSMessage msg;
-                msg._timestamp = wxDateTime::Now().MakeGMT() + (suppressTimezoneAdjust ? 0 : wxTimeSpan(0, _options->GetTimezoneAdjust()));
+                msg._timestamp = TimeMgt::getSchedNowWx().MakeGMT() + (suppressTimezoneAdjust ? 0 : wxTimeSpan(0, _options->GetTimezoneAdjust()));
                 msg._from = "TEST";
                 msg._rawMessage = m;
                 AddMessage(msg);
@@ -498,12 +499,12 @@ inline void* RetrieveThread::Entry()
         }
         else
         {
-            wxDateTime next = wxDateTime::Now() + wxTimeSpan(0, 0, 0, _interval);
+            wxDateTime next = TimeMgt::getSchedNowWx() + wxTimeSpan(0, 0, 0, _interval);
             logger_base.debug("Next message retrieval at %s.", (const char *)next.FormatTime().c_str());
 
-            while (!_stop && wxDateTime::Now() < next)
+            while (!_stop && TimeMgt::getSchedNowWx() < next)
             {
-                wxMilliSleep(100);
+                wxMilliSleep(100); // TODO: If this is 100ms then the millisecond timer ought to be used above... and sched is probably not involved here.
             }
         }
 

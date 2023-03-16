@@ -16,6 +16,7 @@
 #include <wx/datetime.h>
 
 #include "../xLights/UtilFunctions.h"
+#include "TimeMgt.h"
 
 #include <log4cpp/Category.hh>
 
@@ -45,7 +46,7 @@ public:
     {
         static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
         City* city = GetCity("Sydney");
-        wxDateTime date = wxDateTime::Now();
+        wxDateTime date = TimeMgt::getSchedNowWx();
         date.SetDay(1);
         date.SetMonth(wxDateTime::Jan);
         date.SetYear(2018);
@@ -108,7 +109,7 @@ public:
 
         const float zenith = 90.83333333333333f;
 
-        wxDateTime res = wxDateTime::Now(); // What's the use of now() vs the input date?  Try Test() routine
+        wxDateTime res = TimeMgt::getSchedNowWx(); // What's the use of now() vs the input date?  Try Test() routine
         res.SetHour(0);
         res.SetMinute(0);
         res.SetSecond(0);

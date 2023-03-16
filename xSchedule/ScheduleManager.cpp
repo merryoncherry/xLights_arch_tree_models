@@ -87,7 +87,7 @@ ScheduleManager::ScheduleManager(xScheduleFrame* frame, const std::string& showD
     _lastBrightness = 100;
     _xyzzy = nullptr;
     _timerAdjustment = 0;
-    _lastXyzzyCommand = wxDateTime::Now();
+    _lastXyzzyCommand = TimeMgt::getSchedNowWx(); // TODO UNow?
     _outputManager = new OutputManager();
 
     _mode = (int)SYNCMODE::STANDALONE;
@@ -835,7 +835,7 @@ int ScheduleManager::Frame(bool outputframe, xScheduleFrame* frame)
     long totalChannels = _outputManager->GetTotalChannels();
 
     // timeout xyzzy if no api calls for 15 seconds
-    if (_xyzzy != nullptr && (wxDateTime::Now() - _lastXyzzyCommand).GetSeconds() > 15)
+    if (_xyzzy != nullptr && (TimeMgt::getSchedNowWx() - _lastXyzzyCommand).GetSeconds() > 15)
     {
         logger_base.info("Stopping xyzzy due to timeout.");
 
@@ -3798,7 +3798,7 @@ bool ScheduleManager::Query(const wxString& command, const wxString& parameters,
                 "\",\"version\":\"" + xlights_version_string +
                 "\",\"reference\":\"" + reference +
                 "\",\"passwordset\":\"" + (_scheduleOptions->GetPassword() == ""? "false" : "true") +
-                "\",\"time\":\""+ wxDateTime::Now().Format("%Y-%m-%d %H:%M:%S") +
+                "\",\"time\":\"" + TimeMgt::getSchedNowWx().Format("%Y-%m-%d %H:%M:%S") +
                 "\"," + GetPingStatus() +"}";
         }
         else
@@ -3859,7 +3859,7 @@ bool ScheduleManager::Query(const wxString& command, const wxString& parameters,
                 "\",\"queuelength\":\"" + wxString::Format(wxT("%i"), (long)_queuedSongs->GetSteps().size()) +
                 "\",\"volume\":\"" + wxString::Format(wxT("%i"), GetVolume()) +
                 "\",\"brightness\":\"" + wxString::Format(wxT("%i"), GetBrightness()) +
-				"\",\"time\":\"" + wxDateTime::Now().Format("%Y-%m-%d %H:%M:%S") +
+                "\",\"time\":\"" + TimeMgt::getSchedNowWx().Format("%Y-%m-%d %H:%M:%S") +
                 "\",\"ip\":\"" + ip +
                 "\",\"reference\":\"" + reference +
                 "\",\"autooutputtolights\":\"" + (_manualOTL ? "false" : "true") +
@@ -5321,7 +5321,7 @@ void ScheduleManager::ImportxLightsSchedule(const std::string& filename)
 
 bool ScheduleManager::DoXyzzy(const wxString& command, const wxString& parameters, wxString& result, const wxString& reference)
 {
-    _lastXyzzyCommand = wxDateTime::Now();
+    _lastXyzzyCommand = TimeMgt::getSchedNowWx(); // TODO This would seem to be UNow
 
     if (command == "highscore")
     {

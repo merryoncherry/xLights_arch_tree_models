@@ -12,6 +12,7 @@
 #include <wx/tokenzr.h>
 #include <wx/filename.h>
 #include "../../xLights/UtilFunctions.h"
+#include "../TimeMgt.h"
 
 class SMSMessage
 {
@@ -114,7 +115,7 @@ class SMSMessage
 
     int GetAgeMins() const
     {
-        wxTimeSpan age = wxDateTime::Now().MakeGMT() - _timestamp;
+        wxTimeSpan age = TimeMgt::getSchedNowWx().MakeGMT() - _timestamp;
         return age.GetDays() * 24 * 60 + age.GetHours() * 60 + age.GetMinutes();
     }
 
