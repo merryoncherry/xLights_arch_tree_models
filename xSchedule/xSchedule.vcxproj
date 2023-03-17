@@ -418,6 +418,7 @@
     <ClCompile Include="ScheduleManager.cpp" />
     <ClCompile Include="ScheduleOptions.cpp" />
     <ClCompile Include="SetDialog.cpp" />
+    <ClCompile Include="StructuredLog.cpp" />
     <ClCompile Include="SustainDialog.cpp" />
     <ClCompile Include="SyncArtNet.cpp" />
     <ClCompile Include="SyncFPP.cpp" />
@@ -667,6 +668,7 @@
     <ClInclude Include="ScheduleManager.h" />
     <ClInclude Include="ScheduleOptions.h" />
     <ClInclude Include="SetDialog.h" />
+    <ClInclude Include="StructuredLog.h" />
     <ClInclude Include="SustainDialog.h" />
     <ClInclude Include="SyncArtNet.h" />
     <ClInclude Include="SyncFPP.h" />

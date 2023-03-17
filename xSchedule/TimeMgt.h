@@ -1,5 +1,15 @@
 #pragma once
 
+/***************************************************************
+ * This source files comes from the xLights project
+ * https://www.xlights.org
+ * https://github.com/smeighan/xLights
+ * See the github commit history for a record of contributing
+ * developers.
+ * Copyright claimed based on commit dates recorded in Github
+ * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ **************************************************************/
+
 // This file is a simple API for getting the current time.
 // Why not just a bunch of now() calls all over?
 //    That reads the current time clock, so in some cases it is what you want, but,

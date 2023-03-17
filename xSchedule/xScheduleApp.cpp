@@ -30,6 +30,7 @@
 
 #include "ScheduleManager.h"
 #include "TimeMgt.h"
+#include "StructuredLog.h"
 #include "../xLights/outputs/OutputManager.h"
 #include "../xLights/xLightsVersion.h"
 
@@ -380,7 +381,9 @@ bool xScheduleApp::OnInit()
         if (parser.Found("j", &jsonLog)) {
             parmfound = true;
             logger_base.info("-j: JSON Log: %s.", (const char*)jsonLog.c_str());
-            // TODO
+            if (!xsStructuredLog::setJsonLog(jsonLog.c_str())) {
+                wxMessageBox("Unable to open JSON log; see log for details.", _("Command Line Log Options"));
+            }
         }
         if (parser.Found("e", &extEventsFile)) {
             parmfound = true;
