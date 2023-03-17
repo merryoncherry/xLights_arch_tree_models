@@ -297,6 +297,7 @@ int xScheduleApp::OnExit()
     }
 
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+    xsStructuredLog::logShutdown();
     logger_base.info("xSchedule exiting.");
 
     return 0;
@@ -316,6 +317,7 @@ bool xScheduleApp::OnInit()
     InitialiseLogging(false);
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.info("******* OnInit: xSchedule started.");
+    xsStructuredLog::logStartup();
 
 #ifdef __WXMSW__
     logger_base.debug("xSchedule module handle 0x%llx", ::GetModuleHandle(nullptr));
@@ -374,7 +376,7 @@ bool xScheduleApp::OnInit()
                 wxDateTime start, end;
                 start.ParseFormat(st_end[0], "%Y-%m-%d %H:%M:%S");
                 end.ParseFormat(st_end[1], "%Y-%m-%d %H:%M:%S");
-                logger_base.info("Running time window %s - %s; not accelerated", start.FormatISOCombined(' ').c_str(), end.FormatISOCombined(' ').c_str());
+                logger_base.info("Running time window %s - %s; not accelerated", start.Format("%Y-%m-%d %H:%M:%S").c_str(), end.Format("%Y-%m-%d %H:%M:%S").c_str());
                 TimeMgt::setRunTimeRange(start, end, false);
             }
         }

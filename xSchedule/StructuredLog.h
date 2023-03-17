@@ -14,4 +14,13 @@ namespace xsStructuredLog
 {
     bool setJsonLog(const char* fn);
     void closeJsonLog();
+
+    void logStartup();
+    void logTimerTick();
+    void logPlayListStart();
+    void logPlayListEnd();
+    void logPlayListItemStart();
+    void logPlayListItemEnd();
+    void logFrame();
+    void logShutdown();
 }
