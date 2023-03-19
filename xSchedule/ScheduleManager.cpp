@@ -50,6 +50,7 @@
 #include "OutputProcessExcludeDim.h"
 #include "../xLights/Parallel.h"
 #include "TimeMgt.h"
+#include "StructuredLog.h"
 
 #include <memory>
 
@@ -502,6 +503,7 @@ ScheduleManager::~ScheduleManager()
     {
         auto toremove = _activeSchedules.front();
         _activeSchedules.remove(toremove);
+        xsStructuredLog::logScheduleDeactivate(toremove->GetSchedule()->GetName().c_str());
         delete toremove;
     }
 
@@ -1323,6 +1325,7 @@ int ScheduleManager::CheckSchedule()
                     if (rs->GetSchedule() != nullptr && rs->GetSchedule()->GetPriority() > Schedule::GetMaxSchedulePriorityBelowQueued()) {
                         higherThanQueuedPlayListScheduleFound = true;
                     }
+                    xsStructuredLog::logScheduleActivate(rs->GetSchedule()->GetName().c_str());
                     _activeSchedules.push_back(rs);
                     rs->GetPlayList()->StartSuspended(rs->GetSchedule()->GetLoop(), rs->GetSchedule()->GetRandom(), rs->GetSchedule()->GetLoops());
 
@@ -1371,6 +1374,7 @@ int ScheduleManager::CheckSchedule()
 
     for (const auto& it : todelete) {
         _activeSchedules.remove(it);
+        xsStructuredLog::logScheduleDeactivate(it->GetSchedule()->GetName().c_str());
         delete it;
     }
 
@@ -1402,14 +1406,16 @@ int ScheduleManager::CheckSchedule()
                             actuallyRunningPlaylist->SetSuspendAtEndOfCurrentStep();
                             if (!it->GetPlayList()->IsRunning() &&
                                 it->GetSchedule()->GetFireFrequency() != "Fire once" &&
-                                it->GetSchedule()->ShouldFire()) {
+                                it->GetSchedule()->ShouldFire())
+                            {
                                 it->GetPlayList()->StartSuspended();
                             }
                         }
                         else {
                             if (!it->GetPlayList()->IsRunning() &&
                                 it->GetSchedule()->GetFireFrequency() != "Fire once" &&
-                                it->GetSchedule()->ShouldFire()) {
+                                it->GetSchedule()->ShouldFire())
+                            {
                                 it->GetPlayList()->StartSuspended();
                                 toUnsuspend = it;
                             }
@@ -2919,6 +2925,7 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                             if ((*it)->GetSchedule()->GetId() == selschedule->GetId())
                             {
                                 auto todelete = *it;
+                                xsStructuredLog::logScheduleDeactivate(todelete->GetSchedule()->GetName().c_str());
                                 _activeSchedules.erase(it);
                                 todelete->GetPlayList()->Stop();
                                 delete todelete;
@@ -2936,6 +2943,7 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                 {
                     for (auto it : _activeSchedules)
                     {
+                        xsStructuredLog::logScheduleDeactivate(it->GetSchedule()->GetName().c_str());
                         delete it;
                     }
                     _activeSchedules.clear();
@@ -3099,6 +3107,7 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                         rs->GetPlayList()->Stop();
                         _syncManager->SendStop();
                         _activeSchedules.remove(rs);
+                        xsStructuredLog::logScheduleDeactivate(rs->GetSchedule()->GetName().c_str());
                         delete rs;
 
                         PlayList* orig = nullptr;
@@ -3131,6 +3140,8 @@ bool ScheduleManager::Action(const wxString& command, const wxString& parameters
                             {
                                 rs = new RunningSchedule(pl, sc);
                                 _activeSchedules.push_back(rs);
+                                xsStructuredLog::logScheduleActivate(rs->GetSchedule()->GetName().c_str());
+
                                 rs->GetPlayList()->StartSuspended(loop, random, loopsLeft, step);
 
                                 _activeSchedules.sort(compare_runningschedules);

@@ -318,7 +318,6 @@ bool xScheduleApp::OnInit()
     InitialiseLogging(false);
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.info("******* OnInit: xSchedule started.");
-    xsStructuredLog::logStartup();
 
 #ifdef __WXMSW__
     logger_base.debug("xSchedule module handle 0x%llx", ::GetModuleHandle(nullptr));
@@ -430,6 +429,8 @@ bool xScheduleApp::OnInit()
     {
         _checker->CreateDefault();
     }
+
+    xsStructuredLog::logStartup(); // OnInit was called a bit before loading command line options...
 
     //(*AppInitialize
     bool wxsOK = true;

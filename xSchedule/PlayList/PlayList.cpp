@@ -22,6 +22,7 @@
 #include "../ReentrancyCounter.h"
 #include "../../xLights/UtilFunctions.h"
 #include "../TimeMgt.h"
+#include "../StructuredLog.h"
 
 #include <wx/xml/xml.h>
 
@@ -670,6 +671,9 @@ void PlayList::StartSuspended(bool loop, bool random, int loops, const std::stri
 void PlayList::Start(bool loop, bool random, int loops, const std::string& step)
 {
     if (IsRunning()) return;
+
+    xsStructuredLog::logPlayListStart(GetNameNoTime().c_str(), step.c_str());
+
     if (_steps.size() == 0) return;
 
     {
@@ -738,6 +742,8 @@ void PlayList::Start(bool loop, bool random, int loops, const std::string& step)
 void PlayList::Stop()
 {
     if (!IsRunning()) return;
+
+    xsStructuredLog::logPlayListStop(GetNameNoTime().c_str());
 
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.info("******** Playlist %s stopping.", (const char*)GetName().c_str());
@@ -937,6 +943,8 @@ void PlayList::TogglePause()
 int PlayList::Suspend(bool suspend)
 {
     if (_currentStep == nullptr) return 50;
+
+    xsStructuredLog::logPlayListSuspend(GetNameNoTime().c_str(), suspend);
 
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     if (!IsPaused())

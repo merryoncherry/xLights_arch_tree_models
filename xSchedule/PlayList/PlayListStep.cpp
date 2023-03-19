@@ -47,6 +47,7 @@
 #include "../../xLights/FSEQFile.h"
 #include "../ScheduleOptions.h"
 #include "../TimeMgt.h"
+#include "../StructuredLog.h"
 
 #include <wx/filename.h>
 #include <wx/xml/xml.h>
@@ -584,6 +585,8 @@ size_t PlayListStep::GetFrameMS()
 
 void PlayListStep::Start(int loops)
 {
+    xsStructuredLog::logPlayListStepStart(GetNameNoTime().c_str());
+
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.info("         ######## Playlist step %s starting.", (const char*)GetNameNoTime().c_str());
 
@@ -601,6 +604,8 @@ void PlayListStep::Start(int loops)
 void PlayListStep::Pause(bool pause)
 {
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+
+    xsStructuredLog::logPlayListStepPause(GetNameNoTime().c_str(), pause);
 
     if (pause)
     {
@@ -666,6 +671,8 @@ void PlayListStep::Suspend(bool suspend)
 {
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
 
+    xsStructuredLog::logPlayListStepSuspend(GetNameNoTime().c_str(), suspend);
+
     if (!IsPaused())
     {
         if (suspend)
@@ -694,6 +701,8 @@ void PlayListStep::Restart()
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.info("Playlist step %s restarting.", (const char*)GetNameNoTime().c_str());
 
+    xsStructuredLog::logPlayListStepRestart(GetNameNoTime().c_str());
+
     _startTime = TimeMgt::getSchedNowMsUTCWxll().GetLo();
     {
         ReentrancyCounter rec(_reentrancyCounter);
@@ -708,6 +717,8 @@ void PlayListStep::Stop()
 {
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.info("         ######## Playlist step %s stopping.", (const char*)GetNameNoTime().c_str());
+
+    xsStructuredLog::logPlayListStepStop(GetNameNoTime().c_str());
 
     {
         ReentrancyCounter rec(_reentrancyCounter);

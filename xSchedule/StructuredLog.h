@@ -16,11 +16,17 @@ namespace xsStructuredLog
     void closeJsonLog();
 
     void logStartup();
+    void logScheduleActivate(const char *name);
+    void logScheduleDeactivate(const char *name);
+    void logPlayListStart(const char *name, const char *step);
+    void logPlayListSuspend(const char *name, bool suspend);
+    void logPlayListStop(const char *name);
+    void logPlayListStepStart(const char *name);
+    void logPlayListStepPause(const char* name, bool pause);
+    void logPlayListStepSuspend(const char* name, bool suspend);
+    void logPlayListStepRestart(const char* name);
+    void logPlayListStepStop(const char* name);
     void logTimerTick();
-    void logPlayListStart();
-    void logPlayListEnd();
-    void logPlayListItemStart();
-    void logPlayListItemEnd();
     void logFrame();
     void logShutdown();
 }
