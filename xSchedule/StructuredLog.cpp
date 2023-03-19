@@ -85,7 +85,7 @@ namespace xsStructuredLog
             return;
 
         wxJSONValue val;
-        val["type"] = "shutdown";
+        val["type"] = wxJSONValue("shutdown");
         populateTimestamps(val);
         wxString vStr;
         wxJSONWriter().Write(val, vStr);

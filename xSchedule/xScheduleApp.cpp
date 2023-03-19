@@ -298,6 +298,7 @@ int xScheduleApp::OnExit()
 
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     xsStructuredLog::logShutdown();
+    xsStructuredLog::closeJsonLog();
     logger_base.info("xSchedule exiting.");
 
     return 0;
