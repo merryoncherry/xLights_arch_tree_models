@@ -24,6 +24,7 @@ namespace TimeMgt
     //   on whether we're just stabilizing the current time, or
     //   doing a test/simulation of another time interval
     static bool overridden = false;
+    static int64_t overrideMs = 0;
     static wxDateTime overrideTime;
 
     // This is for pretending it is a different time
@@ -109,11 +110,13 @@ namespace TimeMgt
     {
         std::lock_guard lk(overridemtx);
         overrideTime = t;
+        overrideMs = t.GetValue().GetValue();
         overridden = true;
     }
     void setTimeOverrideUTC(int64_t millis)
     {
         std::lock_guard lk(overridemtx);
+        overrideMs = millis;
         overrideTime.Set(time_t(millis/1000));
         overrideTime.SetMillisecond(millis % 1000);
         overrideTime = wxDateTime(wxLongLongNative(millis));
@@ -135,6 +138,10 @@ namespace TimeMgt
         auto diff = startedAt - rtrStart;
         timeDelta = diff.GetValue();
         accelerated = accelerate;
+        if (accelerate) {
+            // TODO: Should we set override time already?
+            setTimeOverrideUTC(start.ToUTC().GetValue().GetValue());
+        }
     }
 
     bool shouldEndRun()
@@ -143,5 +150,62 @@ namespace TimeMgt
             return false;
         }
         return getSchedUNowWx() >= rtrEnd;
+    }
+
+    static int64_t frameInterval;
+    static int64_t frameAt;
+    static bool frameOS;
+    static int64_t schedInterval;
+    static int64_t schedAt;
+    static bool schedOS;
+
+    bool isSimulatedTime()
+    {
+        std::lock_guard lk(overridemtx);
+        return accelerated;
+    }
+
+    void setNextFrameIn(int64_t ms, bool oneshot)
+    {
+        std::lock_guard lk(overridemtx);
+        frameInterval = ms;
+        frameAt = ms <= 0 ? std::numeric_limits<int64_t>::min() : overrideMs + ms;
+        frameOS = oneshot;
+    }
+
+    int64_t getNextFrameIn(bool& os)
+    {
+        std::lock_guard lk(overridemtx);
+        os = frameOS;
+        return frameInterval;
+    }
+
+    int64_t getNextFrameAt(bool& os)
+    {
+        std::lock_guard lk(overridemtx);
+        os = frameOS;
+        return frameAt;
+    }
+
+    void setNextSchedIn(int64_t ms, bool oneshot)
+    {
+        std::lock_guard lk(overridemtx);
+        schedInterval = ms;
+        schedAt = ms <= 0 ? std::numeric_limits<int64_t>::min() : overrideMs + ms;
+        schedOS = oneshot;
+    }
+
+    int64_t getNextSchedIn(bool& os)
+    {
+        std::lock_guard lk(overridemtx);
+        os = schedOS;
+        return schedInterval;
+    }
+
+    int64_t getNextSchedAt(bool& os)
+    {
+        std::lock_guard lk(overridemtx);
+        os = schedOS;
+        return schedAt;
     }
 }

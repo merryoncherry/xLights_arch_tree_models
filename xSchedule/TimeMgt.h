@@ -82,4 +82,20 @@ namespace TimeMgt
     /// </summary>
     /// <returns></returns>
     bool shouldEndRun();
+
+    /// <summary>
+    /// Is time mode to accelerated / simulated?
+    /// </summary>
+    bool isSimulatedTime();
+
+    /// <summary>
+    /// Set the time between frame time ticks
+    /// </summary>
+    /// <param name="ms">Time until next tick, or negative to stop</param>
+    void setNextFrameIn(int64_t ms, bool oneshot);
+    void setNextSchedIn(int64_t ms, bool oneshot);
+    int64_t getNextFrameIn(bool &oneshot);
+    int64_t getNextFrameAt(bool &oneshot);
+    int64_t getNextSchedIn(bool &oneshot);
+    int64_t getNextSchedAt(bool &oneshot);
 }

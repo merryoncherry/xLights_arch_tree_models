@@ -1509,32 +1509,59 @@ void xScheduleFrame::OnTreeCtrl_PlayListsSchedulesItemActivated(wxTreeEvent& eve
 
 void xScheduleFrame::SetFrameTimerInterval(int64_t ms, bool oneshot)
 {
-    _timer.Start(ms, oneshot, "FrameTimer");
+    if (TimeMgt::isSimulatedTime()) {
+        TimeMgt::setNextFrameIn(ms, oneshot);
+    } else {
+        _timer.Start(ms, oneshot, "FrameTimer");
+    }
 }
 
 int64_t xScheduleFrame::GetFrameTimerInterval()
 {
+    if (TimeMgt::isSimulatedTime()) {
+        bool os;
+        return TimeMgt::getNextFrameIn(os);
+    }
     return _timer.GetInterval();
 }
 
 void xScheduleFrame::StopFrameTimer()
 {
-    _timer.Stop();
+    if (TimeMgt::isSimulatedTime())
+    {
+        TimeMgt::setNextFrameIn(-1, false);
+    } else {
+        _timer.Stop();
+    }
 }
 
 void xScheduleFrame::SetSchedTimerInterval(int64_t ms, bool oneshot)
 {
-    _timerSchedule.Start(ms, oneshot, "ScheduleTimer");
+    if (TimeMgt::isSimulatedTime()) {
+        TimeMgt::setNextSchedIn(ms, oneshot);
+    } else {
+        _timerSchedule.Start(ms, oneshot, "ScheduleTimer");
+    }
 }
 
 int64_t xScheduleFrame::GetSchedTimerInterval()
 {
-    return _timerSchedule.GetInterval();
+    if (TimeMgt::isSimulatedTime()) {
+        bool os;
+        return TimeMgt::getNextSchedIn(os);
+    } else {
+        return _timerSchedule.GetInterval();
+    }
 }
 
 void xScheduleFrame::StopSchedTimer()
 {
-    _timerSchedule.Stop();
+    if (TimeMgt::isSimulatedTime())
+    {
+        TimeMgt::setNextSchedIn(-1, false);
+    } else {
+        _timerSchedule.Stop();
+    }
 }
 
 void xScheduleFrame::On_timerTrigger(wxTimerEvent& event)
