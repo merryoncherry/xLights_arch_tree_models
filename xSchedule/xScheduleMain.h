@@ -422,4 +422,11 @@ public:
         DECLARE_EVENT_TABLE()
 
         void OnPluginMenu(wxCommandEvent& event);
+
+        int64_t GetFrameTimerInterval();
+        void SetFrameTimerInterval(int64_t ms, bool oneshot);
+        void StopFrameTimer();
+        int64_t GetSchedTimerInterval();
+        void SetSchedTimerInterval(int64_t ms, bool oneshot);
+        void StopSchedTimer();
 };

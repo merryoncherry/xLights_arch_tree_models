@@ -582,11 +582,11 @@
 			<message>Select show folder ...</message>
 		</object>
 		<object class="wxTimer" name="ID_TIMER1" subclass="xLightsTimer" variable="_timer" member="yes">
-			<interval>500000</interval>
+			<interval>-1</interval>
 			<handler function="On_timerTrigger" entry="EVT_TIMER" />
 		</object>
 		<object class="wxTimer" name="ID_TIMER2" subclass="xLightsTimer" variable="_timerSchedule" member="yes">
-			<interval>50000</interval>
+			<interval>-1</interval>
 			<handler function="On_timerScheduleTrigger" entry="EVT_TIMER" />
 		</object>
 		<object class="wxFileDialog" variable="FileDialog1" member="yes">

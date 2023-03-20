@@ -622,9 +622,7 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
     SetStatusBar(StatusBar1);
     DirDialog1 = new wxDirDialog(this, _("Select show folder ..."), wxEmptyString, wxDD_DEFAULT_STYLE, wxDefaultPosition, wxDefaultSize, _T("wxDirDialog"));
     _timer.SetOwner(this, ID_TIMER1);
-    _timer.Start(500000, false);
     _timerSchedule.SetOwner(this, ID_TIMER2);
-    _timerSchedule.Start(50000, false);
     FileDialog1 = new wxFileDialog(this, _("Select file"), wxEmptyString, _("xlights_schedule.xml"), _("xlights_schedule.xml"), wxFD_DEFAULT_STYLE|wxFD_OPEN|wxFD_FILE_MUST_EXIST, wxDefaultPosition, wxDefaultSize, _T("wxFileDialog"));
     SetSizer(FlexGridSizer1);
     Layout();
@@ -857,8 +855,9 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
 
     if (rate == 0) rate = 50;
     _useHalfFrames = rate > 1000 / 30; // slower than 30 fps
-    _timer.Start(_useHalfFrames ? rate / 2 : rate, false, "FrameTimer");
-    _timerSchedule.Start(500, false, "ScheduleTimer");
+
+    SetFrameTimerInterval(_useHalfFrames ? rate / 2 : rate, false);
+    SetSchedTimerInterval(500, false);
 
     StaticText_IP->SetLabel("    " + __schedule->GetOurIP() + ":" + wxString::Format("%d", __schedule->GetOptions()->GetWebServerPort()) + "   ");
 
@@ -1052,8 +1051,8 @@ xScheduleFrame::~xScheduleFrame()
     logger_base.debug("xScheduleFrame destructor start.");
 
     // stop the timers immediately
-    _timer.Stop();
-    _timerSchedule.Stop();
+    StopFrameTimer();
+    StopSchedTimer();
 
     // give them plenty of time to stop
     wxMilliSleep(100);
@@ -1380,13 +1379,13 @@ void xScheduleFrame::OnMenuItem_ShowFolderSelected(wxCommandEvent& event)
     if (SelectShowFolder())
     {
         _pluginManager.Uninitialise();
-        _timerSchedule.Stop();
-        _timer.Stop();
+        StopSchedTimer();
+        StopFrameTimer();
         LoadSchedule();
         wxASSERT(__schedule != nullptr);
         _useHalfFrames = true;
-        _timer.Start(50 / 2, false);
-        _timerSchedule.Start(500, false);
+        SetFrameTimerInterval(50 / 2, false);
+        SetSchedTimerInterval(500, false);
         _pluginManager.Initialise(_showDir);
     }
     ValidateWindow();
@@ -1508,6 +1507,36 @@ void xScheduleFrame::OnTreeCtrl_PlayListsSchedulesItemActivated(wxTreeEvent& eve
     UpdateUI(true);
 }
 
+void xScheduleFrame::SetFrameTimerInterval(int64_t ms, bool oneshot)
+{
+    _timer.Start(ms, oneshot, "FrameTimer");
+}
+
+int64_t xScheduleFrame::GetFrameTimerInterval()
+{
+    return _timer.GetInterval();
+}
+
+void xScheduleFrame::StopFrameTimer()
+{
+    _timer.Stop();
+}
+
+void xScheduleFrame::SetSchedTimerInterval(int64_t ms, bool oneshot)
+{
+    _timerSchedule.Start(ms, oneshot, "ScheduleTimer");
+}
+
+int64_t xScheduleFrame::GetSchedTimerInterval()
+{
+    return _timerSchedule.GetInterval();
+}
+
+void xScheduleFrame::StopSchedTimer()
+{
+    _timerSchedule.Stop();
+}
+
 void xScheduleFrame::On_timerTrigger(wxTimerEvent& event)
 {
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
@@ -1524,31 +1553,31 @@ void xScheduleFrame::On_timerTrigger(wxTimerEvent& event)
 
     logger_frame.info("Timer: Start frame elapsed %lld now %lld last %lld", elapsed, now, lastms);
 
-    if (elapsed < _timer.GetInterval() / 2)
+    if (elapsed < GetFrameTimerInterval() / 2)
     {
         // this is premature ... maybe it is a backed up timer event ... lets skip it
         ++shortFramesSkipped;
         // log slow and fast frames infrequently
         if (shortFramesSkipped % 200 == 1) {
-            logger_frame.warn("Timer: Frame event fire interval %dms less than 1/2 frame time %dms. %u events skipped.", elapsed, _timer.GetInterval() / 2, shortFramesSkipped);
+            logger_frame.warn("Timer: Frame event fire interval %dms less than 1/2 frame time %dms. %u events skipped.", elapsed, (int)GetFrameTimerInterval() / 2, shortFramesSkipped);
         }
         else {
-            logger_frame.debug("Timer: Frame event fire interval %dms less than 1/2 frame time %dms. %u events skipped.", elapsed, _timer.GetInterval() / 2, shortFramesSkipped);
+            logger_frame.debug("Timer: Frame event fire interval %dms less than 1/2 frame time %dms. %u events skipped.", elapsed, (int)GetFrameTimerInterval() / 2, shortFramesSkipped);
         }
         return;
     }
 
-    if (elapsed > _timer.GetInterval() * 4)
+    if (elapsed > GetFrameTimerInterval() * 4)
     {
         if (lastms != 0 && __schedule->IsOutputToLights())
         {
             ++longFrames;
             // log slow and fast frames infrequently
             if (longFrames % 200 == 1) {
-                logger_frame.warn("Timer: Frame interval greater than 200%% of what it should have been [%d] %d : So far %u", _timer.GetInterval() * 2, (int)(now - lastms), longFrames);
+                logger_frame.warn("Timer: Frame interval greater than 200%% of what it should have been [%d] %d : So far %u", (int)GetFrameTimerInterval() * 2, (int)(now - lastms), longFrames);
             }
             else {
-                logger_frame.debug("Timer: Frame interval greater than 200%% of what it should have been [%d] %d : So far %u", _timer.GetInterval() * 2, (int)(now - lastms), longFrames);
+                logger_frame.debug("Timer: Frame interval greater than 200%% of what it should have been [%d] %d : So far %u", (int)GetFrameTimerInterval() * 2, (int)(now - lastms), longFrames);
             }
             _lastSlow = TimeMgt::getSchedNowMsUTCWxll();
         }
@@ -1577,11 +1606,11 @@ void xScheduleFrame::On_timerTrigger(wxTimerEvent& event)
     wxDateTime frameEnd = TimeMgt::getSchedUNowWx();
     long ms = (frameEnd - frameStart).GetMilliseconds().ToLong();
 
-    if (ms > _timer.GetInterval())
+    if (ms > GetFrameTimerInterval())
     {
         // we took too long so next frame has to be an output frame
         _timerOutputFrame = true;
-        logger_frame.debug("Timer: Frame took too long %ld > %d so next frame forced to be output", ms, _timer.GetInterval());
+        logger_frame.debug("Timer: Frame took too long %ld > %d so next frame forced to be output", ms, (int)GetFrameTimerInterval());
     } else if (!_useHalfFrames) {
         // every frame is an output frame
         _timerOutputFrame = true;
@@ -1671,10 +1700,10 @@ void xScheduleFrame::UpdateSchedule()
     if (TimeMgt::getSchedNowWx().GetSecond() != 0) { // TODO - maybe take ms
         int time = (60 - TimeMgt::getSchedNowWx().GetSecond()) * 1000;
         if (time == 0) time = 1;
-        _timerSchedule.Start(time, false);
+        SetSchedTimerInterval(time, false);
     }
-    else if (_timerSchedule.GetInterval() != 60000)     {
-        _timerSchedule.Start(60000, false);
+    else if (GetSchedTimerInterval() != 60000)     {
+        SetSchedTimerInterval(60000, false);
     }
 
     logger_frame.debug("    Timers sorted %ldms", sw.Time());
@@ -1870,12 +1899,12 @@ void xScheduleFrame::ChangeShowFolder(wxCommandEvent& event)
     logger_base.debug("Changing show folder to %s.", (const char*)newShowFolder.c_str());
     _showDir = newShowFolder.ToStdString();
     SaveShowDir();
-    _timerSchedule.Stop();
-    _timer.Stop();
+    StopSchedTimer();
+    StopFrameTimer();
     LoadSchedule();
     _useHalfFrames = true;
-    _timer.Start(50 / 2, false);
-    _timerSchedule.Start(500, false);
+    SetFrameTimerInterval(50 / 2, false);
+    SetSchedTimerInterval(500, false);
     ValidateWindow();
 }
 
@@ -1903,7 +1932,7 @@ void xScheduleFrame::OnButton_UserClick(wxCommandEvent& event)
         }
     }
 
-    size_t rate = _timer.GetInterval();
+    size_t rate = GetFrameTimerInterval();
     wxString msg = "";
     __schedule->Action(((wxButton*)event.GetEventObject())->GetLabel(), playlist, step, schedule, rate, msg);
 
@@ -2631,7 +2660,7 @@ bool xScheduleFrame::HandleHotkeys(wxKeyEvent& event)
                 }
             }
 
-            size_t rate = _timer.GetInterval();
+            size_t rate = GetFrameTimerInterval();
             wxString msg = "";
             __schedule->Action((*it)->GetLabel(), playlist, step, schedule, rate, msg);
 
@@ -2655,11 +2684,11 @@ void xScheduleFrame::CorrectTimer(int rate)
     else {
         _useHalfFrames = rate > 1000 / 30; // slower than 30 fps
     }
-    if ((rate - __schedule->GetTimerAdjustment()) / (_useHalfFrames ? 2 : 1) != _timer.GetInterval())
+    if ((rate - __schedule->GetTimerAdjustment()) / (_useHalfFrames ? 2 : 1) != GetFrameTimerInterval())
     {
         logger_frame.debug("Timer corrected %d", (rate - __schedule->GetTimerAdjustment()) / (_useHalfFrames ? 2 : 1));
 
-        _timer.Start((rate - __schedule->GetTimerAdjustment()) / (_useHalfFrames ? 2 : 1));
+        SetFrameTimerInterval((rate - __schedule->GetTimerAdjustment()) / (_useHalfFrames ? 2 : 1), false);
     }
 }
 
@@ -3218,7 +3247,7 @@ void xScheduleFrame::DoAction(wxCommandEvent& event)
         }
     }
 
-    size_t rate = _timer.GetInterval();
+    size_t rate = GetFrameTimerInterval();
     wxString msg = "";
 
     __schedule->Action(amd->_command, amd->_parameters, amd->_data, playlist, step, schedule, rate, msg);
@@ -3685,12 +3714,12 @@ void xScheduleFrame::OnMenuItem_UsexLightsFolderSelected(wxCommandEvent& event)
 {
     _showDir = ScheduleManager::xLightsShowDir();
     SaveShowDir();
-    _timerSchedule.Stop();
-    _timer.Stop();
+    StopSchedTimer();
+    StopFrameTimer();
     LoadSchedule();
     _useHalfFrames = true;
-    _timer.Start(50 / 2, false);
-    _timerSchedule.Start(500, false);
+    SetFrameTimerInterval(50 / 2, false);
+    SetSchedTimerInterval(500, false);
 
     ValidateWindow();
 }
