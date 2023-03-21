@@ -333,6 +333,7 @@ bool xScheduleApp::OnInit()
         { wxCMD_LINE_OPTION, "p", "playlist", "specify the playlist to play" },
         { wxCMD_LINE_SWITCH, "w", "wipe", "wipe settings clean" },
         { wxCMD_LINE_OPTION, "t", "test", "test execute schedule over simulated time range (in local time)" },
+        { wxCMD_LINE_OPTION, "a", "simulate", "simulate execute schedule over simulated time range (in local time)" },
         { wxCMD_LINE_OPTION, "j", "jsonlog", "log things that happen to json log file" },
         { wxCMD_LINE_OPTION, "e", "events", "read and replay events from json log file" },
         { wxCMD_LINE_OPTION, "f", "fseq", "write out xSchedule data to fseq file" },
@@ -365,19 +366,25 @@ bool xScheduleApp::OnInit()
             parmfound = true;
             logger_base.info("-p: Playlist to play %s.", (const char*)playlist.c_str());
         }
-        if (parser.Found("t", &testTimeRange)) {
-            parmfound = true;
-            logger_base.info("-t: Time range to test: %s.", (const char*)testTimeRange.c_str());
-            auto st_end = wxSplit(testTimeRange, ';');
-            if (st_end.size() != 2) {
-                logger_base.info("Unrecognised date formats: %s.  Use start;end.", testTimeRange.c_str());
-                wxMessageBox("Unrecognised date formats on command line.", _("Command Line Options"));
-            } else {
-                wxDateTime start, end;
-                start.ParseFormat(st_end[0], "%Y-%m-%d %H:%M:%S");
-                end.ParseFormat(st_end[1], "%Y-%m-%d %H:%M:%S");
-                logger_base.info("Running time window %s - %s; not accelerated", (const char *)(start.Format("%Y-%m-%d %H:%M:%S").c_str()), (const char *)(end.Format("%Y-%m-%d %H:%M:%S").c_str()));
-                TimeMgt::setRunTimeRange(start, end, true);
+        {
+            bool ft = parser.Found("t", &testTimeRange);
+            bool st = false;
+            if (!ft)
+                st = parser.Found("a", &testTimeRange);
+            if (ft || st) {
+                parmfound = true;
+                logger_base.info("-t: Time range to test: %s.", (const char*)testTimeRange.c_str());
+                auto st_end = wxSplit(testTimeRange, ';');
+                if (st_end.size() != 2) {
+                    logger_base.info("Unrecognised date formats: %s.  Use start;end.", (const char *)testTimeRange.c_str());
+                    wxMessageBox("Unrecognised date formats on command line.", _("Command Line Options"));
+                } else {
+                    wxDateTime start, end;
+                    start.ParseFormat(st_end[0], "%Y-%m-%d %H:%M:%S");
+                    end.ParseFormat(st_end[1], "%Y-%m-%d %H:%M:%S");
+                    logger_base.info("Running time window %s - %s; %s accelerated", (const char*)(start.Format("%Y-%m-%d %H:%M:%S").c_str()), (const char*)(end.Format("%Y-%m-%d %H:%M:%S").c_str()), ft ? "not" : "");
+                    TimeMgt::setRunTimeRange(start, end, st);
+                }
             }
         }
         if (parser.Found("j", &jsonLog)) {
