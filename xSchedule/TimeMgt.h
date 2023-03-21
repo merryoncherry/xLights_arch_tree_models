@@ -87,6 +87,7 @@ namespace TimeMgt
     /// Is time mode to accelerated / simulated?
     /// </summary>
     bool isSimulatedTime();
+    int64_t getSimulationEndUTC();
 
     /// <summary>
     /// Set the time between frame time ticks

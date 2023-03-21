@@ -429,4 +429,5 @@ public:
         int64_t GetSchedTimerInterval();
         void SetSchedTimerInterval(int64_t ms, bool oneshot);
         void StopSchedTimer();
+        void SimulatedTimerTrigger();
 };

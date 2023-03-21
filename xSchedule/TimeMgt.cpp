@@ -11,6 +11,7 @@
 #include <mutex>
 
 #include <wx/time.h>
+#include <log4cpp/Category.hh>
 
 #include "TimeMgt.h"
 
@@ -40,7 +41,7 @@ namespace TimeMgt
         {
             std::lock_guard lk(overridemtx);
             if (overridden) {
-                wxDateTime rv = overrideTime.ToTimezone(wxDateTime::TZ::Local);
+                wxDateTime rv = overrideTime.FromUTC();
                 rv.SetMillisecond(0);
                 return rv;
             }
@@ -53,7 +54,7 @@ namespace TimeMgt
         {
             std::lock_guard lk(overridemtx);
             if (overridden)
-                return overrideTime.ToTimezone(wxDateTime::TZ::Local);
+                return overrideTime.FromUTC();
         }
 
         return wxDateTime::UNow().Subtract(timeDelta);
@@ -75,7 +76,7 @@ namespace TimeMgt
         {
             std::lock_guard lk(overridemtx);
             if (overridden)
-                return overrideTime.ToTimezone(wxDateTime::TZ::Local).GetValue().GetValue();
+                return overrideTime.FromUTC().GetValue().GetValue();
         }       
         return (wxGetLocalTimeMillis()-timeDelta).GetValue();
     }
@@ -84,7 +85,7 @@ namespace TimeMgt
         {
             std::lock_guard lk(overridemtx);
             if (overridden)
-                return overrideTime.GetValue().GetValue();
+                return overrideMs;
         }
         return (wxGetLocalTimeMillis()-timeDelta).GetValue();
     }
@@ -117,8 +118,6 @@ namespace TimeMgt
     {
         std::lock_guard lk(overridemtx);
         overrideMs = millis;
-        overrideTime.Set(time_t(millis/1000));
-        overrideTime.SetMillisecond(millis % 1000);
         overrideTime = wxDateTime(wxLongLongNative(millis));
         overridden = true;
     }
@@ -141,6 +140,8 @@ namespace TimeMgt
         if (accelerate) {
             // TODO: Should we set override time already?
             setTimeOverrideUTC(start.ToUTC().GetValue().GetValue());
+            //static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+            //logger_base.info("Time override: %s vs end of window: %s", (const char*)(overrideTime.FromUTC().Format("%Y-%m-%d %H:%M:%S").c_str()), (const char*)(rtrEnd.Format("%Y-%m-%d %H:%M:%S").c_str()));
         }
     }
 
@@ -149,8 +150,12 @@ namespace TimeMgt
         if (!runTimeRange) {
             return false;
         }
+
+        //static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+        //logger_base.info("Time: %s vs end of window: %s", (const char*)(overrideTime.FromUTC().Format("%Y-%m-%d %H:%M:%S").c_str()), (const char*)(rtrEnd.Format("%Y-%m-%d %H:%M:%S").c_str()));
+
         return getSchedUNowWx() >= rtrEnd;
-    }
+  }
 
     static int64_t frameInterval;
     static int64_t frameAt;
@@ -165,11 +170,17 @@ namespace TimeMgt
         return accelerated;
     }
 
+    int64_t getSimulationEndUTC()
+    {
+        std::lock_guard lk(overridemtx);
+        return rtrEnd.ToUTC().GetValue().GetValue();
+    }
+
     void setNextFrameIn(int64_t ms, bool oneshot)
     {
         std::lock_guard lk(overridemtx);
         frameInterval = ms;
-        frameAt = ms <= 0 ? std::numeric_limits<int64_t>::min() : overrideMs + ms;
+        frameAt = ms <= 0 ? std::numeric_limits<int64_t>::max() : overrideMs + ms;
         frameOS = oneshot;
     }
 
@@ -191,7 +202,7 @@ namespace TimeMgt
     {
         std::lock_guard lk(overridemtx);
         schedInterval = ms;
-        schedAt = ms <= 0 ? std::numeric_limits<int64_t>::min() : overrideMs + ms;
+        schedAt = ms <= 0 ? std::numeric_limits<int64_t>::max() : overrideMs + ms;
         schedOS = oneshot;
     }
 

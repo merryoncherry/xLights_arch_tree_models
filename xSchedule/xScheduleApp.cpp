@@ -376,8 +376,8 @@ bool xScheduleApp::OnInit()
                 wxDateTime start, end;
                 start.ParseFormat(st_end[0], "%Y-%m-%d %H:%M:%S");
                 end.ParseFormat(st_end[1], "%Y-%m-%d %H:%M:%S");
-                logger_base.info("Running time window %s - %s; not accelerated", start.Format("%Y-%m-%d %H:%M:%S").c_str(), end.Format("%Y-%m-%d %H:%M:%S").c_str());
-                TimeMgt::setRunTimeRange(start, end, false);
+                logger_base.info("Running time window %s - %s; not accelerated", (const char *)(start.Format("%Y-%m-%d %H:%M:%S").c_str()), (const char *)(end.Format("%Y-%m-%d %H:%M:%S").c_str()));
+                TimeMgt::setRunTimeRange(start, end, true);
             }
         }
         if (parser.Found("j", &jsonLog)) {

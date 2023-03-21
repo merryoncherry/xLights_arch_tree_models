@@ -858,6 +858,9 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
 
     SetFrameTimerInterval(_useHalfFrames ? rate / 2 : rate, false);
     SetSchedTimerInterval(500, false);
+    if (TimeMgt::isSimulatedTime()) {
+        this->CallAfter(&xScheduleFrame::SimulatedTimerTrigger);
+    }
 
     StaticText_IP->SetLabel("    " + __schedule->GetOurIP() + ":" + wxString::Format("%d", __schedule->GetOptions()->GetWebServerPort()) + "   ");
 
@@ -1561,6 +1564,51 @@ void xScheduleFrame::StopSchedTimer()
         TimeMgt::setNextSchedIn(-1, false);
     } else {
         _timerSchedule.Stop();
+    }
+}
+
+void xScheduleFrame::SimulatedTimerTrigger()
+{
+    bool osf, oss;
+    int64_t nextFrame = TimeMgt::getNextFrameAt(osf);
+    int64_t nextFrameIn = TimeMgt::getNextFrameIn(osf);
+    int64_t nextSched = TimeMgt::getNextSchedAt(oss);
+    int64_t nextSchedIn = TimeMgt::getNextSchedIn(oss);
+
+    int64_t nxt = std::min(nextFrame, nextSched);
+    nxt = std::min(nxt, TimeMgt::getSimulationEndUTC());
+    TimeMgt::setTimeOverrideUTC(nxt);
+
+    if (nextFrame == nxt) {
+        if (osf) {
+            TimeMgt::setNextFrameIn(-1, false);
+        } else {
+            TimeMgt::setNextFrameIn(nextFrameIn, osf);
+        }
+        wxTimerEvent evt(_timer);
+        On_timerTrigger(evt);
+    }
+
+    if (nextSched == nxt) {
+        if (oss) {
+            TimeMgt::setNextSchedIn(-1, false);
+        } else {
+            TimeMgt::setNextSchedIn(nextSchedIn, oss);
+        }
+        wxTimerEvent evt(_timerSchedule);
+        On_timerScheduleTrigger(evt);
+    }
+
+    if (TimeMgt::shouldEndRun()) {
+        //static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+        //logger_base.info("We're done here");
+        // Well, we should check that we're done...
+        //  but if we don't have anything to do, blah
+        // This may change with simulated events
+        wxCommandEvent event(EVT_QUIT);
+        wxPostEvent(this, event);
+    } else {
+        CallAfter(&xScheduleFrame::SimulatedTimerTrigger);
     }
 }
 
