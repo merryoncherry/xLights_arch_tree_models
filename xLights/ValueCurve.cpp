@@ -26,6 +26,192 @@
 AudioManager* ValueCurve::__audioManager = nullptr;
 SequenceElements* ValueCurve::__sequenceElements = nullptr;
 
+static VCTypeChoice vcChoices[] = {
+    {
+        "Flat",
+        {
+            VCParamDesc("Level")
+        }
+    },
+    {
+        "Ramp",
+        {
+            VCParamDesc("Start Level"),
+            VCParamDesc("End Level")
+        }
+    },
+    {
+        "Ramp Up/Down",
+        {
+            VCParamDesc("Start Level"),
+            VCParamDesc("Mid Level"),
+            VCParamDesc("End Level")
+        }
+    },
+    {
+        "Ramp Up/Down Hold",
+        {
+            VCParamDesc("Start/End Level"),
+            VCParamDesc("Mid Level"),
+            VCParamDesc("Mid Level Time")
+        }
+    },
+    {
+        "Saw Tooth",
+        {
+            VCParamDesc("Start Level"),
+            VCParamDesc("End Level"),
+            VCParamDesc("Cycles")
+        }
+    },
+    {
+        "Parabolic Down",
+        {
+            VCParamDesc("Slope"),
+            VCParamDesc("Low")
+        }
+    },
+    {
+        "Parabolic Up",
+        {
+            VCParamDesc("Slope"),
+            VCParamDesc("High")
+        }
+    },
+    { "Logarithmic Up",
+        {
+            VCParamDesc("Rate"),
+            VCParamDesc("Vertical Offset")
+        }
+    },
+    {
+        "Logarithmic Down",
+        {
+            VCParamDesc("Rate"),
+            VCParamDesc("Vertical Offset")
+        }
+    },
+    {
+        "Exponential Up",
+        {
+            VCParamDesc("Rate"),
+            VCParamDesc("Vertical Offset")
+        }
+    },
+    {
+        "Exponential Down",
+        {
+            VCParamDesc("Rate"),
+            VCParamDesc("Vertical Offset")
+        }
+    },
+    {
+        "Sine",
+        {
+            VCParamDesc("Start"),
+            VCParamDesc("Amplitude"),
+            VCParamDesc("Cycles"),
+            VCParamDesc("Vertical Offset")
+        }
+    },
+    {
+        "Abs Sine",
+        {
+            VCParamDesc("Start"),
+            VCParamDesc("Amplitude"),
+            VCParamDesc("Cycles"),
+            VCParamDesc("Vertical Offset")
+        }
+    },
+    {
+        "Decaying Sine",
+        {
+            VCParamDesc("Start"),
+            VCParamDesc("Amplitude"),
+            VCParamDesc("Cycles"),
+            VCParamDesc("Vertical Offset")
+        }
+    },
+    {
+        "Square",
+        {
+            VCParamDesc("Start Level"),
+            VCParamDesc("End Level"),
+            VCParamDesc("Cycles")
+         }
+    },
+    { "Random",
+        {
+            VCParamDesc("Minimum"),
+            VCParamDesc("Maximum"),
+            VCParamDesc("Points")
+        }
+    },
+    {
+        "Music",
+        {
+            VCParamDesc("Low"),
+            VCParamDesc("High"),
+            VCParamDesc("Gain")
+        }
+    },
+    {
+        "Inverted Music",
+        {
+            VCParamDesc("Low"),
+            VCParamDesc("High"),
+            VCParamDesc("Gain")
+        }
+    },
+    { "Music Trigger Fade",
+        { 
+            VCParamDesc("Low"),
+            VCParamDesc("High"),
+            VCParamDesc("Trigger"),
+            VCParamDesc("Fade"),
+        }
+    },
+    {
+        "Timing Track Toggle",
+        {
+            VCParamDesc("Low"),
+            VCParamDesc("High")
+        }
+    },
+    {
+        "Timing Track Fade Fixed",
+        {
+            VCParamDesc("Low"),
+            VCParamDesc("High"),
+            VCParamDesc("Frames")
+        }
+    },
+    {
+        "Timing Track Fade Proportional",
+        {
+            VCParamDesc("Low"),
+            VCParamDesc("High"),
+            VCParamDesc("Prportion")
+        }
+    },
+    {
+        "Custom",
+        {} // No parameters
+    },
+};
+VCTypeChoice* VCTypeChoice::choices = vcChoices;
+size_t VCTypeChoice::nChoices = sizeof(vcChoices) / sizeof(VCTypeChoice);
+
+const VCTypeChoice* VCTypeChoice::getChoice(const char* name)
+{
+    for (size_t i = 0; i < nChoices; ++i) {
+        if (choices[i].name == name)
+            return &choices[i];
+    }
+    wxASSERT("Invalid curve type supplied" == 0);
+    return nullptr;
+}
+
 float ValueCurve::SafeParameter(size_t p, float v)
 {
     float low;

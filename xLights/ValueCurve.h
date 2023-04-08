@@ -25,6 +25,29 @@ class wxFileName;
 class AudioManager;
 class SequenceElements;
 
+struct VCParamDesc
+{
+    bool exists = false;
+    std::string pname = "N/A";
+
+    VCParamDesc() {}
+    VCParamDesc(const char* name) : exists(true), pname(name) {}
+};
+
+/// <summary>
+/// Description of a value curve type choice
+/// What it is called, what the parameters mean, etc.
+/// </summary>
+struct VCTypeChoice
+{
+    std::string name = "UNKNOWN";
+    VCParamDesc params[4];
+
+    static VCTypeChoice* choices;
+    static size_t nChoices;
+    static const VCTypeChoice* getChoice(const char* name);
+};
+
 class vcSortablePoint
 {
 public:

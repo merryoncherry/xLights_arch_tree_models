@@ -1201,221 +1201,27 @@ void ValueCurveDialog::ValidateWindow()
     if (max == MAXVOID) max = _vc->GetMax();
     if (Slider_Parameter4->GetMin() != min || Slider_Parameter4->GetMax() != max) Slider_Parameter4->SetRange(min, max);
 
-    if (type == "Custom") {
-        Slider_Parameter1->Disable();
-        TextCtrl_Parameter1->Disable();
-        Slider_Parameter2->Disable();
-        TextCtrl_Parameter2->Disable();
-        Slider_Parameter3->Disable();
-        TextCtrl_Parameter3->Disable();
-        Slider_Parameter4->Disable();
-        TextCtrl_Parameter4->Disable();
-    }
-    else if (type == "Sine" || type == "Abs Sine" || type == "Decaying Sine" || type == "Music Trigger Fade") {
-        Slider_Parameter1->Enable();
-        TextCtrl_Parameter1->Enable();
-        Slider_Parameter2->Enable();
-        TextCtrl_Parameter2->Enable();
-        Slider_Parameter3->Enable();
-        TextCtrl_Parameter3->Enable();
-        Slider_Parameter4->Enable();
-        TextCtrl_Parameter4->Enable();
-    }
-    else if (type == "Flat") {
-        Slider_Parameter1->Enable();
-        TextCtrl_Parameter1->Enable();
-        Slider_Parameter2->Disable();
-        TextCtrl_Parameter2->Disable();
-        Slider_Parameter3->Disable();
-        TextCtrl_Parameter3->Disable();
-        Slider_Parameter4->Disable();
-        TextCtrl_Parameter4->Disable();
-    }
-    else if (type == "Ramp" || type == "Parabolic Down" || type == "Parabolic Up" || type == "Logarithmic Up" || type == "Logarithmic Down" || type == "Exponential Up" || type == "Exponential Down" || type == "Timing Track Toggle") {
-        Slider_Parameter1->Enable();
-        TextCtrl_Parameter1->Enable();
-        Slider_Parameter2->Enable();
-        TextCtrl_Parameter2->Enable();
-        Slider_Parameter3->Disable();
-        TextCtrl_Parameter3->Disable();
-        Slider_Parameter4->Disable();
-        TextCtrl_Parameter4->Disable();
-    }
-    else if (type == "Saw Tooth" || type == "Ramp Up/Down Hold" || type == "Ramp Up/Down" || type == "Square" || type == "Random" || type == "Music" || type == "Inverted Music" || type == "Timing Track Fade Fixed" || type == "Timing Track Fade Proportional") {
-        Slider_Parameter1->Enable();
-        TextCtrl_Parameter1->Enable();
-        Slider_Parameter2->Enable();
-        TextCtrl_Parameter2->Enable();
-        Slider_Parameter3->Enable();
-        TextCtrl_Parameter3->Enable();
-        Slider_Parameter4->Disable();
-        TextCtrl_Parameter4->Disable();
-    }
-    else {
-        Slider_Parameter1->Enable();
-        TextCtrl_Parameter1->Enable();
-        Slider_Parameter2->Enable();
-        TextCtrl_Parameter2->Enable();
-        Slider_Parameter3->Enable();
-        TextCtrl_Parameter3->Enable();
-        Slider_Parameter4->Enable();
-        TextCtrl_Parameter4->Enable();
-    }
+    const VCTypeChoice *choice = VCTypeChoice::getChoice(type.c_str());
 
-    if (type == "Flat") {
-        StaticText_P1->SetLabel("Level");
-        StaticText_P2->SetLabel("N/A");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter2(0);
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Ramp") {
-        StaticText_P1->SetLabel("Start Level");
-        StaticText_P2->SetLabel("End Level");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Timing Track Toggle") {
-        StaticText_P1->SetLabel("Low");
-        StaticText_P2->SetLabel("High");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Timing Track Fade Fixed") {
-        StaticText_P1->SetLabel("Low");
-        StaticText_P2->SetLabel("High");
-        StaticText_P3->SetLabel("Frames");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Timing Track Fade Proportional") {
-        StaticText_P1->SetLabel("Low");
-        StaticText_P2->SetLabel("High");
-        StaticText_P3->SetLabel("Prportion");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Music" || type == "Inverted Music") {
-        StaticText_P1->SetLabel("Low");
-        StaticText_P2->SetLabel("High");
-        StaticText_P3->SetLabel("Gain");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Music Trigger Fade") {
-        StaticText_P1->SetLabel("Low");
-        StaticText_P2->SetLabel("High");
-        StaticText_P3->SetLabel("Trigger");
-        StaticText_P4->SetLabel("Fade");
-    }
-    else if (type == "Ramp Up/Down") {
-        StaticText_P1->SetLabel("Start Level");
-        StaticText_P2->SetLabel("Mid Level");
-        StaticText_P3->SetLabel("End Level");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Ramp Up/Down Hold") {
-        StaticText_P1->SetLabel("Start/End Level");
-        StaticText_P2->SetLabel("Mid Level");
-        StaticText_P3->SetLabel("Mid Level Time");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Saw Tooth") {
-        StaticText_P1->SetLabel("Start Level");
-        StaticText_P2->SetLabel("End Level");
-        StaticText_P3->SetLabel("Cycles");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Parabolic Down") {
-        StaticText_P1->SetLabel("Slope");
-        StaticText_P2->SetLabel("Low");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Parabolic Up") {
-        StaticText_P1->SetLabel("Slope");
-        StaticText_P2->SetLabel("High");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Logarithmic Up") {
-        StaticText_P1->SetLabel("Rate");
-        StaticText_P2->SetLabel("Vertical Offset");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Logarithmic Down") {
-        StaticText_P1->SetLabel("Rate");
-        StaticText_P2->SetLabel("Vertical Offset");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Exponential Up" || type == "Exponential Down") {
-        StaticText_P1->SetLabel("Rate");
-        StaticText_P2->SetLabel("Vertical Offset");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Sine") {
-        StaticText_P1->SetLabel("Start");
-        StaticText_P2->SetLabel("Amplitude");
-        StaticText_P3->SetLabel("Cycles");
-        StaticText_P4->SetLabel("Vertical Offset");
-    }
-    else if (type == "Decaying Sine") {
-        StaticText_P1->SetLabel("Start");
-        StaticText_P2->SetLabel("Amplitude");
-        StaticText_P3->SetLabel("Cycles");
-        StaticText_P4->SetLabel("Vertical Offset");
-    }
-    else if (type == "Random") {
-        StaticText_P1->SetLabel("Minimum");
-        StaticText_P2->SetLabel("Maximum");
-        StaticText_P3->SetLabel("Points");
-        StaticText_P4->SetLabel("N/A");
-    }
-    else if (type == "Abs Sine") {
-        StaticText_P1->SetLabel("Start");
-        StaticText_P2->SetLabel("Amplitude");
-        StaticText_P3->SetLabel("Cycles");
-        StaticText_P4->SetLabel("Vertical Offset");
-    }
-    else if (type == "Square") {
-        StaticText_P1->SetLabel("Start Level");
-        StaticText_P2->SetLabel("End Level");
-        StaticText_P3->SetLabel("Cycles");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter4(0);
-    }
-    else if (type == "Custom") {
-        StaticText_P1->SetLabel("N/A");
-        StaticText_P2->SetLabel("N/A");
-        StaticText_P3->SetLabel("N/A");
-        StaticText_P4->SetLabel("N/A");
-        _vc->SetParameter1(0);
-        _vc->SetParameter2(0);
-        _vc->SetParameter3(0);
-        _vc->SetParameter4(0);
-    }
+    Slider_Parameter1->Enable(choice->params[0].exists);
+    TextCtrl_Parameter1->Enable(choice->params[0].exists);
+    StaticText_P1->SetLabel(choice->params[0].pname);
+    if (!choice->params[0].exists) _vc->SetParameter1(0);
+
+    Slider_Parameter2->Enable(choice->params[1].exists);
+    TextCtrl_Parameter2->Enable(choice->params[1].exists);
+    StaticText_P2->SetLabel(choice->params[1].pname);
+    if (!choice->params[1].exists) _vc->SetParameter2(0);
+
+    Slider_Parameter3->Enable(choice->params[2].exists);
+    TextCtrl_Parameter3->Enable(choice->params[2].exists);
+    StaticText_P3->SetLabel(choice->params[2].pname);
+    if (!choice->params[2].exists) _vc->SetParameter3(0);
+
+    Slider_Parameter4->Enable(choice->params[3].exists);
+    TextCtrl_Parameter4->Enable(choice->params[3].exists);
+    StaticText_P4->SetLabel(choice->params[3].pname);
+    if (!choice->params[3].exists) _vc->SetParameter4(0);
 
     if (type == "Flat" ||
         type == "Saw Tooth" ||
@@ -1450,7 +1256,8 @@ void ValueCurveDialog::ValidateWindow()
         type == "Timing Track Fade Fixed" ||
         type == "Timing Track Fade Proportional" ||
         type == "Decaying Sine"
-        ) {
+        )
+    {
         Button_Flip->Enable(false);
     }
     else {
@@ -1459,7 +1266,8 @@ void ValueCurveDialog::ValidateWindow()
 
     if (type == "Timing Track Toggle" ||
         type == "Timing Track Fade Fixed" ||
-        type == "Timing Track Fade Proportional") {
+        type == "Timing Track Fade Proportional")
+    {
         Choice_TimingTrack->Enable();
 
         if (Choice_TimingTrack->GetStringSelection() == "") {
