@@ -24,11 +24,14 @@
 class wxFileName;
 class AudioManager;
 class SequenceElements;
+class ValueCurve;
 
 struct VCParamDesc
 {
     bool exists = false;
     std::string pname = "N/A";
+
+    // Is min/max determined by parameter, or by this parameter type?
 
     VCParamDesc() {}
     VCParamDesc(const char* name) : exists(true), pname(name) {}
@@ -42,6 +45,14 @@ struct VCTypeChoice
 {
     std::string name = "UNKNOWN";
     VCParamDesc params[4];
+
+    // Does it use a timing track?
+    bool needsTimingTrack = false;
+
+    // Does this support reverse?
+    void (*reverseVC)(ValueCurve* vc) = nullptr;
+    // Does this support flip?
+    void (*flipVC)(ValueCurve* vc) = nullptr;
 
     static VCTypeChoice* choices;
     static size_t nChoices;
@@ -107,6 +118,7 @@ public:
 
 class ValueCurve
 {
+public:
     std::list<vcSortablePoint> _values;
     std::string _type;
     std::string _id;

@@ -31,6 +31,11 @@ static VCTypeChoice vcChoices[] = {
         "Flat",
         {
             VCParamDesc("Level")
+        },
+        false, // TT
+        [](ValueCurve *vc){}, // Reverse
+        [](ValueCurve* vc) {   // Flip
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
         }
     },
     {
@@ -38,6 +43,16 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Start Level"),
             VCParamDesc("End Level")
+        },
+        false, // TT
+        [](ValueCurve* vc) { // Reverse
+            float p1 = vc->GetParameter1();
+            vc->SetParameter1(vc->GetParameter2());
+            vc->SetParameter2(p1);
+        },
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
@@ -46,6 +61,17 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Start Level"),
             VCParamDesc("Mid Level"),
             VCParamDesc("End Level")
+        },
+        false, // TT
+        [](ValueCurve* vc) { // Reverse
+            float p1 = vc->GetParameter1();
+            vc->SetParameter1(vc->GetParameter3());
+            vc->SetParameter3(p1);
+        },
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
+            vc->SetParameter3(vc->GetMax() - vc->GetParameter3() + vc->GetMin());
         }
     },
     {
@@ -54,6 +80,12 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Start/End Level"),
             VCParamDesc("Mid Level"),
             VCParamDesc("Mid Level Time")
+        },
+        false, // TT
+        [](ValueCurve* vc){}, // Reverse
+        [](ValueCurve* vc){ // Flip
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
@@ -62,6 +94,12 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Start Level"),
             VCParamDesc("End Level"),
             VCParamDesc("Cycles")
+        },
+        false, // TT
+        [](ValueCurve* vc) {}, // Reverse
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
@@ -69,6 +107,12 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Slope"),
             VCParamDesc("Low")
+        },
+        false, // TT
+        [](ValueCurve* vc) {}, // Reverse
+        [](ValueCurve* vc) {   // Flip
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
+            vc->SetType("Parabolic Up");
         }
     },
     {
@@ -76,26 +120,45 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Slope"),
             VCParamDesc("High")
+        },
+        false, // TT
+        [](ValueCurve* vc) {}, // Reverse
+        [](ValueCurve* vc) {   // Flip
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
+            vc->SetType("Parabolic Down");
         }
     },
-    { "Logarithmic Up",
+    {
+        "Logarithmic Up",
         {
             VCParamDesc("Rate"),
             VCParamDesc("Vertical Offset")
-        }
+        },
+        false,  // TT
+        nullptr, // Reverse - no reverse version exists
+        nullptr  // Nothing is an exact vertical flip either
     },
     {
         "Logarithmic Down",
         {
             VCParamDesc("Rate"),
             VCParamDesc("Vertical Offset")
-        }
+        },
+        false,  // TT
+        nullptr, // Reverse - no reverse version exists
+        nullptr // Nothing is an exact vertical flip either
     },
     {
         "Exponential Up",
         {
             VCParamDesc("Rate"),
             VCParamDesc("Vertical Offset")
+        },
+        false, // TT
+        nullptr, // Reverse - no reverse version exists
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
+            vc->SetType("Exponential Down");
         }
     },
     {
@@ -103,6 +166,12 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Rate"),
             VCParamDesc("Vertical Offset")
+        },
+        false, // TT
+        nullptr, // Reverse - no reverse version exists
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
+            vc->SetType("Exponential Up");
         }
     },
     {
@@ -112,6 +181,16 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Amplitude"),
             VCParamDesc("Cycles"),
             VCParamDesc("Vertical Offset")
+        },
+        false, // TT
+        [](ValueCurve *vc) { // Reverse
+            int sp = int(vc->GetParameter1()) + 50;
+            int ep = int(sp + vc->GetParameter3() * 10) % 100;
+            vc->SetParameter1(100 - ep);
+        },
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter4(vc->GetMax() - vc->GetParameter4() + vc->GetMin());
+            vc->SetParameter1((int)(vc->GetParameter1() + 50.0) % 100);
         }
     },
     {
@@ -121,7 +200,13 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Amplitude"),
             VCParamDesc("Cycles"),
             VCParamDesc("Vertical Offset")
-        }
+        },
+        false, // TT
+        [](ValueCurve* vc) { // Reverse
+          int sp = int(vc->GetParameter1());
+          int ep = int(sp + vc->GetParameter3() * 10) % 100;
+          vc->SetParameter1(100 - ep);
+      }
     },
     {
         "Decaying Sine",
@@ -130,6 +215,12 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Amplitude"),
             VCParamDesc("Cycles"),
             VCParamDesc("Vertical Offset")
+        },
+        false, // TT
+        nullptr, // No reverse exists
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter4(100 - vc->GetParameter4());
+            vc->SetParameter1((int)(vc->GetParameter1() + 50.0) % 100);
         }
     },
     {
@@ -138,13 +229,30 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Start Level"),
             VCParamDesc("End Level"),
             VCParamDesc("Cycles")
-         }
+        },
+        false, // TT
+        [](ValueCurve* vc) { // Reverse
+            float p1 = vc->GetParameter1();
+            vc->SetParameter1(vc->GetParameter2());
+            vc->SetParameter2(p1);
+        },
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
+        }
     },
-    { "Random",
+    {
+        "Random",
         {
             VCParamDesc("Minimum"),
             VCParamDesc("Maximum"),
             VCParamDesc("Points")
+        },
+        false, // TT
+        nullptr, // reverse
+        [](ValueCurve* vc) { // Flip
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
@@ -153,6 +261,12 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Low"),
             VCParamDesc("High"),
             VCParamDesc("Gain")
+        },
+        false, // TT
+        nullptr, // Reverse not relevant
+        [](ValueCurve* vc) { // Flip low/high
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
@@ -161,14 +275,27 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Low"),
             VCParamDesc("High"),
             VCParamDesc("Gain")
+        },
+        false,               // TT
+        nullptr,             // Reverse not relevant
+        [](ValueCurve* vc) { // Flip low/high
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
-    { "Music Trigger Fade",
+    {
+        "Music Trigger Fade",
         { 
             VCParamDesc("Low"),
             VCParamDesc("High"),
             VCParamDesc("Trigger"),
             VCParamDesc("Fade"),
+        },
+        false,               // TT
+        nullptr,             // Reverse not relevant
+        [](ValueCurve* vc) { // Flip low/high
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
@@ -176,6 +303,12 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Low"),
             VCParamDesc("High")
+        },
+        true, // TT
+        nullptr,             // Reverse not relevant
+        [](ValueCurve* vc) { // Flip low/high
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
@@ -184,6 +317,12 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Low"),
             VCParamDesc("High"),
             VCParamDesc("Frames")
+        },
+        true, // TT
+        nullptr,             // Reverse not relevant
+        [](ValueCurve* vc) { // Flip low/high
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
@@ -191,12 +330,29 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Low"),
             VCParamDesc("High"),
-            VCParamDesc("Prportion")
+            VCParamDesc("Proportion")
+        }, 
+        true, // TT
+        nullptr,             // Reverse not relevant
+        [](ValueCurve* vc) { // Flip low/high
+            vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+            vc->SetParameter2(vc->GetMax() - vc->GetParameter2() + vc->GetMin());
         }
     },
     {
         "Custom",
-        {} // No parameters
+        {}, // No parameters
+        false,
+        [](ValueCurve* vc) { // Reverse
+            for (auto& it : vc->_values) {
+                it.x = 1.0 - it.x;
+            }
+        },
+        [](ValueCurve* vc) { // Flip
+            for (auto& it : vc->_values) {
+                it.y = 1.0 - it.y;
+            }
+        }
     },
 };
 VCTypeChoice* VCTypeChoice::choices = vcChoices;
@@ -694,136 +850,18 @@ void ValueCurve::Reverse()
         _timeOffset = 100 - _timeOffset;
     }
 
-    if (_type == "Custom")
-    {
-        for (auto& it : _values)
-        {
-            it.x = 1.0 - it.x;
-        }
-    }
-    else if (_type == "Ramp")
-    {
-        float p1 = GetParameter1();
-        SetParameter1(GetParameter2());
-        SetParameter2(p1);
-    }
-    else if (_type == "Ramp Up/Down")
-    {
-        float p1 = GetParameter1();
-        SetParameter1(GetParameter3());
-        SetParameter3(p1);
-    }
-    //else if (_type == "Logarithmic Up")
-    //{
-    //    float p1 = GetParameter1();
-    //    float p2 = GetParameter2();
-    //    SetType("Logarithmic Down");
-    //    SetParameter1(100.0 - p1);
-    //    SetParameter2(p2);
-    //}
-    //else if (_type == "Logarithmic Down")
-    //{
-    //    float p1 = GetParameter1();
-    //    float p2 = GetParameter2();
-    //    SetType("Logarithmic Up");
-    //    SetParameter1(100.0 - p1);
-    //    SetParameter2(p2);
-    //}
-    //else if (_type == "Exponential Up")
-    //{
-    //    float p1 = GetParameter1();
-    //    float p2 = GetParameter2();
-    //    SetType("Exponential Down");
-    //    SetParameter1(100.0 - p1);
-    //    SetParameter2(p2);
-    //}
-    //else if (_type == "Exponential Down")
-    //{
-    //    float p1 = GetParameter1();
-    //    float p2 = GetParameter2();
-    //    SetType("Exponential Up");
-    //    SetParameter1(100.0 - p1);
-    //    SetParameter2(p2);
-    //}
-    else if (_type == "Sine")   
-    {
-        SetParameter1((int)(GetParameter1() + 25.0) % 100);
-        _timeOffset = 100 - _timeOffset;
-        _timeOffset += 0.5 * 100 * 10 / _parameter3;
-        _timeOffset %= 100;
-    }
-    else if (_type == "Abs Sine")
-    {
-        SetParameter1((int)(GetParameter1() + 25.0) % 100);
-        _timeOffset = 100 - _timeOffset;
-        _timeOffset += 0.5 * 100 * 10 / _parameter3;
-        _timeOffset %= 100;
-    }
-    else if (_type == "Square")
-    {
-        float p1 = GetParameter1();
-        SetParameter1(GetParameter2());
-        SetParameter2(p1);
-    }
+    auto choice = VCTypeChoice::getChoice(_type.c_str());
+    wxASSERT(choice && choice->reverseVC);
+    if (!choice || !choice->reverseVC) return;
+    choice->reverseVC(this);
 }
 
 void ValueCurve::Flip()
 {
-    if (_type == "Custom")
-    {
-        for (auto& it : _values)
-        {
-            it.y = 1.0 - it.y;
-        }
-    }
-    else if (_type == "Ramp" || _type == "Saw Tooth" || _type == "Square" || _type == "Random")
-    {
-        SetParameter1(GetMax() - GetParameter1());
-        SetParameter2(GetMax() - GetParameter2());
-    }
-    else if (_type == "Ramp Up/Down" || _type == "Ramp Up/Down Hold")
-    {
-        SetParameter1(GetMax() - GetParameter1());
-        SetParameter2(GetMax() - GetParameter2());
-        SetParameter3(GetMax() - GetParameter3());
-    }
-    else if (_type == "Flat")
-    {
-        SetParameter1(GetMax() - GetParameter1());
-    }
-    else if (_type == "Parabolic Down")
-    {
-        SetType("Parabolic Up");
-        SetParameter2(GetMax() - GetParameter2());
-    }
-    else if (_type == "Parabolic Up")
-    {
-        SetType("Parabolic Down");
-        SetParameter2(GetMax() - GetParameter2());
-    }
-    else if (_type == "Exponential Up")
-    {
-        SetType("Exponential Down");
-    }
-    else if (_type == "Exponential Down")
-    {
-        SetType("Exponential Up");
-    }
-    else if (_type == "Sine") {}
-    else if (_type == "Logarithmic Up") {}
-    else if (_type == "Logarithmic Down") {}
-    else if (_type == "Music") {}
-    else if (_type == "Inverted Music") {}
-    else if (_type == "Music Trigger Fade") {}
-    else if (_type == "Timing Track Toggle") {
-    }
-    else if (_type == "Timing Track Fade Fixed") {
-    }
-    else if (_type == "Timing Track Fade Proportional") {
-    }
-    else if (_type == "Decaying Sine") {}
-    else if (_type == "Abs Sine") {}
-    else { wxASSERT(false); }
+    auto choice = VCTypeChoice::getChoice(_type.c_str());
+    wxASSERT(choice && choice->flipVC);
+    if (!choice || !choice->flipVC) return;
+    choice->flipVC(this);
 }
 
 // call this function from adjustSettings when a value curve has been changed to have a different divider ... it will convert the values to the equivalent and then you can serialise the value curve

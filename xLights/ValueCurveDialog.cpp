@@ -1223,50 +1223,10 @@ void ValueCurveDialog::ValidateWindow()
     StaticText_P4->SetLabel(choice->params[3].pname);
     if (!choice->params[3].exists) _vc->SetParameter4(0);
 
-    if (type == "Flat" ||
-        type == "Saw Tooth" ||
-        type == "Ramp Up/Down Hold" ||
-        type == "Parabolic Down" ||
-        type == "Parabolic Up" ||
-        type == "Decaying Sine" ||
-        type == "Logarithmic Up" ||
-        type == "Logarithmic Down" ||
-        type == "Exponential Up" ||
-        type == "Random" ||
-        type == "Music" ||
-        type == "Inverted Music" ||
-        type == "Music Trigger Fade" ||
-        type == "Timing Track Toggle" ||
-        type == "Timing Track Fade Fixed" ||
-        type == "Timing Track Fade Proportional" ||
-        type == "Exponential Down") {
-        Button_Reverse->Enable(false);
-    }
-    else {
-        Button_Reverse->Enable();
-    }
-    if (type == "Logarithmic Up" ||
-        type == "Logarithmic Down" ||
-        type == "Sine" ||
-        type == "Abs Sine" ||
-        type == "Music" ||
-        type == "Inverted Music" ||
-        type == "Music Trigger Fade" ||
-        type == "Timing Track Toggle" ||
-        type == "Timing Track Fade Fixed" ||
-        type == "Timing Track Fade Proportional" ||
-        type == "Decaying Sine"
-        )
-    {
-        Button_Flip->Enable(false);
-    }
-    else {
-        Button_Flip->Enable();
-    }
+    Button_Flip->Enable(choice->flipVC != nullptr);
+    Button_Reverse->Enable(choice->reverseVC != nullptr);
 
-    if (type == "Timing Track Toggle" ||
-        type == "Timing Track Fade Fixed" ||
-        type == "Timing Track Fade Proportional")
+    if (choice->needsTimingTrack)
     {
         Choice_TimingTrack->Enable();
 
