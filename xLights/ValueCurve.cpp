@@ -503,6 +503,7 @@ void ValueCurve::Flip()
 // call this function from adjustSettings when a value curve has been changed to have a different divider ... it will convert the values to the equivalent and then you can serialise the value curve
 void ValueCurve::ConvertDivider(int oldDivider, int newDivider)
 {
+    // MoC TODO: This only makes sense for params expressed in terms of the VC min/max values
     _parameter1 = (_parameter1 * (float)newDivider) / (float)oldDivider;
     _parameter2 = (_parameter2 * (float)newDivider) / (float)oldDivider;
     _parameter3 = (_parameter3 * (float)newDivider) / (float)oldDivider;

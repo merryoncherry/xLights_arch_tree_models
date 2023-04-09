@@ -1194,13 +1194,11 @@ void ValueCurveDialog::ValidateWindow()
         s->Enable(choice->params[sn].exists);
         txts[sn]->Enable(choice->params[sn].exists);
         labs[sn]->SetLabel(choice->params[sn].pname);
+        if (!choice->params[sn].exists) {
+            SetParameter(sn + 1, 0);
+        }
         ++sn;
     }
-
-    if (!choice->params[0].exists) _vc->SetParameter1(0);
-    if (!choice->params[1].exists) _vc->SetParameter2(0);
-    if (!choice->params[2].exists) _vc->SetParameter3(0);
-    if (!choice->params[3].exists) _vc->SetParameter4(0);
 
     Button_Flip->Enable(choice->flipVC != nullptr);
     Button_Reverse->Enable(choice->reverseVC != nullptr);
