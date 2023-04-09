@@ -1089,7 +1089,6 @@ void ValueCurvePanel::DrawTiming(wxAutoBufferedPaintDC& pdc)
 
 void ValueCurvePanel::Paint(wxPaintEvent& event)
 {
-    //wxPaintDC pdc(this);
     wxAutoBufferedPaintDC pdc(this);
     pdc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK)));
     pdc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK)));
@@ -1119,9 +1118,9 @@ void ValueCurvePanel::Paint(wxPaintEvent& event)
 
                 if (x > 1.0 && lastx <= 1.0)
                 {
+                    double yat1 = (1.0 - lastx) / (x - lastx) * (p->y - last->y) + last->y;
                     x -= 1.0;
 
-                    double yat1 = (1.0 - lastx) * (p->y - last->y) + last->y;
                     if (last->IsWrapped() == p->IsWrapped())
                     {
                         pdc.DrawLine(lastx * w + X_VC_MARGIN, h - last->y * h, 1.0 * w + X_VC_MARGIN, h - yat1 * h);
