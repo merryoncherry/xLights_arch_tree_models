@@ -79,7 +79,7 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Start/End Level"),
             VCParamDesc("Mid Level"),
-            VCParamDesc("Mid Level Time")
+            VCParamDesc("Mid Level Time", 0, 100)
         },
         false, // TT
         [](ValueCurve* vc){}, // Reverse
@@ -93,7 +93,7 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Start Level"),
             VCParamDesc("End Level"),
-            VCParamDesc("Cycles")
+            VCParamDesc("Cycles", 0, 100)
         },
         false, // TT
         [](ValueCurve* vc) {}, // Reverse
@@ -105,7 +105,7 @@ static VCTypeChoice vcChoices[] = {
     {
         "Parabolic Down",
         {
-            VCParamDesc("Slope"),
+            VCParamDesc("Slope", 0, 100),
             VCParamDesc("Low")
         },
         false, // TT
@@ -118,7 +118,7 @@ static VCTypeChoice vcChoices[] = {
     {
         "Parabolic Up",
         {
-            VCParamDesc("Slope"),
+            VCParamDesc("Slope", 0, 100),
             VCParamDesc("High")
         },
         false, // TT
@@ -131,7 +131,7 @@ static VCTypeChoice vcChoices[] = {
     {
         "Logarithmic Up",
         {
-            VCParamDesc("Rate"),
+            VCParamDesc("Rate", 0, 100),
             VCParamDesc("Vertical Offset")
         },
         false,  // TT
@@ -141,7 +141,7 @@ static VCTypeChoice vcChoices[] = {
     {
         "Logarithmic Down",
         {
-            VCParamDesc("Rate"),
+            VCParamDesc("Rate", 0, 100),
             VCParamDesc("Vertical Offset")
         },
         false,  // TT
@@ -151,7 +151,7 @@ static VCTypeChoice vcChoices[] = {
     {
         "Exponential Up",
         {
-            VCParamDesc("Rate"),
+            VCParamDesc("Rate", 0, 100),
             VCParamDesc("Vertical Offset")
         },
         false, // TT
@@ -164,7 +164,7 @@ static VCTypeChoice vcChoices[] = {
     {
         "Exponential Down",
         {
-            VCParamDesc("Rate"),
+            VCParamDesc("Rate", 0, 100),
             VCParamDesc("Vertical Offset")
         },
         false, // TT
@@ -177,9 +177,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Sine",
         {
-            VCParamDesc("Start"),
+            VCParamDesc("Start", 0, 100),
             VCParamDesc("Amplitude"),
-            VCParamDesc("Cycles"),
+            VCParamDesc("Cycles", 0, 100),
             VCParamDesc("Vertical Offset")
         },
         false, // TT
@@ -196,9 +196,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Abs Sine",
         {
-            VCParamDesc("Start"),
+            VCParamDesc("Start", 0, 100),
             VCParamDesc("Amplitude"),
-            VCParamDesc("Cycles"),
+            VCParamDesc("Cycles", 0, 100),
             VCParamDesc("Vertical Offset")
         },
         false, // TT
@@ -211,10 +211,10 @@ static VCTypeChoice vcChoices[] = {
     {
         "Decaying Sine",
         {
-            VCParamDesc("Start"),
-            VCParamDesc("Amplitude"),
-            VCParamDesc("Cycles"),
-            VCParamDesc("Vertical Offset")
+            VCParamDesc("Start", 0, 100),
+            VCParamDesc("Amplitude", 0, 100),
+            VCParamDesc("Cycles", 0, 100),
+            VCParamDesc("Vertical Offset", 0, 100)
         },
         false, // TT
         nullptr, // No reverse exists
@@ -228,7 +228,7 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Start Level"),
             VCParamDesc("End Level"),
-            VCParamDesc("Cycles")
+            VCParamDesc("Cycles", 0, 100)
         },
         false, // TT
         [](ValueCurve* vc) { // Reverse
@@ -246,7 +246,7 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Minimum"),
             VCParamDesc("Maximum"),
-            VCParamDesc("Points")
+            VCParamDesc("Points", 1, VC_X_POINTS)
         },
         false, // TT
         nullptr, // reverse
@@ -260,7 +260,7 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Low"),
             VCParamDesc("High"),
-            VCParamDesc("Gain")
+            VCParamDesc("Gain", -100, 100)
         },
         false, // TT
         nullptr, // Reverse not relevant
@@ -274,7 +274,7 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Low"),
             VCParamDesc("High"),
-            VCParamDesc("Gain")
+            VCParamDesc("Gain", -100, 100)
         },
         false,               // TT
         nullptr,             // Reverse not relevant
@@ -288,8 +288,8 @@ static VCTypeChoice vcChoices[] = {
         { 
             VCParamDesc("Low"),
             VCParamDesc("High"),
-            VCParamDesc("Trigger"),
-            VCParamDesc("Fade"),
+            VCParamDesc("Trigger", 0, 100),
+            VCParamDesc("Fade", 0, 100),
         },
         false,               // TT
         nullptr,             // Reverse not relevant
@@ -316,7 +316,7 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Low"),
             VCParamDesc("High"),
-            VCParamDesc("Frames")
+            VCParamDesc("Frames", 1, 1000)
         },
         true, // TT
         nullptr,             // Reverse not relevant
@@ -330,7 +330,7 @@ static VCTypeChoice vcChoices[] = {
         {
             VCParamDesc("Low"),
             VCParamDesc("High"),
-            VCParamDesc("Proportion")
+            VCParamDesc("Proportion", 1, 100)
         }, 
         true, // TT
         nullptr,             // Reverse not relevant
@@ -390,23 +390,9 @@ float ValueCurve::Safe01(float v)
 
 void ValueCurve::GetRangeParm(int parm, const std::string& type, float& low, float &high)
 {
-    switch (parm)
-    {
-    case 1:
-        ValueCurve::GetRangeParm1(type, low, high);
-        break;
-    case 2:
-        ValueCurve::GetRangeParm2(type, low, high);
-        break;
-    case 3:
-        ValueCurve::GetRangeParm3(type, low, high);
-        break;
-    case 4:
-        ValueCurve::GetRangeParm4(type, low, high);
-        break;
-    default:
-        break;
-    }
+    auto choice = VCTypeChoice::getChoice(type.c_str());
+    low = !choice->params[parm-1].minMaxIsVarRange ? choice->params[parm-1].minVal : MINVOID;
+    high = !choice->params[parm-1].minMaxIsVarRange ? choice->params[parm-1].maxVal : MAXVOID;
 }
 
 float ValueCurve::Denormalise(int parm, float value) const
@@ -474,372 +460,22 @@ void ValueCurve::ConvertToRealValues(float oldmin, float oldmax)
 
 void ValueCurve::GetRangeParm1(const std::string& type, float& low, float &high)
 {
-    low = 0;
-    high = 100;
-
-    if (type == "Custom")
-    {
-    }
-    else if (type == "Flat")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Random")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Ramp")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Ramp Up/Down")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Ramp Up/Down Hold")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Saw Tooth")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Timing Track Toggle") {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Timing Track Fade Fixed") {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Timing Track Fade Proportional") {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Music")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Inverted Music")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Music Trigger Fade")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Square")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Parabolic Down")
-    {
-    }
-    else if (type == "Parabolic Up")
-    {
-    }
-    else if (type == "Logarithmic Up")
-    {
-    }
-    else if (type == "Logarithmic Down")
-    {
-    }
-    else if (type == "Exponential Up")
-    {
-    }
-    else if (type == "Exponential Down")
-    {
-    }
-    else if (type == "Sine")
-    {
-    }
-    else if (type == "Decaying Sine")
-    {
-    }
-    else if (type == "Abs Sine")
-    {
-    }
+    GetRangeParm(1, type, low, high);
 }
 
 void ValueCurve::GetRangeParm2(const std::string& type, float& low, float &high)
 {
-    low = 0;
-    high = 100;
-
-    if (type == "Custom")
-    {
-    }
-    else if (type == "Flat")
-    {
-    }
-    else if (type == "Random")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Ramp")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Ramp Up/Down")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Timing Track Toggle") {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Timing Track Fade Fixed") {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Timing Track Fade Proportional") {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Inverted Music")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Music")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Music Trigger Fade")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Ramp Up/Down Hold")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Saw Tooth")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Square")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Parabolic Down")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Parabolic Up")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Logarithmic Up")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Logarithmic Down")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Exponential Up")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Exponential Down")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Sine")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Decaying Sine")
-    {
-        //low = MINVOID;
-        //high = MAXVOID;
-    }
-    else if (type == "Abs Sine")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
+    GetRangeParm(2, type, low, high);
 }
 
 void ValueCurve::GetRangeParm3(const std::string& type, float& low, float &high)
 {
-    low = 0;
-    high = 100;
-
-    if (type == "Custom")
-    {
-    }
-    else if (type == "Flat")
-    {
-    }
-    else if (type == "Ramp")
-    {
-    }
-    else if (type == "Ramp Up/Down")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Random")
-    {
-        low = 1;
-        high = VC_X_POINTS;
-    }
-    else if (type == "Ramp Up/Down Hold")
-    {
-    }
-    else if (type == "Saw Tooth")
-    {
-    }
-    else if (type == "Square")
-    {
-    }
-    else if (type == "Parabolic Down")
-    {
-    }
-    else if (type == "Parabolic Up")
-    {
-    }
-    else if (type == "Logarithmic Up")
-    {
-    }
-    else if (type == "Logarithmic Down")
-    {
-    }
-    else if (type == "Exponential Up")
-    {
-    }
-    else if (type == "Exponential Down")
-    {
-    }
-    else if (type == "Sine")
-    {
-    }
-    else if (type == "Decaying Sine")
-    {
-    }
-    else if (type == "Abs Sine")
-    {
-    }
-    else if (type == "Music Trigger Fade")
-    {
-    }
-    else if (type == "Music")
-    {
-        low = -100;
-        high = 100;
-    }
-    else if (type == "Inverted Music")
-    {
-        low = -100;
-        high = 100;
-    }
-    else if (type == "Timing Track Toggle") {
-    }
-    else if (type == "Timing Track Fade Fixed") {
-        low = 1;
-        high = 1000;
-    }
-    else if (type == "Timing Track Fade Proportional") {
-        low = 1;
-        high = 100;
-    }
+    GetRangeParm(3, type, low, high);
 }
 
 void ValueCurve::GetRangeParm4(const std::string& type, float& low, float &high)
 {
-    low = 0;
-    high = 100;
-
-    if (type == "Custom")
-    {
-    }
-    else if (type == "Flat")
-    {
-    }
-    else if (type == "Ramp")
-    {
-    }
-    else if (type == "Random")
-    {
-    }
-    else if (type == "Ramp Up/Down")
-    {
-    }
-    else if (type == "Ramp Up/Down Hold")
-    {
-    }
-    else if (type == "Saw Tooth")
-    {
-    }
-    else if (type == "Square")
-    {
-    }
-    else if (type == "Parabolic Down")
-    {
-    }
-    else if (type == "Parabolic Up")
-    {
-    }
-    else if (type == "Logarithmic Up")
-    {
-    }
-    else if (type == "Logarithmic Down")
-    {
-    }
-    else if (type == "Exponential Up")
-    {
-    }
-    else if (type == "Exponential Down")
-    {
-    }
-    else if (type == "Sine")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
-    else if (type == "Decaying Sine")
-    {
-    }
-    else if (type == "Music Trigger Fade")
-    {
-    }
-    else if (type == "Timing Track Toggle") {
-    }
-    else if (type == "Timing Track Fade Fixed") {
-    }
-    else if (type == "Timing Track Fade Proportional") {
-    }
-    else if (type == "Abs Sine")
-    {
-        low = MINVOID;
-        high = MAXVOID;
-    }
+    GetRangeParm(4, type, low, high);
 }
 
 void ValueCurve::Reverse()

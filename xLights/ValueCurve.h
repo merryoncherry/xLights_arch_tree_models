@@ -31,10 +31,20 @@ struct VCParamDesc
     bool exists = false;
     std::string pname = "N/A";
 
+    /// <summary>
+    /// If true, the min/max for this parameter is the min/max of the
+    ///   value that the curve controls, otherwise see explicit min/max below
+    /// </summary>
+    bool minMaxIsVarRange = true;
+
     // Is min/max determined by parameter, or by this parameter type?
+    float minVal = 0, maxVal = 100;
 
     VCParamDesc() {}
     VCParamDesc(const char* name) : exists(true), pname(name) {}
+    VCParamDesc(const char* name, float min, float max, float scale = 1) :
+        exists(true), pname(name), minMaxIsVarRange(false), minVal(min), maxVal(max)
+    {}
 };
 
 /// <summary>
