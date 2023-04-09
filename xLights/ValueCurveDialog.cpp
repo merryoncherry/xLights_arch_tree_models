@@ -215,7 +215,7 @@ ValueCurveDialog::ValueCurveDialog(wxWindow* parent, ValueCurve* vc, bool slider
     TextCtrl_Parameter3 = new wxTextCtrl(this, IDD_TEXTCTRL_Parameter3, _("0"), wxDefaultPosition, wxDLG_UNIT(this,wxSize(25,-1)), 0, wxDefaultValidator, _T("IDD_TEXTCTRL_Parameter3"));
     TextCtrl_Parameter3->SetMaxLength(5);
     FlexGridSizer2->Add(TextCtrl_Parameter3, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 2);
-    StaticText_P4 = new wxStaticText(this, ID_STATICTEXT6, _("Label"), wxDefaultPosition, wxSize(121,16), 0, _T("ID_STATICTEXT6"));
+    StaticText_P4 = new wxStaticText(this, ID_STATICTEXT6, _("Label"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT6"));
     FlexGridSizer2->Add(StaticText_P4, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 2);
     Slider_Parameter4 = new wxSlider(this, ID_SLIDER_Parameter4, 0, 0, 100, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Parameter4"));
     FlexGridSizer2->Add(Slider_Parameter4, 1, wxALL|wxEXPAND, 2);
@@ -246,7 +246,7 @@ ValueCurveDialog::ValueCurveDialog(wxWindow* parent, ValueCurve* vc, bool slider
     FlexGridSizer2->Add(StaticText3, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
     Choice_TimingTrack = new wxChoice(this, ID_CHOICE2, wxDefaultPosition, wxDefaultSize, 0, 0, 0, wxDefaultValidator, _T("ID_CHOICE2"));
     FlexGridSizer2->Add(Choice_TimingTrack, 1, wxALL|wxEXPAND, 5);
-    FlexGridSizer2->Add(0,0,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    FlexGridSizer2->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     FlexGridSizer1->Add(FlexGridSizer2, 1, wxALL|wxEXPAND, 2);
     FlexGridSizer7 = new wxFlexGridSizer(0, 2, 0, 0);
     FlexGridSizer7->AddGrowableCol(0);

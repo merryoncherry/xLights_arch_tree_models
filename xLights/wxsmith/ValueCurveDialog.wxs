@@ -199,7 +199,6 @@
 					<object class="sizeritem">
 						<object class="wxStaticText" name="ID_STATICTEXT6" variable="StaticText_P4" member="yes">
 							<label>Label</label>
-							<size>121,16</size>
 						</object>
 						<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
 						<border>2</border>
