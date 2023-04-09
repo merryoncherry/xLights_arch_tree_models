@@ -45,6 +45,18 @@ struct VCParamDesc
     VCParamDesc(const char* name, float min, float max, float scale = 1) :
         exists(true), pname(name), minMaxIsVarRange(false), minVal(min), maxVal(max)
     {}
+
+    void getMinMax(float vcMin, float vcMax, float& min, float& max) const
+    {
+        if (!exists)
+        {
+            min = 0;
+            max = 100;
+            return;
+        }
+        min = minMaxIsVarRange ? vcMin : minVal;
+        max = minMaxIsVarRange ? vcMax : maxVal;
+    }
 };
 
 /// <summary>

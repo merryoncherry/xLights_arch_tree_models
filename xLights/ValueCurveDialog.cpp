@@ -1150,6 +1150,7 @@ void ValueCurvePanel::Paint(wxPaintEvent& event)
                     }
                     else
                     {
+                        // MoC - these else cases are not wonderful.  Verify how it affects the real thing?
                         pdc.DrawLine(lastx * w + X_VC_MARGIN, h - p->y * h, x * w + X_VC_MARGIN, h - p->y * h);
                     }
                 }
@@ -1177,49 +1178,28 @@ void ValueCurvePanel::Paint(wxPaintEvent& event)
 void ValueCurveDialog::ValidateWindow()
 {
     wxString type = Choice1->GetStringSelection();
+    auto choice = VCTypeChoice::getChoice(type.c_str());
+    if (!choice)
+        return;
 
-    float min = 0;
-    float max = 100;
-    ValueCurve::GetRangeParm1(type.ToStdString(), min, max);
-    if (min == MINVOID) min = _vc->GetMin();
-    if (max == MAXVOID) max = _vc->GetMax();
-    if (Slider_Parameter1->GetMin() != min || Slider_Parameter1->GetMax() != max) Slider_Parameter1->SetRange(min, max);
+    wxSlider* sliders[] = { Slider_Parameter1, Slider_Parameter2, Slider_Parameter3, Slider_Parameter4 }; 
+    wxTextCtrl* txts[] = { TextCtrl_Parameter1, TextCtrl_Parameter2, TextCtrl_Parameter3, TextCtrl_Parameter4 };
+    wxStaticText* labs[] = { StaticText_P1, StaticText_P2, StaticText_P3, StaticText_P4 };
+    int sn = 0;
+    for (auto s : sliders) {
+        float min = 0;
+        float max = 100;
+        choice->params[sn].getMinMax(_vc->GetMin(), _vc->GetMax(), min, max);
+        if (s->GetMin() != min || s->GetMax() != max) s->SetRange(min, max);
+        s->Enable(choice->params[sn].exists);
+        txts[sn]->Enable(choice->params[sn].exists);
+        labs[sn]->SetLabel(choice->params[sn].pname);
+        ++sn;
+    }
 
-    ValueCurve::GetRangeParm2(type.ToStdString(), min, max);
-    if (min == MINVOID) min = _vc->GetMin();
-    if (max == MAXVOID) max = _vc->GetMax();
-    if (Slider_Parameter2->GetMin() != min || Slider_Parameter2->GetMax() != max) Slider_Parameter2->SetRange(min, max);
-
-    ValueCurve::GetRangeParm3(type.ToStdString(), min, max);
-    if (min == MINVOID) min = _vc->GetMin();
-    if (max == MAXVOID) max = _vc->GetMax();
-    if (Slider_Parameter3->GetMin() != min || Slider_Parameter3->GetMax() != max) Slider_Parameter3->SetRange(min, max);
-
-    ValueCurve::GetRangeParm4(type.ToStdString(), min, max);
-    if (min == MINVOID) min = _vc->GetMin();
-    if (max == MAXVOID) max = _vc->GetMax();
-    if (Slider_Parameter4->GetMin() != min || Slider_Parameter4->GetMax() != max) Slider_Parameter4->SetRange(min, max);
-
-    const VCTypeChoice *choice = VCTypeChoice::getChoice(type.c_str());
-
-    Slider_Parameter1->Enable(choice->params[0].exists);
-    TextCtrl_Parameter1->Enable(choice->params[0].exists);
-    StaticText_P1->SetLabel(choice->params[0].pname);
     if (!choice->params[0].exists) _vc->SetParameter1(0);
-
-    Slider_Parameter2->Enable(choice->params[1].exists);
-    TextCtrl_Parameter2->Enable(choice->params[1].exists);
-    StaticText_P2->SetLabel(choice->params[1].pname);
     if (!choice->params[1].exists) _vc->SetParameter2(0);
-
-    Slider_Parameter3->Enable(choice->params[2].exists);
-    TextCtrl_Parameter3->Enable(choice->params[2].exists);
-    StaticText_P3->SetLabel(choice->params[2].pname);
     if (!choice->params[2].exists) _vc->SetParameter3(0);
-
-    Slider_Parameter4->Enable(choice->params[3].exists);
-    TextCtrl_Parameter4->Enable(choice->params[3].exists);
-    StaticText_P4->SetLabel(choice->params[3].pname);
     if (!choice->params[3].exists) _vc->SetParameter4(0);
 
     Button_Flip->Enable(choice->flipVC != nullptr);
