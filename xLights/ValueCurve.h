@@ -38,12 +38,12 @@ struct VCParamDesc
     bool minMaxIsVarRange = true;
 
     // Is min/max determined by parameter, or by this parameter type?
-    float minVal = 0, maxVal = 100;
+    float minVal = 0, maxVal = 100, initPct = 0;
 
     VCParamDesc() {}
-    VCParamDesc(const char* name) : exists(true), pname(name) {}
-    VCParamDesc(const char* name, float min, float max, float scale = 1) :
-        exists(true), pname(name), minMaxIsVarRange(false), minVal(min), maxVal(max)
+    VCParamDesc(const char* name, float initpct = 0) : exists(true), pname(name), initPct(initpct) {}
+    VCParamDesc(const char* name, float min, float max, float initpct = 0) :
+        exists(true), pname(name), minMaxIsVarRange(false), minVal(min), maxVal(max), initPct(initpct)
     {}
 
     void getMinMax(float vcMin, float vcMax, float& min, float& max) const

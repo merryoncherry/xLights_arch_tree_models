@@ -30,7 +30,7 @@ static VCTypeChoice vcChoices[] = {
     {
         "Flat",
         {
-            VCParamDesc("Level")
+            VCParamDesc("Level", 50)
         },
         false, // TT
         [](ValueCurve *vc){}, // Reverse
@@ -41,8 +41,8 @@ static VCTypeChoice vcChoices[] = {
     {
         "Ramp",
         {
-            VCParamDesc("Start Level"),
-            VCParamDesc("End Level")
+            VCParamDesc("Start Level", 0),
+            VCParamDesc("End Level", 100)
         },
         false, // TT
         [](ValueCurve* vc) { // Reverse
@@ -58,9 +58,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Ramp Up/Down",
         {
-            VCParamDesc("Start Level"),
-            VCParamDesc("Mid Level"),
-            VCParamDesc("End Level")
+            VCParamDesc("Start Level", 0),
+            VCParamDesc("Mid Level", 100),
+            VCParamDesc("End Level", 0)
         },
         false, // TT
         [](ValueCurve* vc) { // Reverse
@@ -77,9 +77,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Ramp Up/Down Hold",
         {
-            VCParamDesc("Start/End Level"),
-            VCParamDesc("Mid Level"),
-            VCParamDesc("Mid Level Time", 0, 100)
+            VCParamDesc("Start/End Level", 0),
+            VCParamDesc("Mid Level", 100),
+            VCParamDesc("Mid Level Time", 0, 100, 80)
         },
         false, // TT
         [](ValueCurve* vc){}, // Reverse
@@ -91,9 +91,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Saw Tooth",
         {
-            VCParamDesc("Start Level"),
-            VCParamDesc("End Level"),
-            VCParamDesc("Cycles", 0, 100)
+            VCParamDesc("Start Level", 0),
+            VCParamDesc("End Level", 100),
+            VCParamDesc("Cycles", 0, 100, 2)
         },
         false, // TT
         [](ValueCurve* vc) {}, // Reverse
@@ -105,8 +105,8 @@ static VCTypeChoice vcChoices[] = {
     {
         "Parabolic Down",
         {
-            VCParamDesc("Slope", 0, 100),
-            VCParamDesc("Low")
+            VCParamDesc("Slope", 0, 100, 4),
+            VCParamDesc("Low", 0)
         },
         false, // TT
         [](ValueCurve* vc) {}, // Reverse
@@ -118,8 +118,8 @@ static VCTypeChoice vcChoices[] = {
     {
         "Parabolic Up",
         {
-            VCParamDesc("Slope", 0, 100),
-            VCParamDesc("High")
+            VCParamDesc("Slope", 0, 100, 4),
+            VCParamDesc("High", 100)
         },
         false, // TT
         [](ValueCurve* vc) {}, // Reverse
@@ -131,8 +131,8 @@ static VCTypeChoice vcChoices[] = {
     {
         "Logarithmic Up",
         {
-            VCParamDesc("Rate", 0, 100),
-            VCParamDesc("Vertical Offset")
+            VCParamDesc("Rate", 0, 100, 4),
+            VCParamDesc("Vertical Offset", 100)
         },
         false,  // TT
         nullptr, // Reverse - no reverse version exists
@@ -141,8 +141,8 @@ static VCTypeChoice vcChoices[] = {
     {
         "Logarithmic Down",
         {
-            VCParamDesc("Rate", 0, 100),
-            VCParamDesc("Vertical Offset")
+            VCParamDesc("Rate", 0, 100, 15),
+            VCParamDesc("Vertical Offset", 50)
         },
         false,  // TT
         nullptr, // Reverse - no reverse version exists
@@ -151,8 +151,8 @@ static VCTypeChoice vcChoices[] = {
     {
         "Exponential Up",
         {
-            VCParamDesc("Rate", 0, 100),
-            VCParamDesc("Vertical Offset")
+            VCParamDesc("Rate", 0, 100, 100),
+            VCParamDesc("Vertical Offset", 50)
         },
         false, // TT
         nullptr, // Reverse - no reverse version exists
@@ -164,8 +164,8 @@ static VCTypeChoice vcChoices[] = {
     {
         "Exponential Down",
         {
-            VCParamDesc("Rate", 0, 100),
-            VCParamDesc("Vertical Offset")
+            VCParamDesc("Rate", 0, 100, 100),
+            VCParamDesc("Vertical Offset", 50)
         },
         false, // TT
         nullptr, // Reverse - no reverse version exists
@@ -177,10 +177,10 @@ static VCTypeChoice vcChoices[] = {
     {
         "Sine",
         {
-            VCParamDesc("Start", 0, 100),
-            VCParamDesc("Amplitude"),
-            VCParamDesc("Cycles", 0, 100),
-            VCParamDesc("Vertical Offset")
+            VCParamDesc("Start", 0, 100, 75),
+            VCParamDesc("Amplitude", 100),
+            VCParamDesc("Cycles", 0, 100, 10),
+            VCParamDesc("Vertical Offset", 50)
         },
         false, // TT
         [](ValueCurve *vc) { // Reverse
@@ -196,10 +196,10 @@ static VCTypeChoice vcChoices[] = {
     {
         "Abs Sine",
         {
-            VCParamDesc("Start", 0, 100),
-            VCParamDesc("Amplitude"),
-            VCParamDesc("Cycles", 0, 100),
-            VCParamDesc("Vertical Offset")
+            VCParamDesc("Start", 0, 100, 0),
+            VCParamDesc("Amplitude", 100),
+            VCParamDesc("Cycles", 0, 100, 10),
+            VCParamDesc("Vertical Offset", 50)
         },
         false, // TT
         [](ValueCurve* vc) { // Reverse
@@ -211,10 +211,10 @@ static VCTypeChoice vcChoices[] = {
     {
         "Decaying Sine",
         {
-            VCParamDesc("Start", 0, 100),
-            VCParamDesc("Amplitude", 0, 100),
-            VCParamDesc("Cycles", 0, 100),
-            VCParamDesc("Vertical Offset", 0, 100)
+            VCParamDesc("Start", 0, 100, 75),
+            VCParamDesc("Amplitude", 0, 100, 100),
+            VCParamDesc("Cycles", 0, 100, 10),
+            VCParamDesc("Vertical Offset", 0, 100, 50)
         },
         false, // TT
         nullptr, // No reverse exists
@@ -226,9 +226,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Square",
         {
-            VCParamDesc("Start Level"),
-            VCParamDesc("End Level"),
-            VCParamDesc("Cycles", 0, 100)
+            VCParamDesc("Start Level", 0),
+            VCParamDesc("End Level", 100),
+            VCParamDesc("Cycles", 0, 100, 1)
         },
         false, // TT
         [](ValueCurve* vc) { // Reverse
@@ -244,9 +244,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Random",
         {
-            VCParamDesc("Minimum"),
-            VCParamDesc("Maximum"),
-            VCParamDesc("Points", 1, VC_X_POINTS)
+            VCParamDesc("Minimum", 0),
+            VCParamDesc("Maximum", 100),
+            VCParamDesc("Points", 1, VC_X_POINTS, 5)
         },
         false, // TT
         nullptr, // reverse
@@ -258,9 +258,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Music",
         {
-            VCParamDesc("Low"),
-            VCParamDesc("High"),
-            VCParamDesc("Gain", -100, 100)
+            VCParamDesc("Low", 0),
+            VCParamDesc("High", 100),
+            VCParamDesc("Gain", -100, 100, 50)
         },
         false, // TT
         nullptr, // Reverse not relevant
@@ -272,9 +272,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Inverted Music",
         {
-            VCParamDesc("Low"),
-            VCParamDesc("High"),
-            VCParamDesc("Gain", -100, 100)
+            VCParamDesc("Low", 0),
+            VCParamDesc("High", 100),
+            VCParamDesc("Gain", -100, 100, 50)
         },
         false,               // TT
         nullptr,             // Reverse not relevant
@@ -286,10 +286,10 @@ static VCTypeChoice vcChoices[] = {
     {
         "Music Trigger Fade",
         { 
-            VCParamDesc("Low"),
-            VCParamDesc("High"),
-            VCParamDesc("Trigger", 0, 100),
-            VCParamDesc("Fade", 0, 100),
+            VCParamDesc("Low", 0),
+            VCParamDesc("High", 100),
+            VCParamDesc("Trigger", 0, 100, 50),
+            VCParamDesc("Fade", 0, 100, 10),
         },
         false,               // TT
         nullptr,             // Reverse not relevant
@@ -301,8 +301,8 @@ static VCTypeChoice vcChoices[] = {
     {
         "Timing Track Toggle",
         {
-            VCParamDesc("Low"),
-            VCParamDesc("High")
+            VCParamDesc("Low", 0),
+            VCParamDesc("High", 100)
         },
         true, // TT
         nullptr,             // Reverse not relevant
@@ -314,9 +314,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Timing Track Fade Fixed",
         {
-            VCParamDesc("Low"),
-            VCParamDesc("High"),
-            VCParamDesc("Frames", 1, 1000)
+            VCParamDesc("Low", 0),
+            VCParamDesc("High", 100),
+            VCParamDesc("Frames", 1, 1000, .9)
         },
         true, // TT
         nullptr,             // Reverse not relevant
@@ -328,9 +328,9 @@ static VCTypeChoice vcChoices[] = {
     {
         "Timing Track Fade Proportional",
         {
-            VCParamDesc("Low"),
-            VCParamDesc("High"),
-            VCParamDesc("Proportion", 1, 100)
+            VCParamDesc("Low", 0),
+            VCParamDesc("High", 100),
+            VCParamDesc("Proportion", 1, 100, 49)
         }, 
         true, // TT
         nullptr,             // Reverse not relevant

@@ -442,55 +442,23 @@ void ValueCurveDialog::SetParameter(int p, float v)
     SetTextCtrlsFromSliders();
 }
 
-void ValueCurveDialog::SetSliderMinMax()
+void ValueCurveDialog::SetSliderMinMax(bool initialValues)
 {
-    float min, max;
+    wxString type = Choice1->GetStringSelection();
+    auto choice = VCTypeChoice::getChoice(type.c_str());
+    if (!choice) return;
 
-    ValueCurve::GetRangeParm1(_vc->GetType(), min, max);
-    if (min == MINVOID)
-    {
-        Slider_Parameter1->SetMin(_vc->GetMin());
-        Slider_Parameter1->SetMax(_vc->GetMax());
-    }
-    else
-    {
-        Slider_Parameter1->SetMin(min);
-        Slider_Parameter1->SetMax(max);
-    }
-
-    ValueCurve::GetRangeParm2(_vc->GetType(), min, max);
-    if (min == MINVOID)
-    {
-        Slider_Parameter2->SetMin(_vc->GetMin());
-        Slider_Parameter2->SetMax(_vc->GetMax());
-    }
-    else
-    {
-        Slider_Parameter2->SetMin(min);
-        Slider_Parameter2->SetMax(max);
-    }
-
-    ValueCurve::GetRangeParm3(_vc->GetType(), min, max);
-    if (min == MINVOID)
-    {
-        Slider_Parameter3->SetMin(_vc->GetMin());
-        Slider_Parameter3->SetMax(_vc->GetMax());
-    }
-    else
-    {
-        Slider_Parameter3->SetMin(min);
-        Slider_Parameter3->SetMax(max);
-    }
-    ValueCurve::GetRangeParm4(_vc->GetType(), min, max);
-    if (min == MINVOID)
-    {
-        Slider_Parameter4->SetMin(_vc->GetMin());
-        Slider_Parameter4->SetMax(_vc->GetMax());
-    }
-    else
-    {
-        Slider_Parameter4->SetMin(min);
-        Slider_Parameter4->SetMax(max);
+    wxSlider* sliders[] = { Slider_Parameter1, Slider_Parameter2, Slider_Parameter3, Slider_Parameter4 };
+    int sn = 0;
+    for (auto s : sliders) {
+        float min = 0, max = 100;
+        choice->params[sn].getMinMax(_vc->GetMin(), _vc->GetMax(), min, max);
+        if (s->GetMin() != min || s->GetMax() != max)
+            s->SetRange(min, max);
+        if (initialValues) {
+            SetParameter100(sn+1, choice->params[sn].initPct);
+        }
+        ++sn;
     }
 }
 
@@ -502,150 +470,21 @@ void ValueCurveDialog::OnChoice1Select(wxCommandEvent& event)
     _vcp->Refresh();
     ValidateWindow();
 
-    SetSliderMinMax();
+    SetSliderMinMax(true);
 
     wxString type = Choice1->GetStringSelection();
-    if (type == "Flat")
-    {
-        // Dont change anything
-    }
-    else if (type == "Ramp")
-    {
-        if (_vc->GetParameter1_100() < 50)
-        {
-            SetParameter100(2, 100);
-        }
-        else
-        {
-            SetParameter100(2, 0);
-        }
-    }
-    else if (type == "Ramp Up/Down")
-    {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 0);
-    }
-    else if (type == "Music" || type == "Inverted Music")
-    {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 50);
-    }
-    else if (type == "Music Trigger Fade")
-    {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 50);
-        SetParameter100(4, 10);
-    }
-    else if (type == "Timing Track Toggle") {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
+    auto choice = VCTypeChoice::getChoice(type.c_str());
+    if (!choice)
+        return;
+
+    if (choice->needsTimingTrack) {
         if (Choice_TimingTrack->GetCount() > 0) {
             Choice_TimingTrack->SetSelection(0);
             _vc->SetTimingTrack(Choice_TimingTrack->GetStringSelection());
         }
     }
-    else if (type == "Timing Track Fade Fixed") {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter(3, 10);
-        if (Choice_TimingTrack->GetCount() > 0) {
-            Choice_TimingTrack->SetSelection(0);
-            _vc->SetTimingTrack(Choice_TimingTrack->GetStringSelection());
-        }
-    }
-    else if (type == "Timing Track Fade Proportional") {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter(3, 50);
-        if (Choice_TimingTrack->GetCount() > 0) {
-            Choice_TimingTrack->SetSelection(0);
-            _vc->SetTimingTrack(Choice_TimingTrack->GetStringSelection());
-        }
-    }
-    else if (type == "Ramp Up/Down Hold")
-    {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 80);
-    }
-    else if (type == "Saw Tooth")
-    {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 2);
-    }
-    else if (type == "Parabolic Down")
-    {
-        SetParameter100(1, 4);
-        SetParameter100(2, 0);
-    }
-    else if (type == "Parabolic Up")
-    {
-        SetParameter100(1, 4);
-        SetParameter100(2, 100);
-    }
-    else if (type == "Logarithmic Up")
-    {
-        SetParameter100(1, 4);
-        SetParameter100(2, 100);
-    }
-    else if (type == "Logarithmic Down")
-    {
-        SetParameter100(1, 15);
-        SetParameter100(2, 50);
-    }
-    else if (type == "Exponential Up")
-    {
-        SetParameter100(1, 100);
-        SetParameter100(2, 50);
-    }
-    else if (type == "Exponential Down")
-    {
-        SetParameter100(1, 100);
-        SetParameter100(2, 50);
-    }
-    else if (type == "Sine")
-    {
-        SetParameter100(1, 75);
-        _vc->SetTimeOffset(0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 10);
-        SetParameter100(4, 50);
-    }
-    else if (type == "Decaying Sine")
-    {
-        SetParameter100(1, 75);
-        _vc->SetTimeOffset(0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 10);
-        SetParameter100(4, 50);
-    }
-    else if (type == "Random")
-    {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 5);
-        SetParameter100(4, 0);
-    }
-    else if (type == "Abs Sine")
-    {
-        SetParameter100(1, 0);
-        _vc->SetTimeOffset(0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 10);
-        SetParameter100(4, 50);
-    }
-    else if (type == "Square")
-    {
-        SetParameter100(1, 0);
-        SetParameter100(2, 100);
-        SetParameter100(3, 1);
-        SetParameter100(4, 0);
-    }
-    else if (type == "Custom")
+
+    if (type == "Custom")
     {
         // If there are no points add some
         if (_vc->GetPoints().size() == 0)

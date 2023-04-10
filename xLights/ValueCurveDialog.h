@@ -95,7 +95,7 @@ class ValueCurveDialog: public wxDialog
     void SetSlidersFromTextCtrls();
     void SetTextCtrlFromSlider(int parm, wxTextCtrl* text, int value);
     void SetSliderFromTextCtrl(int parm, wxSlider* slider, float value);
-    void SetSliderMinMax();
+    void SetSliderMinMax(bool initialValues = false);
 
     public:
 
