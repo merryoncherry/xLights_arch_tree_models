@@ -654,6 +654,8 @@ public:
         }
     }
     uint32_t GetChannelForNode(int strandIndex, int node) const;
+    
+    [[nodiscard]] std::string GetAttributesAsJSON() const;
 
 protected:
     std::vector<int> layerSizes; // inside to outside
@@ -675,7 +677,7 @@ protected:
         int renderHi = 0;
         int modelChangeCount = 0;
         bool isTransparent = false;
-        float boundingBox[6];
+        float boundingBox[6] = { 0 };
     };
     std::map<std::string, PreviewGraphicsCacheInfo*> uiCaches;
     virtual void deleteUIObjects();

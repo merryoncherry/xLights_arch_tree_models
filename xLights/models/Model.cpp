@@ -56,6 +56,8 @@
 #include "../xSchedule/wxJSON/jsonreader.h"
 #include "CachedFileDownloader.h"
 
+#include <algorithm>
+
 #define MOST_STRINGS_WE_EXPECT 480
 
 const long Model::ID_LAYERSIZE_INSERT = wxNewId();
@@ -3705,10 +3707,11 @@ void Model::DumpBuffer(std::vector<NodeBaseClassPtr> &newNodes,
     }
 }
 
-void Model::ApplyTransform(const std::string &type,
-                    std::vector<NodeBaseClassPtr> &newNodes,
-                    int &bufferWi, int &bufferHi) const {
-    //"Rotate CC 90", "Rotate CW 90", "Rotate 180", "Flip Vertical", "Flip Horizontal",
+void Model::ApplyTransform(const std::string& type,
+                           std::vector<NodeBaseClassPtr>& newNodes,
+                           int& bufferWi, int& bufferHi) const
+{
+    //"Rotate CC 90", "Rotate CW 90", "Rotate 180", "Flip Vertical", "Flip Horizontal", "Rotate CC 90 Flip Horizontal", "Rotate CW 90 Flip Horizontal"
     if (type == "None") {
         return;
     } else if (type == "Rotate 180") {
@@ -3735,18 +3738,40 @@ void Model::ApplyTransform(const std::string &type,
                 SetCoords(it2, bufferHi - it2.bufY - 1, it2.bufX);
             }
         }
-        int tmp = bufferHi;
-        bufferHi = bufferWi;
-        bufferWi = tmp;
+        std::swap(bufferWi, bufferHi);
     } else if (type == "Rotate CC 90") {
         for (int x = 0; x < newNodes.size(); x++) {
             for (auto& it2 : newNodes[x]->Coords) {
                 SetCoords(it2, it2.bufY, bufferWi - it2.bufX - 1);
             }
         }
-        int tmp = bufferHi;
-        bufferHi = bufferWi;
-        bufferWi = tmp;
+        std::swap(bufferWi, bufferHi);
+    } else if (type == "Rotate CC 90 Flip Horizontal") {
+        for (int x = 0; x < newNodes.size(); x++) {
+            for (auto& it2 : newNodes[x]->Coords) {
+                SetCoords(it2, it2.bufY, bufferWi - it2.bufX - 1);
+            }
+        }
+        std::swap(bufferWi, bufferHi);
+
+        for (size_t x = 0; x < newNodes.size(); x++) {
+            for (auto& it2 : newNodes[x]->Coords) {
+                SetCoords(it2, it2.bufX, bufferHi - it2.bufY - 1);
+            }
+        }
+    } else if (type == "Rotate CW 90 Flip Horizontal") {
+        for (size_t x = 0; x < newNodes.size(); x++) {
+            for (auto& it2 : newNodes[x]->Coords) {
+                SetCoords(it2, bufferHi - it2.bufY - 1, it2.bufX);
+            }
+        }
+        std::swap(bufferWi, bufferHi);
+
+        for (size_t x = 0; x < newNodes.size(); x++) {
+            for (auto& it2 : newNodes[x]->Coords) {
+                SetCoords(it2, it2.bufX, bufferHi - it2.bufY - 1);
+            }
+        }
     }
 }
 
@@ -4162,7 +4187,7 @@ void Model::SetNodeCount(size_t NumStrings, size_t NodesPerString, const std::st
         }
         else if (StringType == "Superstring") {
             for (n = 0; n < NumStrings; n++) {
-                Nodes.push_back(NodeBaseClassPtr(new NodeClassSuperString(n, NodesPerString, superStringColours, GetNextName())));
+                Nodes.push_back(NodeBaseClassPtr(new NodeClassSuperString(n, NodesPerString, superStringColours, rgbwHandlingType, GetNextName())));
                 Nodes.back()->model = this;
             }
         } else if (StringType=="Single Color Blue") {
@@ -7448,3 +7473,41 @@ void Model::ImportXlightsModel(std::string const& filename, xLightsFrame* xlight
         DisplayError("Failure loading model file: " + filename);
     }
 }
+
+std::string Model::GetAttributesAsJSON() const
+{
+    std::string json = "{";
+    bool first{true};
+    for (wxXmlAttribute* attrp = ModelXml->GetAttributes(); attrp; attrp = attrp->GetNext())
+    {
+        wxString value = attrp->GetValue();
+        if (!value.empty())
+        {
+            if(!first)
+            {
+                json += ",";
+            }
+            json += "\"" + attrp->GetName().ToStdString() + "\":\"" + JSONSafe(value.ToStdString()) + "\"";
+            first = false;
+        }
+    }
+    json += ",\"ControllerConnection\":{";
+    wxXmlNode* cc = GetControllerConnection();
+    bool first2{true};
+    for (wxXmlAttribute* attrp = cc->GetAttributes(); attrp; attrp = attrp->GetNext())
+    {
+        wxString value = attrp->GetValue();
+        if (!value.empty())
+        {
+            if(!first2)
+            {
+                json += ",";
+            }
+            json += "\"" + attrp->GetName().ToStdString() + "\":\"" + JSONSafe(value.ToStdString()) + "\"";
+            first2 = false;
+        }
+    }
+    json += "}}";
+    return json;
+}
+
