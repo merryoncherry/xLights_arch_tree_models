@@ -1779,7 +1779,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id) :
 #ifndef NDEBUG
     logger_base.debug("xLights Crash Menu item not removed.");
 #ifdef _MSC_VER
-    if (wxSystemSettings::GetAppearance().IsDark()) {
+    if (IsDarkMode()) {
         Notebook1->SetBackgroundColour(wxColour(0x006000));
     } else {
         Notebook1->SetBackgroundColour(*wxGREEN);
@@ -4535,7 +4535,7 @@ void xLightsFrame::ExportModels(wxString const& filename)
             }
 
             int w, h;
-            model->GetBufferSize("Default", "2D", "None", w, h);
+            model->GetBufferSize("Default", "2D", "None", w, h, 0);
             write_worksheet_string(modelsheet, row, 0, model->name, format, _model_col_widths);
             write_worksheet_string(modelsheet, row, 1, model->GetShadowModelFor(), format, _model_col_widths);
             write_worksheet_string(modelsheet, row, 2, model->description, format, _model_col_widths);
@@ -4612,7 +4612,7 @@ void xLightsFrame::ExportModels(wxString const& filename)
                 }
             }
             int w, h;
-            model->GetBufferSize("Default", "2D", "None", w, h);
+            model->GetBufferSize("Default", "2D", "None", w, h, 0);
 
             write_worksheet_string(groupsheet, row, 0, model->name, format, _group_col_widths);
             write_worksheet_string(groupsheet, row, 1, models, format, _group_col_widths);
@@ -5892,7 +5892,7 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
                     std::vector<NodeBaseClassPtr> nodes;
                     int bufwi;
                     int bufhi;
-                    m->InitRenderBufferNodes("Default", "2D", "None", nodes, bufwi, bufhi);
+                    m->InitRenderBufferNodes("Default", "2D", "None", nodes, bufwi, bufhi, 0);
                     for (const auto& n : nodes) {
                         auto e = usedch.find(n->ActChan);
                         if (e != end(usedch)) {
@@ -7710,11 +7710,11 @@ std::string xLightsFrame::MoveToShowFolder(const std::string& file, const std::s
     return target.ToStdString();
 }
 
-void xLightsFrame::CleanupSequenceFileLocations()
+bool xLightsFrame::CleanupSequenceFileLocations()
 {
     if (GetShowDirectory() == "") {
         wxMessageBox("Show directory invalid. Cleanup aborted.");
-        return;
+        return false;
     }
 
     wxString media = CurrentSeqXmlFile->GetMediaFile();
@@ -7747,9 +7747,11 @@ void xLightsFrame::CleanupSequenceFileLocations()
     {
         _sequenceElements.IncrementChangeCount(nullptr);
     }
+
+    return true;
 }
 
-void xLightsFrame::CleanupRGBEffectsFileLocations()
+bool xLightsFrame::CleanupRGBEffectsFileLocations()
 {
     if (FileExists(mBackgroundImage) && !IsInShowFolder(mBackgroundImage))
     {
@@ -7773,6 +7775,8 @@ void xLightsFrame::CleanupRGBEffectsFileLocations()
             GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RGBEFFECTS_CHANGE, "CleanupRGBEffectsFileLocations");
         }
     }
+
+    return true;
 }
 
 void xLightsFrame::OnMenuItem_CleanupFileLocationsSelected(wxCommandEvent& event)
