@@ -283,7 +283,7 @@ void MeteorsEffect::HorizontalMoveMeteors(RenderBuffer& buffer, int mspeed)
     std::function<void(MeteorClass&, int)> f = [mspeed](MeteorClass& meteor, int n) {
         meteor.x -= mspeed;
     };
-    parallel_for(cache->meteors, f, 500);
+    parallel_for(cache->meteors, f, 99999999);
 }
 
 void MeteorsEffect::HorizontalRemoveMeteors(RenderBuffer& buffer, int Length)
@@ -365,7 +365,7 @@ void MeteorsEffect::RenderMeteorsHorizontal(RenderBuffer& buffer, int ColorSchem
             }
         }
     };
-    parallel_for(cache->meteors, f, 500);
+    parallel_for(cache->meteors, f, 99999999);
 
     HorizontalMoveMeteors(buffer, speed);
 
@@ -432,7 +432,7 @@ void MeteorsEffect::VerticalMoveMeteors(RenderBuffer& buffer, int mspeed)
     std::function<void(MeteorClass&, int)> f = [mspeed](MeteorClass& meteor, int n) {
         meteor.y -= mspeed;
     };
-    parallel_for(cache->meteors, f, 500);
+    parallel_for(cache->meteors, f, 99999999);
 }
 
 void MeteorsEffect::VerticalRemoveMeteors(RenderBuffer& buffer, int Length)
@@ -515,7 +515,7 @@ void MeteorsEffect::RenderMeteorsVertical(RenderBuffer& buffer, int ColorScheme,
             }
         }
     };
-    parallel_for(cache->meteors, f, 500);
+    parallel_for(cache->meteors, f, 99999999);
 
     VerticalMoveMeteors(buffer, speed);
 
@@ -578,7 +578,7 @@ void MeteorsEffect::IcicleMoveMeteors(RenderBuffer& buffer, int mspeed)
     std::function<void(MeteorClass&, int)> f = [mspeed](MeteorClass& meteor, int n) {
         meteor.y -= mspeed;
     };
-    parallel_for(cache->meteors, f, 500);
+    parallel_for(cache->meteors, f, 99999999);
 }
 
 void MeteorsEffect::IcicleRemoveMeteors(RenderBuffer& buffer)
@@ -662,7 +662,7 @@ void MeteorsEffect::RenderIcicleDrip(RenderBuffer& buffer, int ColorScheme, int 
             buffer.SetPixel(x, y, hsv);
         }
     };
-    parallel_for(cache->meteors, f, 500);
+    parallel_for(cache->meteors, f, 99999999);
 
     IcicleMoveMeteors(buffer, speed);
 
@@ -777,7 +777,7 @@ void MeteorsEffect::ImplodeMoveMeteors(RenderBuffer& buffer, int mspeed, int xof
         meteor.y -= meteor.dy * mspeed * hdistance;
         meteor.cnt++;
     };
-    parallel_for(cache->meteorsRadial, f, 500);
+    parallel_for(cache->meteorsRadial, f, 9999999);
 }
 
 void MeteorsEffect::ImplodeRemoveMeteors(RenderBuffer& buffer, int xoffset, int yoffset)
@@ -877,7 +877,7 @@ void MeteorsEffect::RenderMeteorsImplode(RenderBuffer& buffer, int ColorScheme, 
             }
         }
     };
-    parallel_for(cache->meteorsRadial, f, 500);
+    parallel_for(cache->meteorsRadial, f, 99999999);
 
     ImplodeMoveMeteors(buffer, speed, xoffset, yoffset, fadeWithDistance);
 
@@ -980,7 +980,7 @@ void MeteorsEffect::ExplodeMoveMeteors(RenderBuffer& buffer, int mspeed, int xof
         meteor.y += meteor.dy * mspeed * hdistance;
         meteor.cnt++;
     };
-    parallel_for(cache->meteorsRadial, f, 500);
+    parallel_for(cache->meteorsRadial, f, 99999999);
 }
 
 void MeteorsEffect::ExplodeRemoveMeteors(RenderBuffer& buffer)
@@ -1079,7 +1079,7 @@ void MeteorsEffect::RenderMeteorsExplode(RenderBuffer& buffer, int ColorScheme, 
             }
         }
     };
-    parallel_for(cache->meteorsRadial, f, 500);
+    parallel_for(cache->meteorsRadial, f, 99999999);
 
     ExplodeMoveMeteors(buffer, speed, xoffset, yoffset, fadeWithDistance);
 
