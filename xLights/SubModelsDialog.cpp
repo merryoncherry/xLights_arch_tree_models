@@ -387,6 +387,7 @@ SubModelsDialog::SubModelsDialog(wxWindow* parent, OutputManager* om) :
     Connect(wxID_ANY, wxEVT_CLOSE_WINDOW, (wxObjectEventFunction)&SubModelsDialog::OnCancel);
     Connect(wxID_CANCEL, wxEVT_BUTTON, (wxObjectEventFunction)&SubModelsDialog::OnCancel);
     Connect(ID_TEXTCTRL_NAME, wxEVT_COMMAND_TEXT_ENTER, (wxObjectEventFunction)&SubModelsDialog::ApplySubmodelName);
+    Connect(ID_TEXTCTRL_SUBMODEL_DESC, wxEVT_COMMAND_TEXT_UPDATED, (wxObjectEventFunction)&SubModelsDialog::ApplySubmodelDesc);
 
     TextCtrl_Name->Bind(wxEVT_KILL_FOCUS, &SubModelsDialog::OnTextCtrl_NameText_KillFocus, this);
 
@@ -625,6 +626,7 @@ void SubModelsDialog::SaveXML(Model *m)
     for (auto a = _subModels.begin(); a != _subModels.end(); ++a) {
         child = new wxXmlNode(wxXML_ELEMENT_NODE, "subModel");
         child->AddAttribute("name", (*a)->name);
+        child->AddAttribute("desc", (*a)->description);
         child->AddAttribute("layout", (*a)->vertical ? "vertical" : "horizontal");
         child->AddAttribute("type", (*a)->isRanges ? "ranges" : "subbuffer");
         child->AddAttribute("bufferstyle", (*a)->bufferStyle);
@@ -1199,6 +1201,19 @@ void SubModelsDialog::ApplySubmodelName()
     }
 
     ValidateWindow();
+}
+
+void SubModelsDialog::ApplySubmodelDesc()
+{
+    int index = GetSelectedIndex();
+    wxASSERT(index >= 0);
+
+    wxString desc = TextCtrl_SubmodelDesc->GetValue();
+
+    SubModelInfo* sm = (SubModelInfo*)ListCtrl_SubModels->GetItemData(index);
+    if (sm != nullptr) {
+        sm->description = desc;
+    }
 }
 
 void SubModelsDialog::OnTextCtrl_NameText_KillFocus(wxFocusEvent& event)
@@ -2020,6 +2035,7 @@ void SubModelsDialog::ValidateWindow()
     {
         ListCtrl_SubModels->Disable();
         TextCtrl_Name->Disable();
+        TextCtrl_SubmodelDesc->Disable();
         DeleteButton->Disable();
         ButtonCopy->Disable();
         NodesGrid->Disable();
@@ -2100,6 +2116,7 @@ void SubModelsDialog::ValidateWindow()
         {
             TypeNotebook->Enable();
             TextCtrl_Name->Enable();
+            TextCtrl_SubmodelDesc->Enable();
 
             int index = GetSelectedIndex();
             bool clash = false;
@@ -2125,9 +2142,11 @@ void SubModelsDialog::ValidateWindow()
         {
             TypeNotebook->Disable();
             TextCtrl_Name->Disable();
+            TextCtrl_SubmodelDesc->Disable();
         }
     } else {
         TextCtrl_Name->Disable();
+        TextCtrl_SubmodelDesc->Disable();
         DeleteButton->Disable();
         ButtonCopy->Disable();
         NodesGrid->Disable();
@@ -2162,6 +2181,7 @@ void SubModelsDialog::Select(const wxString &name)
 
     ListCtrl_SubModels->EnsureVisible(idx);
     TextCtrl_Name->SetValue(name);
+    TextCtrl_SubmodelDesc->SetValue(sm->description);
 
     if (sm->isRanges) {
         TypeNotebook->SetSelection(0);
@@ -3187,6 +3207,7 @@ void SubModelsDialog::ReadSubModelXML(wxXmlNode* xmlData)
             SubModelInfo *sm = new SubModelInfo(name);
             sm->name = name;
             sm->oldName = name;
+            sm->description = child->GetAttribute("desc", "");
             sm->isRanges = child->GetAttribute("type", "ranges") == "ranges";
             sm->vertical = child->GetAttribute("layout") == "vertical";
             sm->subBuffer = child->GetAttribute("subBuffer");
@@ -3469,6 +3490,7 @@ void SubModelsDialog::ImportCustomModel(std::string filename)
                         {
                             auto smname = n->GetAttribute("name");
                             SubModelInfo* sm2 = new SubModelInfo(name + "-" + smname);
+                            sm2->description = n->GetAttribute("desc", "");
                             sm2->vertical = n->GetAttribute("layout", "horizontal") == "vertical";
                             sm2->strands.clear();
                             sm2->isRanges = n->GetAttribute("type", "") == "ranges";

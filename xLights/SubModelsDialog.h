@@ -104,6 +104,7 @@ class SubModelsDialog : public wxDialog
 
         wxString name;
         wxString oldName;
+        wxString description;
         bool vertical{false};
         bool isRanges{true};
         wxString subBuffer;
@@ -268,6 +269,7 @@ protected:
     void FixNodes(wxXmlNode* n, const std::string& attribute, std::map<int, int>& nodeMap);
 
     void ApplySubmodelName();
+    void ApplySubmodelDesc();
     void PopulateList();
     void ValidateWindow();
     void Select(const wxString &name);
