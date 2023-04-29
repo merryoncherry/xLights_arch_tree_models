@@ -93,6 +93,7 @@ public:
 	wxStaticText* StaticText8;
 	wxStaticText* StaticText9;
 	wxTextCtrl* TextCtrl_Filter;
+	wxTextCtrl* TextCtrl_ModelGroupDesc;
 	//*)
 
 protected:
@@ -100,6 +101,7 @@ protected:
 	//(*Identifiers(ModelGroupPanel)
 	static const long ID_STATICTEXT5;
 	static const long ID_STATICTEXT6;
+	static const long ID_TEXTCTRL_MODELGROUPDESC;
 	static const long ID_CHOICE1;
 	static const long ID_STATICTEXT12;
 	static const long ID_CHOICE2;

@@ -20,7 +20,7 @@
 									<label>Model Group Name:</label>
 								</object>
 								<flag>wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
-								<border>5</border>
+								<border>2</border>
 								<option>1</option>
 							</object>
 							<object class="sizeritem">
@@ -28,7 +28,21 @@
 									<label>&lt;group name&gt;</label>
 								</object>
 								<flag>wxALL|wxEXPAND</flag>
-								<border>5</border>
+								<border>2</border>
+								<option>1</option>
+							</object>
+							<object class="sizeritem">
+								<object class="wxStaticText" name="wxID_ANY" variable="StaticText_ModelGroupDesc" member="no">
+									<label>Description:</label>
+								</object>
+								<flag>wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
+								<border>2</border>
+								<option>1</option>
+							</object>
+							<object class="sizeritem">
+								<object class="wxTextCtrl" name="ID_TEXTCTRL_MODELGROUPDESC" variable="TextCtrl_ModelGroupDesc" member="yes" />
+								<flag>wxALL|wxEXPAND</flag>
+								<border>2</border>
 								<option>1</option>
 							</object>
 							<object class="sizeritem">
@@ -36,7 +50,7 @@
 									<label>Default Layout Mode:</label>
 								</object>
 								<flag>wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
-								<border>5</border>
+								<border>2</border>
 								<option>1</option>
 							</object>
 							<object class="sizeritem">
@@ -70,7 +84,7 @@
 									<label>Default Camera:</label>
 								</object>
 								<flag>wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
-								<border>5</border>
+								<border>2</border>
 								<option>1</option>
 							</object>
 							<object class="sizeritem">
@@ -78,7 +92,7 @@
 									<handler function="OnChoice_DefaultCameraSelect" entry="EVT_CHOICE" />
 								</object>
 								<flag>wxALL|wxEXPAND</flag>
-								<border>5</border>
+								<border>2</border>
 								<option>1</option>
 							</object>
 							<object class="sizeritem">
@@ -86,7 +100,7 @@
 									<label>Max Grid Size:</label>
 								</object>
 								<flag>wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
-								<border>5</border>
+								<border>2</border>
 								<option>1</option>
 							</object>
 							<object class="sizeritem">
@@ -168,7 +182,7 @@
 									</object>
 								</object>
 								<flag>wxALL|wxEXPAND</flag>
-								<border>5</border>
+								<border>2</border>
 								<option>1</option>
 							</object>
 							<object class="sizeritem">
@@ -185,7 +199,7 @@
 									<handler function="OnColourPickerCtrl_ModelGroupTagColourColourChanged" entry="EVT_COLOURPICKER_CHANGED" />
 								</object>
 								<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
-								<border>5</border>
+								<border>2</border>
 								<option>1</option>
 							</object>
 							<object class="sizeritem">

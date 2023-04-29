@@ -146,14 +146,14 @@
 									<growablerows>1</growablerows>
 									<object class="sizeritem">
 										<object class="wxFlexGridSizer" variable="FlexGridSizer7" member="no">
-											<cols>5</cols>
+											<cols>2</cols>
 											<growablecols>1</growablecols>
 											<object class="sizeritem">
 												<object class="wxStaticText" name="ID_STATICTEXT_NAME" variable="StaticTextName" member="yes">
 													<label>Name:</label>
 												</object>
-												<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
-												<border>5</border>
+												<flag>wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
+												<border>2</border>
 												<option>1</option>
 											</object>
 											<object class="sizeritem">
@@ -163,7 +163,21 @@
 													<handler function="OnTextCtrl_NameText_Change" entry="EVT_TEXT" />
 												</object>
 												<flag>wxALL|wxEXPAND</flag>
-												<border>5</border>
+												<border>2</border>
+												<option>1</option>
+											</object>
+											<object class="sizeritem">
+												<object class="wxStaticText" name="ID_STATICTEXT_SUBMODELDESC" variable="StaticTextSubmodelDesc" member="yes">
+													<label>Description:</label>
+												</object>
+												<flag>wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
+												<border>2</border>
+												<option>1</option>
+											</object>
+											<object class="sizeritem">
+												<object class="wxTextCtrl" name="ID_TEXTCTRL_SUBMODEL_DESC" variable="TextCtrl_SubmodelDesc" member="yes" />
+												<flag>wxALL|wxEXPAND</flag>
+												<border>2</border>
 												<option>1</option>
 											</object>
 										</object>

@@ -174,7 +174,9 @@ public:
     wxStaticText* StaticText1;
     wxStaticText* StaticText2;
     wxStaticText* StaticTextName;
+    wxStaticText* StaticTextSubmodelDesc;
     wxTextCtrl* TextCtrl_Name;
+    wxTextCtrl* TextCtrl_SubmodelDesc;
     //*)
 
 protected:
@@ -193,6 +195,8 @@ protected:
     static const long ID_PANEL4;
     static const long ID_STATICTEXT_NAME;
     static const long ID_TEXTCTRL_NAME;
+    static const long ID_STATICTEXT_SUBMODELDESC;
+    static const long ID_TEXTCTRL_SUBMODEL_DESC;
     static const long ID_STATICTEXT2;
     static const long ID_CHOICE_BUFFER_STYLE;
     static const long ID_CHECKBOX1;

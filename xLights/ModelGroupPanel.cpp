@@ -86,6 +86,7 @@ public:
 //(*IdInit(ModelGroupPanel)
 const long ModelGroupPanel::ID_STATICTEXT5 = wxNewId();
 const long ModelGroupPanel::ID_STATICTEXT6 = wxNewId();
+const long ModelGroupPanel::ID_TEXTCTRL_MODELGROUPDESC = wxNewId();
 const long ModelGroupPanel::ID_CHOICE1 = wxNewId();
 const long ModelGroupPanel::ID_STATICTEXT12 = wxNewId();
 const long ModelGroupPanel::ID_CHOICE2 = wxNewId();
@@ -140,6 +141,7 @@ ModelGroupPanel::ModelGroupPanel(wxWindow* parent, ModelManager &Models, LayoutP
 	wxFlexGridSizer* FlexGridSizer6;
 	wxStaticText* StaticText4;
 	wxStaticText* StaticText6;
+	wxStaticText* StaticText_ModelGroupDesc;
 
 	Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("wxID_ANY"));
 	Panel_Sizer = new wxFlexGridSizer(0, 1, 0, 0);
@@ -151,11 +153,15 @@ ModelGroupPanel::ModelGroupPanel(wxWindow* parent, ModelManager &Models, LayoutP
 	FlexGridSizer6 = new wxFlexGridSizer(0, 2, 0, 0);
 	FlexGridSizer6->AddGrowableCol(1);
 	StaticText5 = new wxStaticText(this, ID_STATICTEXT5, _("Model Group Name:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT5"));
-	FlexGridSizer6->Add(StaticText5, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer6->Add(StaticText5, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 2);
 	LabelModelGroupName = new wxStaticText(this, ID_STATICTEXT6, _("<group name>"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT6"));
-	FlexGridSizer6->Add(LabelModelGroupName, 1, wxALL|wxEXPAND, 5);
+	FlexGridSizer6->Add(LabelModelGroupName, 1, wxALL|wxEXPAND, 2);
+	StaticText_ModelGroupDesc = new wxStaticText(this, wxID_ANY, _("Description:"), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
+	FlexGridSizer6->Add(StaticText_ModelGroupDesc, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 2);
+	TextCtrl_ModelGroupDesc = new wxTextCtrl(this, ID_TEXTCTRL_MODELGROUPDESC, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_TEXTCTRL_MODELGROUPDESC"));
+	FlexGridSizer6->Add(TextCtrl_ModelGroupDesc, 1, wxALL|wxEXPAND, 2);
 	StaticText4 = new wxStaticText(this, wxID_ANY, _("Default Layout Mode:"), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
-	FlexGridSizer6->Add(StaticText4, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer6->Add(StaticText4, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 2);
 	ChoiceModelLayoutType = new wxChoice(this, ID_CHOICE1, wxDefaultPosition, wxDefaultSize, 0, 0, 0, wxDefaultValidator, _T("ID_CHOICE1"));
 	ChoiceModelLayoutType->SetSelection( ChoiceModelLayoutType->Append(_("Grid as per preview")) );
 	ChoiceModelLayoutType->Append(_("Minimal Grid"));
@@ -174,11 +180,11 @@ ModelGroupPanel::ModelGroupPanel(wxWindow* parent, ModelManager &Models, LayoutP
 	ChoiceModelLayoutType->Append(_("Default Model As A Pixel"));
 	FlexGridSizer6->Add(ChoiceModelLayoutType, 1, wxALL|wxEXPAND, 2);
 	StaticText12 = new wxStaticText(this, ID_STATICTEXT12, _("Default Camera:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT12"));
-	FlexGridSizer6->Add(StaticText12, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer6->Add(StaticText12, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 2);
 	Choice_DefaultCamera = new wxChoice(this, ID_CHOICE2, wxDefaultPosition, wxDefaultSize, 0, 0, 0, wxDefaultValidator, _T("ID_CHOICE2"));
-	FlexGridSizer6->Add(Choice_DefaultCamera, 1, wxALL|wxEXPAND, 5);
+	FlexGridSizer6->Add(Choice_DefaultCamera, 1, wxALL|wxEXPAND, 2);
 	GridSizeLabel = new wxStaticText(this, ID_STATICTEXT4, _("Max Grid Size:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT4"));
-	FlexGridSizer6->Add(GridSizeLabel, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer6->Add(GridSizeLabel, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 2);
 	SizeSpinCtrl = new wxSpinCtrl(this, ID_SPINCTRL1, _T("400"), wxDefaultPosition, wxDefaultSize, 0, 10, 2000, 400, _T("ID_SPINCTRL1"));
 	SizeSpinCtrl->SetValue(_T("400"));
 	FlexGridSizer6->Add(SizeSpinCtrl, 1, wxALL|wxEXPAND, 2);
@@ -199,11 +205,11 @@ ModelGroupPanel::ModelGroupPanel(wxWindow* parent, ModelManager &Models, LayoutP
 	SpinCtrl_YCentreOffset = new wxSpinCtrl(this, ID_SPINCTRL3, _T("0"), wxDefaultPosition, wxDefaultSize, 0, -1000, 1000, 0, _T("ID_SPINCTRL3"));
 	SpinCtrl_YCentreOffset->SetValue(_T("0"));
 	FlexGridSizer4->Add(SpinCtrl_YCentreOffset, 1, wxALL|wxEXPAND, 2);
-	FlexGridSizer6->Add(FlexGridSizer4, 1, wxALL|wxEXPAND, 5);
+	FlexGridSizer6->Add(FlexGridSizer4, 1, wxALL|wxEXPAND, 2);
 	StaticText8 = new wxStaticText(this, ID_STATICTEXT8, _("Tag Color:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT8"));
 	FlexGridSizer6->Add(StaticText8, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 2);
 	ColourPickerCtrl_ModelGroupTagColour = new wxColourPickerCtrl(this, ID_COLOURPICKERCTRL_MG_TAGCOLOUR, wxColour(0,0,0), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_COLOURPICKERCTRL_MG_TAGCOLOUR"));
-	FlexGridSizer6->Add(ColourPickerCtrl_ModelGroupTagColour, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	FlexGridSizer6->Add(ColourPickerCtrl_ModelGroupTagColour, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 2);
 	CheckBox_ShowSubmodels = new wxCheckBox(this, ID_CHECKBOX1, _("Show SubModels to Add"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
 	CheckBox_ShowSubmodels->SetValue(true);
 	FlexGridSizer6->Add(CheckBox_ShowSubmodels, 1, wxALL|wxEXPAND, 2);
