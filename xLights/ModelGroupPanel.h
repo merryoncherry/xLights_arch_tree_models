@@ -173,6 +173,8 @@ private:
 	void OnChoice_DefaultCameraSelect(wxCommandEvent& event);
 	//*)
 
+	void OnTextCtrl_DescriptionText(wxCommandEvent& event);
+
 	DECLARE_EVENT_TABLE()
 
 	void OnDrop(wxCommandEvent& event);

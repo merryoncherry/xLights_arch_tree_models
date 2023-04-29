@@ -299,6 +299,7 @@ ModelGroupPanel::ModelGroupPanel(wxWindow* parent, ModelManager &Models, LayoutP
 	//*)
 
     Connect(ID_LISTCTRL2, wxEVT_CONTEXT_MENU, (wxObjectEventFunction)&ModelGroupPanel::OnListBoxModelsInGroupItemRClick);
+    Connect(ID_TEXTCTRL_MODELGROUPDESC, wxEVT_COMMAND_TEXT_UPDATED, ((wxObjectEventFunction)&ModelGroupPanel::OnTextCtrl_DescriptionText));
 
     ChoicePreviews->Append("Default");
     ChoicePreviews->Append("All Previews");
@@ -469,6 +470,11 @@ void ModelGroupPanel::UpdatePanel(const std::string& group)
                     }
                 }
             }
+        }
+
+        auto desc = e->GetAttribute("desc", "");
+        if (TextCtrl_ModelGroupDesc->GetValue() != desc) {
+            TextCtrl_ModelGroupDesc->SetValue(desc);
         }
 
         auto dc = e->GetAttribute("DefaultCamera", "2D");
@@ -731,6 +737,8 @@ void ModelGroupPanel::SaveGroupChanges()
     }
     e->DeleteAttribute("DefaultCamera");
     e->AddAttribute("DefaultCamera", Choice_DefaultCamera->GetStringSelection());
+    e->DeleteAttribute("desc");
+    e->AddAttribute("desc", TextCtrl_ModelGroupDesc->GetValue());
     switch (ChoiceModelLayoutType->GetSelection()) {
     case 0:
         e->AddAttribute("layout", "grid");
@@ -1342,6 +1350,11 @@ void ModelGroupPanel::OnColourPickerCtrl_ModelGroupTagColourColourChanged(wxColo
 }
 
 void ModelGroupPanel::OnChoice_DefaultCameraSelect(wxCommandEvent& event)
+{
+    SaveGroupChanges();
+}
+
+void ModelGroupPanel::OnTextCtrl_DescriptionText(wxCommandEvent& event)
 {
     SaveGroupChanges();
 }
