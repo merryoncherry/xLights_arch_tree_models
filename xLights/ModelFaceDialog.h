@@ -25,6 +25,7 @@
 #include <wx/sizer.h>
 #include <wx/splitter.h>
 #include <wx/stattext.h>
+#include <wx/textctrl.h>
 //*)
 
 #include <glm/glm.hpp>
@@ -80,7 +81,9 @@ class ModelFaceDialog : public wxDialog
     wxPanel* Panel_NodeRanges;
     wxPanel* Panel_SingleNode;
     wxSplitterWindow* SplitterWindow1;
+    wxStaticText* StaticText1;
     wxStaticText* StaticText3;
+    wxTextCtrl* TextCtrl_ModelFaceDescription;
     //*)
 
     static const long FACES_DIALOG_IMPORT_SUB;
@@ -101,6 +104,8 @@ protected:
     static const long ID_BUTTON3;
     static const long ID_BUTTON_IMPORT;
     static const long ID_BUTTON4;
+    static const long ID_STATICTEXT1;
+    static const long ID_TEXTCTRL_ModelFaceDescription;
     static const long ID_PANEL4;
     static const long ID_CHECKBOX1;
     static const long ID_GRID_COROFACES;

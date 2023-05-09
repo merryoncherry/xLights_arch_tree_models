@@ -36,7 +36,7 @@
 											<handler function="OnMatrixNameChoiceSelect" entry="EVT_CHOICE" />
 										</object>
 										<flag>wxALL|wxEXPAND</flag>
-										<border>5</border>
+										<border>2</border>
 										<option>1</option>
 									</object>
 									<object class="sizeritem">
@@ -69,6 +69,29 @@
 									</object>
 								</object>
 								<flag>wxALL|wxEXPAND</flag>
+								<border>5</border>
+								<option>1</option>
+							</object>
+							<object class="sizeritem">
+								<object class="wxFlexGridSizer" variable="FlexGridSizer8" member="no">
+									<cols>3</cols>
+									<growablecols>1</growablecols>
+									<object class="sizeritem">
+										<object class="wxStaticText" name="ID_STATICTEXT1" variable="StaticText1" member="yes">
+											<label>Description:</label>
+										</object>
+										<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+										<border>2</border>
+										<option>1</option>
+									</object>
+									<object class="sizeritem">
+										<object class="wxTextCtrl" name="ID_TEXTCTRL_ModelStateDescription" variable="TextCtrl_ModelStateDescription" member="yes" />
+										<flag>wxALL|wxEXPAND</flag>
+										<border>2</border>
+										<option>1</option>
+									</object>
+								</object>
+								<flag>wxLEFT|wxRIGHT|wxEXPAND</flag>
 								<border>5</border>
 								<option>1</option>
 							</object>

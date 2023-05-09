@@ -22,6 +22,7 @@
 #include <wx/sizer.h>
 #include <wx/splitter.h>
 #include <wx/stattext.h>
+#include <wx/textctrl.h>
 //*)
 
 #include <wx/timer.h>
@@ -60,7 +61,9 @@ public:
     wxPanel* ModelPreviewPanelLocation;
     wxPanel* Panel3;
     wxSplitterWindow* SplitterWindow1;
+    wxStaticText* StaticText1;
     wxStaticText* StaticText3;
+    wxTextCtrl* TextCtrl_ModelStateDescription;
     //*)
 
     void SetStateInfo(Model* cls, std::map<std::string, std::map<std::string, std::string>>& info);
@@ -75,6 +78,8 @@ protected:
     static const long ID_BUTTON3;
     static const long ID_BUTTON_IMPORT;
     static const long ID_BUTTON4;
+    static const long ID_STATICTEXT1;
+    static const long ID_TEXTCTRL_ModelStateDescription;
     static const long ID_CHECKBOX1;
     static const long ID_BUTTON1;
     static const long ID_GRID_COROSTATES;
