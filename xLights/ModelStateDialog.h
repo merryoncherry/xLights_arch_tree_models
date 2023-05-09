@@ -136,6 +136,7 @@ private:
     void OnPreviewLeftDClick(wxMouseEvent& event);
     void OnPreviewMouseMove(wxMouseEvent& event);
     void OnTimer1Trigger(wxTimerEvent& event);
+    void OnTextCtrl_DescriptionText(wxCommandEvent &event);
 
     DECLARE_EVENT_TABLE()
 

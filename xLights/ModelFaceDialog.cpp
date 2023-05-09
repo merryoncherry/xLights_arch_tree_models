@@ -380,6 +380,7 @@ ModelFaceDialog::ModelFaceDialog(wxWindow* parent, OutputManager* outputManager,
     modelPreview->Connect(wxEVT_MOTION, (wxObjectEventFunction)&ModelFaceDialog::OnPreviewMouseMove, nullptr, this);
     modelPreview->Connect(wxEVT_LEAVE_WINDOW, (wxObjectEventFunction)&ModelFaceDialog::OnPreviewMouseLeave, nullptr, this);
     modelPreview->Connect(wxEVT_LEFT_DCLICK, (wxObjectEventFunction)&ModelFaceDialog::OnPreviewLeftDClick, nullptr, this);
+    Connect(ID_TEXTCTRL_ModelFaceDescription, wxEVT_COMMAND_TEXT_UPDATED, ((wxObjectEventFunction)&ModelFaceDialog::OnTextCtrl_DescriptionText));
 
     FaceTypeChoice->ChangeSelection(NODE_RANGE_FACE);
 
@@ -448,9 +449,11 @@ void ModelFaceDialog::SetFaceInfo(Model *cls, std::map< std::string, std::map<st
         FaceTypeChoice->Enable();
         NameChoice->SetSelection(0);
         SelectFaceModel(NameChoice->GetString(NameChoice->GetSelection()).ToStdString());
+        TextCtrl_ModelFaceDescription->Enable();
     } else {
         DeleteButton->Disable();
         FaceTypeChoice->Disable();
+        TextCtrl_ModelFaceDescription->Disable();
     }
 
     wxArrayString names;
@@ -555,6 +558,10 @@ void ModelFaceDialog::SelectFaceModel(const std::string &name) {
         }
         MatrixImagePlacementChoice->SetStringSelection(w);
     }
+    wxString desc = faceData[name]["Desc"];
+    if (desc != TextCtrl_ModelFaceDescription->GetValue()) {
+        TextCtrl_ModelFaceDescription->SetValue(desc);
+    }
 }
 
 void ModelFaceDialog::OnMatrixNameChoiceSelect(wxCommandEvent& event)
@@ -574,6 +581,7 @@ void ModelFaceDialog::OnButtonMatrixAddClicked(wxCommandEvent& event)
             NameChoice->Enable();
             FaceTypeChoice->Enable();
             DeleteButton->Enable();
+            TextCtrl_ModelFaceDescription->Enable();
 
             // set the default type of face based on the model type
             if (model->GetDisplayAs() == "Matrix" || StartsWith(model->GetDisplayAs(), "Tree")) {
@@ -622,6 +630,7 @@ void ModelFaceDialog::OnButtonMatrixDeleteClick(wxCommandEvent& event)
             NameChoice->Disable();
             FaceTypeChoice->Disable();
             DeleteButton->Disable();
+            TextCtrl_ModelFaceDescription->Disable();
         }
     }
 }
@@ -1136,6 +1145,14 @@ void ModelFaceDialog::OnNodeRangeGridCellSelect(wxGridEvent& event)
     event.Skip();
 }
 
+void ModelFaceDialog::OnTextCtrl_DescriptionText(wxCommandEvent& event)
+{
+    std::string name = NameChoice->GetString(NameChoice->GetSelection()).ToStdString();
+    if (name != "") {
+        faceData[name]["Desc"] = TextCtrl_ModelFaceDescription->GetValue();
+    }
+}
+
 void ModelFaceDialog::PaintFace(wxDC& dc, int x, int y, const char* xpm[])
 {
     wxImage i(xpm);
@@ -1511,6 +1528,7 @@ void ModelFaceDialog::ImportFacesFromModel()
         NameChoice->Enable();
         FaceTypeChoice->Enable();
         DeleteButton->Enable();
+        TextCtrl_ModelFaceDescription->Enable();
 
         NameChoice->SetSelection(NameChoice->GetCount() - 1);
         NameChoice->SetStringSelection(NameChoice->GetString(NameChoice->GetCount() - 1));
@@ -1548,6 +1566,7 @@ void ModelFaceDialog::ImportFaces(const wxString& filename)
             NameChoice->Enable();
             FaceTypeChoice->Enable();
             DeleteButton->Enable();
+            TextCtrl_ModelFaceDescription->Enable();
 
             NameChoice->SetSelection(NameChoice->GetCount()-1);
             NameChoice->SetStringSelection(NameChoice->GetString(NameChoice->GetCount() - 1));

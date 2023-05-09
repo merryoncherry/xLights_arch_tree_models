@@ -274,6 +274,7 @@ ModelStateDialog::ModelStateDialog(wxWindow* parent, OutputManager* outputManage
     modelPreview->Connect(wxEVT_MOTION, (wxObjectEventFunction)&ModelStateDialog::OnPreviewMouseMove, nullptr, this);
     modelPreview->Connect(wxEVT_LEAVE_WINDOW, (wxObjectEventFunction)&ModelStateDialog::OnPreviewMouseLeave, nullptr, this);
     modelPreview->Connect(wxEVT_LEFT_DCLICK, (wxObjectEventFunction)&ModelStateDialog::OnPreviewLeftDClick, nullptr, this);
+    Connect(ID_TEXTCTRL_ModelStateDescription, wxEVT_COMMAND_TEXT_UPDATED, ((wxObjectEventFunction)&ModelStateDialog::OnTextCtrl_DescriptionText));
 
     StateTypeChoice->ChangeSelection(NODE_RANGE_STATE);
 
@@ -328,16 +329,20 @@ void ModelStateDialog::SetStateInfo(Model* cls, std::map<std::string, std::map<s
             }
         }
 
+        std::string desc = info["Desc"]; // If not there, initialize it
+
         stateData[name] = info;
     }
 
     if (NameChoice->GetCount() > 0) {
         DeleteButton->Enable();
+        TextCtrl_ModelStateDescription->Enable();
         StateTypeChoice->Enable();
         NameChoice->SetSelection(0);
         SelectStateModel(NameChoice->GetString(NameChoice->GetSelection()).ToStdString());
     } else {
         DeleteButton->Disable();
+        TextCtrl_ModelStateDescription->Disable();
         StateTypeChoice->Disable();
     }
 
@@ -451,6 +456,10 @@ void ModelStateDialog::SelectStateModel(const std::string &name) {
         CustomColorNodeRanges->SetValue(SetGrid(NodeRangeGrid, info));
     }
     SelectRow(grid, -1);
+    wxString desc = stateData[name]["Desc"];
+    if (desc != TextCtrl_ModelStateDescription->GetValue()) {
+        TextCtrl_ModelStateDescription->SetValue(desc);
+    }
 }
 
 void ModelStateDialog::OnMatrixNameChoiceSelect(wxCommandEvent& event)
@@ -469,6 +478,7 @@ void ModelStateDialog::OnButtonMatrixAddClicked(wxCommandEvent& event)
             NameChoice->SetStringSelection(n);
             NameChoice->Enable();
             DeleteButton->Enable();
+            TextCtrl_ModelStateDescription->Enable();
 
             // set the default type of state based on model type
             if (model->GetDisplayAs() == "Custom") {
@@ -508,6 +518,7 @@ void ModelStateDialog::OnButtonMatrixDeleteClick(wxCommandEvent& event)
             NameChoice->Disable();
             StateTypeChoice->Disable();
             DeleteButton->Disable();
+            TextCtrl_ModelStateDescription->Disable();
         }
     }
     ValidateWindow();
@@ -965,6 +976,7 @@ void ModelStateDialog::OnButton_7SegmentClick(wxCommandEvent& event)
 void ModelStateDialog::ValidateWindow()
 {
     if (NameChoice->GetStringSelection() == "") {
+        TextCtrl_ModelStateDescription->Disable();
         NodeRangeGrid->Disable();
         SingleNodeGrid->Disable();
         Button_7Seg->Disable();
@@ -972,6 +984,7 @@ void ModelStateDialog::ValidateWindow()
         CustomColorSingleNode->Disable();
         CustomColorNodeRanges->Disable();
     } else {
+        TextCtrl_ModelStateDescription->Enable();
         NodeRangeGrid->Enable();
         SingleNodeGrid->Enable();
         Button_7Seg->Enable();
@@ -1135,6 +1148,7 @@ void ModelStateDialog::ImportStatesFromModel()
         NameChoice->Enable();
         StateTypeChoice->Enable();
         DeleteButton->Enable();
+        TextCtrl_ModelStateDescription->Enable();
 
         NameChoice->SetSelection(NameChoice->GetCount() - 1);
         NameChoice->SetStringSelection(NameChoice->GetString(NameChoice->GetCount() - 1));
@@ -1173,6 +1187,7 @@ void ModelStateDialog::ImportStates(const wxString & filename)
             NameChoice->Enable();
             StateTypeChoice->Enable();
             DeleteButton->Enable();
+            TextCtrl_ModelStateDescription->Enable();
 
             NameChoice->SetSelection(NameChoice->GetCount() - 1);
             NameChoice->SetStringSelection(NameChoice->GetString(NameChoice->GetCount() - 1));
@@ -1401,6 +1416,14 @@ void ModelStateDialog::OnPreviewMouseMove(wxMouseEvent& event)
         m_bound_end_x = ray_origin.x;
         m_bound_end_y = ray_origin.y;
         RenderModel();
+    }
+}
+
+void ModelStateDialog::OnTextCtrl_DescriptionText(wxCommandEvent& event)
+{
+    std::string name = NameChoice->GetString(NameChoice->GetSelection()).ToStdString();
+    if (name != "") {
+        stateData[name]["Desc"] = TextCtrl_ModelStateDescription->GetValue();
     }
 }
 
