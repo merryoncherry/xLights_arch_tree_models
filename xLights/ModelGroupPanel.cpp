@@ -1356,5 +1356,16 @@ void ModelGroupPanel::OnChoice_DefaultCameraSelect(wxCommandEvent& event)
 
 void ModelGroupPanel::OnTextCtrl_DescriptionText(wxCommandEvent& event)
 {
-    SaveGroupChanges();
+    ModelGroup* g = (ModelGroup*)mModels[mGroup];
+    if (g == nullptr) return;
+    wxXmlNode* e = g->GetModelXml();
+
+    wxString curDesc = e->GetAttribute("desc", "");
+    wxString newDesc = TextCtrl_ModelGroupDesc->GetValue();
+    if (curDesc != newDesc) {
+        e->DeleteAttribute("desc");
+        e->AddAttribute("desc", TextCtrl_ModelGroupDesc->GetValue());
+        // This is a bit slow, but turns the button pink
+        layoutPanel->ModelGroupUpdated(g, false);
+    }
 }
