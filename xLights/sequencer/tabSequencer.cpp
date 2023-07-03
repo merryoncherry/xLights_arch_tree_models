@@ -2258,15 +2258,18 @@ int xLightsFrame::GetCurrentPlayTime()
 void xLightsFrame::SetPlayStatus(int status) {
     playType = status;
     if (playType != PLAY_TYPE_STOPPED) {
-        OutputTimer.Start(_seqData.FrameTime(), wxTIMER_CONTINUOUS);
+        StartOutputTimer();
         //printf("Timer started - SetPlayStatus %d\n", status);
     }
 }
 void xLightsFrame::StartOutputTimer() {
+    GPURenderUtils::prioritizeGraphics(true);
     OutputTimer.Start(_seqData.FrameTime(), wxTIMER_CONTINUOUS);
-    //printf("Timer started - StartOutputTimer %d\n", playType);
 }
-
+void xLightsFrame::StopOutputTimer() {
+    OutputTimer.Stop();
+    GPURenderUtils::prioritizeGraphics(false);
+}
 bool xLightsFrame::TimerRgbSeq(long msec)
 {
     //check if there are models that depend on timing tracks or similar that need to be rendered
@@ -2878,12 +2881,12 @@ void xLightsFrame::DoLoadPerspective(wxXmlNode *perspective)
         m_mgr->Update();
     }
 
-    if (mEffectAssistMode == EFFECT_ASSIST_ALWAYS_OFF) {
+    if (tempEffectAssistMode == EFFECT_ASSIST_ALWAYS_OFF) {
         SetEffectAssistWindowState(false);
-    } else if (mEffectAssistMode == EFFECT_ASSIST_ALWAYS_ON) {
+    } else if (tempEffectAssistMode == EFFECT_ASSIST_ALWAYS_ON) {
         bool visible = m_mgr->GetPane("EffectAssist").IsShown();
         if (!visible) {
-            mEffectAssistMode = EFFECT_ASSIST_NOT_IN_PERSPECTIVE;
+            tempEffectAssistMode = EFFECT_ASSIST_NOT_IN_PERSPECTIVE;
         }
     }
 
@@ -3131,10 +3134,14 @@ void xLightsFrame::ShowHideEffectAssistWindow(wxCommandEvent& event)
     bool visible = m_mgr->GetPane("EffectAssist").IsShown();
     if (visible) {
         m_mgr->GetPane("EffectAssist").Hide();
-        mEffectAssistMode = EFFECT_ASSIST_ALWAYS_OFF;
+        // Dont set it permanently
+        //mEffectAssistMode = EFFECT_ASSIST_ALWAYS_OFF;
+        tempEffectAssistMode = EFFECT_ASSIST_ALWAYS_OFF;
     } else {
         m_mgr->GetPane("EffectAssist").Show();
-        mEffectAssistMode = EFFECT_ASSIST_ALWAYS_ON;
+        // Dont set it permanently
+        // mEffectAssistMode = EFFECT_ASSIST_ALWAYS_ON;
+        tempEffectAssistMode = EFFECT_ASSIST_ALWAYS_ON;
     }
     m_mgr->Update();
     UpdateViewMenu();

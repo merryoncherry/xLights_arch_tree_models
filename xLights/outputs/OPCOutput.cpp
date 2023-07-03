@@ -54,7 +54,7 @@ void OPCOutput::OpenSocket() {
             delete _socket;
             _socket = nullptr;
         }
-        else if (_socket->Error() != wxSOCKET_NOERROR) {
+        else if (_socket->Error()) {
             logger_base.error("OPCOutput: %s Error connecting OPC socket => %d : %s.", (const char*)_remoteAddr.IPAddress().c_str(), _socket->LastError(), (const char*)DecodeIPError(_socket->LastError()).c_str());
             delete _socket;
             _socket = nullptr;
@@ -76,7 +76,7 @@ void OPCOutput::OpenSocket() {
 #pragma endregion
 
 #pragma region Constructors and Destructors
-OPCOutput::OPCOutput(wxXmlNode* node) : IPOutput(node) {
+OPCOutput::OPCOutput(wxXmlNode* node, bool isActive) : IPOutput(node, isActive) {
 
     if (_channels > GetMaxChannels()) SetChannels(GetMaxChannels());
     _socket = nullptr;

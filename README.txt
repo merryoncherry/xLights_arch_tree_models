@@ -11,6 +11,77 @@ Issue Tracker is found here: www.github.com/smeighan/xLights/issues
 
 XLIGHTS/NUTCRACKER RELEASE NOTES
 ---------------------------------
+2023.10 June 30, 2023
+   -- enh (dkulp)   Add node number under mouse cursor to lower right corner of SubModelDialog
+   -- enh (scott)   Add zero layer size for circle model (for center pixel)
+   -- enh (keith)   Enable ESC to close visualizer
+   -- enh (merryoncherry) "Batch Render" enhancements to disable various warnings, modal dialogs, etc...
+   -- enh (keith)   Allow ovverride of Twinkly http port
+   -- enh (MartinMueller) Add full set of ESPv4 variants
+   -- enh (scott)   Add HinksPix Pro 80 support
+   -- enh (dkulp)   Enable HTTP/2 for FPP Connect and Discovery
+   -- bug (merryoncherry) Fix issues with bulk edit of effects
+   -- bug (dkulp)   Fix crashes when selecting Vendor/Model/Variant using keyboard
+   -- bug (dkulp)   Fix FPP Connect if there is a powered on Falcon v4 controller on the network
+   -- bug (dkulp)   Fix square pixel type on Windows
+   -- bug (scott)   Serial port configuration fixes
+   -- bug (dkulp)   Fix animated GIFs not working properly
+2023.09 June 3, 2023
+   -- enh (scott)   Add CSV Submodel import
+   -- enh (merryoncherry) Single strand chase offset and static modes
+   -- enh (scott)   Add Effect Count to xLights and Vixen3 imports
+   -- enh (dkulp)   Cache animated GIF frames during render to speed up looping renders. (uses more memory)
+   -- bug (dkulp)   Sort by Z for house preview on Sequencer tab to match layout tab
+   -- bug (dkulp)   Fix loading of older xlights_network files causing crashes
+   -- bug (dkulp)   Fix pictures effect value curve min/max
+   -- bug (keith)   Don't use NOWAIT on datagram sockets to avoid dropping packets
+   -- bug (keith)   Fix Falcon F48v4 detection
+   -- bug (scott)   Fix Linux app name parsing for launcher
+   -- bug (dkulp)   Fix display issues on OSX with "Blended Circle" pixels in a group
+2023.08 May 13, 2023
+   -- enh (dkulp)   Windows/Linux - redo OpenGL to be based on Metal architecture
+                     - removes OpenGL 1.x support (retains OpenGL 2.x)
+                     - Provides shading of 3D models similar to Metal
+   -- enh (keith)   Violin support for guitar effect
+   -- enh (keith)   Greater control of the wave shape on guitar strings
+   -- enh (kevin)   Allow customization of lightning width
+   -- enh (dkulp)   Don't mark GPU rendering as experimental, it works
+   -- enh (kevin)   Add simple path re-ordering to SketchAssistPanel
+   -- bug (keith)   Dont show falcon controllers in FPP connect if in bridge mode
+   -- bug (keith)   Fix Falcon V4 DDP one based does not upload correctly
+   -- bug (dkulp)   Fix some DPI scaling issues on Windows
+   -- bug (dkulp)   Fix a BUNCH of issues with DPI scaling on Linux
+   -- bug (keith)   Fix duplication of face files in zip packages
+   -- bug (keith)   Fix multiple panels attached to on port in visualizer
+   -- bug (scott)   Fix import of some AC model effects
+   -- bug (keith)   Timing marks cannot be dropped by clicking waveform and pressing t
+   -- bug (keith)   Suppress controller name IP address resolution if a controller is marked as inactive
+   -- bug (keith)   Color multistring custom model nodes differently in node layout
+2023.07 April 25, 2023
+   -- enh (keith)   Add -x option to xSchedule to silently exit if xSchedule is already running
+   -- enh (keith)   Add some Hanson Electronics boards
+   -- enh (keith)   Add ability to invert channels on DMX effect
+   -- enh (keith)   Add value curve to picture effect centre
+   -- enh (keith)   When user presses update on effect/colours panel and has > 1 effect selected warn the user about what will happen
+   -- enh (keith)   Add cleanupFileLocations and saveLayout APIs
+   -- enh (keith)   Add stagger to stacked model group buffers
+   -- enh (keith)   Add SVG support to VU Meter level shapes
+   -- enh (keith)   Add warmup frames to snowflakes and meteors effect
+   -- enh (keith)   Allow suppression of dark mode on windows
+   -- enh (keith)   Add video sampling instead of image resizing to video effect
+   -- enh (keith)   Add ability to reset an effects settings explicitly
+   -- enh (keith)   Add chord support to guitar effect ... prefix C before note so CA is the A chord
+   -- enh (keith)   For superstrings > 3 channels add support for RGBW colour handling to control behaviour
+   -- enh (dklup)   FPP Connect upload content to the appropriate directory
+   -- enh (scott)   Increase ESPixelStick outputs to 8
+   -- bug (moc)     Fix ripple effect SVG settings
+   -- bug (keith)   Fix text effect not respecting \n as new line
+   -- bug (keith)   Fix QM crash if using them after doing a notes import
+   -- bug (keith)   Fix QM import creates illegal timing tracks with zero length timing marks and overlapping timing marks
+   -- bug (keith)   Fix show/hide effect assist overwrites effect assist preference
+   -- bug (keith)   Only show line segments buffer on a polyline with indiv segments
+   -- bug (keith)   Fix Advatek upload broken
+   -- bug (keith)   Update time display when waveform is clicked
 2023.06 April 10, 2023
    -- enh (keith)   Add Guitar effect
    -- enh (scott)   Add JSON endpoints getModel, getControllerPortMap, getShowFolder

@@ -71,6 +71,18 @@ using namespace TraceLog;
 
 static const std::string LEDPANELS("LED Panels");
 
+
+static std::set<std::string> FPP_MEDIA_EXT = {
+    "mp3", "ogg", "m4a", "m4p", "wav", "au", "wma", "flac", "aac",
+    "MP3", "OGG", "M4A", "M4P", "WAV", "AU", "WMA", "FLAC", "AAC",
+    "mp4", "MP4", "avi", "AVI", "mov", "MOV", "mkv", "MKV",
+    "mpg", "MPG", "mpeg", "MPEG"
+};
+static std::set<std::string> FPP_VIDEO_EXT = {
+    "mp4", "MP4", "avi", "AVI", "mov", "MOV", "mkv", "MKV",
+    "mpg", "MPG", "mpeg", "MPEG"
+};
+
 FPP::FPP(const std::string& ad) :
     BaseController(ad, ""), majorVersion(0), minorVersion(0), patchVersion(0), outputFile(nullptr), parent(nullptr), ipAddress(ad), curl(nullptr), fppType(FPP_TYPE::FPP) {
     wxIPV4address address;
@@ -217,6 +229,9 @@ void FPP::setupCurl(int timeout) {
     curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout);
     curl_easy_setopt(curl, CURLOPT_TCP_FASTOPEN, 1L);
     curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
+    curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+    curl_easy_setopt(curl, CURLOPT_PIPEWAIT, 1);
+    //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 }
 
 bool FPP::GetURLAsString(const std::string& url, std::string& val, bool recordError) {
@@ -891,19 +906,12 @@ int progress_callback(void *clientp,
     }
     return 0;
 }
+
 bool FPP::uploadFileV7(const std::string &filename,
                        const std::string &file,
-                       const std::string &d) {
+                       const std::string &dir) {
     bool cancelled = false;
-    bool callMove = false;
-    std::string dir = d;
-    if (dir == "music") {
-        // xLights treats all media as music so for now we'll upload to uploads and call move to have
-        // fpp sort out where it goes.
-        dir = "uploads";
-        callMove = true;
-    }
-    
+
     wxFile in;
     in.Open(file);
     if (in.IsOpened()) {
@@ -992,11 +1000,6 @@ bool FPP::uploadFileV7(const std::string &filename,
             }
         }
     }
-    if (callMove) {
-        if (!callMoveFile(filename)) {
-            messages.push_back("ERROR Uploading file: " + filename + "     Could not move file to proper directory.");
-        }
-    }
     return cancelled;
 }
 
@@ -1080,13 +1083,6 @@ bool FPP::uploadOrCopyFile(const std::string &filename,
 // 5 - V2 zlib
 // 6 - V2 sparse zlib
 
-
-static std::set<std::string> FPP_MEDIA_EXT = {
-    "mp3", "ogg", "m4a", "m4p", "wav", "au", "wma", "flac", "aac",
-    "MP3", "OGG", "M4A", "M4P", "WAV", "AU", "WMA", "FLAC", "AAC",
-    "mp4", "MP4", "avi", "AVI", "mov", "MOV", "mkv", "MKV",
-    "mpg", "MPG", "mpeg", "MPEG"
-};
 
 static void FindHostSpecificMedia(const std::string &hostName, std::string &mediaBaseName, std::string &mediaFile, wxFileName &mfn) {
     wxFileName mfn2(mediaFile);
@@ -1181,7 +1177,13 @@ bool FPP::PrepareUploadSequence(const FSEQFile &file,
             }
         }
         if (doMediaUpload) {
-            cancelled |= uploadOrCopyFile(mediaBaseName, mediaFile, "music");
+            std::string dir = "music";
+            for (auto &a : FPP_VIDEO_EXT) {
+                if (mfn.GetExt() == a) {
+                    dir = "videos";
+                }
+            }
+            cancelled |= uploadOrCopyFile(mediaBaseName, mediaFile, dir);
         }
         if (cancelled) {
             return cancelled;
@@ -3609,7 +3611,7 @@ bool supportedForFPPConnect(DiscoveredData* res, OutputManager* outputManager) {
 
     if (res->typeId == 0x88 || res->typeId == 0x89) {
         // F16V4 / F48V4
-        return true;
+        return res->mode != "bridge";
     }
 
     return false;

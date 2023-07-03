@@ -107,12 +107,132 @@ std::vector<GuitarNotes>
 
 std::vector<GuitarNotes>
     banjo = {
-        { 0, 0, 50 }, // D3
-        { 1, 0, 55 }, // G3
-        { 2, 0, 59 }, // B4
-        { 3, 0, 62 }, // D4
-        { 0, 0, 64 }, // D4
+        { 1, 0, 50 }, // D3
+        { 2, 0, 55 }, // G3
+        { 3, 0, 59 }, // B4
+        { 4, 0, 62 }, // D4
+        { 0, 0, 62 }, // D4
     };
+
+std::vector<GuitarNotes>
+    violin = {
+        { 1, 0, 55 }, // G3
+        { 2, 0, 62 }, // D4
+        { 3, 0, 69 }, // A4
+        { 4, 0, 76 }, // E5
+    };
+
+class Chordx
+{
+public:
+    std ::string _name;
+    std::list<uint8_t> _notes;
+    std::list<std::pair<uint8_t, uint8_t>> _guitarTiming;
+};
+
+std::list<Chordx> __guitarChords = {
+    // Major Chords
+    { "CA", { 40, 45, 52, 57, 61, 64 }, { { 0, 0 }, { 1, 0 }, { 2, 2 }, { 3, 2 }, { 4, 2 }, { 5, 0 } } }, // A
+    { "CA#", { 50, 58, 62, 65 }, { { 2, 0 }, { 3, 3 }, { 4, 3 }, { 5, 1 } } },                            // A# / Bb
+    { "CBB", { 50, 58, 62, 65 }, { { 2, 0 }, { 3, 3 }, { 4, 3 }, { 5, 1 } } },                            // A# / Bb
+    { "CB", { 54, 59, 63, 66 }, { { 2, 4 }, { 3, 4 }, { 4, 4 }, { 5, 2 } } },                             // B
+    { "CC", { 40, 48, 52, 55, 60, 64 }, { { 0, 0 }, { 1, 3 }, { 2, 2 }, { 3, 0 }, { 4, 1 }, { 5, 0 } } }, // C
+    { "CC#", { 53, 56, 61, 65 }, { { 2, 3 }, { 3, 1 }, { 4, 2 }, { 5, 1 } } },                            // C# / Db
+    { "CDB", { 53, 56, 61, 65 }, { { 2, 3 }, { 3, 1 }, { 4, 2 }, { 5, 1 } } },                            // C# / Db
+    { "CD", { 45, 50, 57, 62, 66 }, { { 1, 0 }, { 2, 0 }, { 3, 2 }, { 4, 3 }, { 5, 2 } } },               // D
+    { "CD#", { 51, 58, 63, 67 }, { { 2, 1 }, { 3, 3 }, { 4, 4 }, { 5, 3 } } },                            // D# / Eb
+    { "CEB", { 51, 58, 63, 67 }, { { 2, 1 }, { 3, 3 }, { 4, 4 }, { 5, 3 } } },                            // D# / Eb
+    { "CE", { 40, 47, 52, 56, 59, 64 }, { { 0, 0 }, { 1, 2 }, { 2, 2 }, { 3, 1 }, { 4, 0 }, { 5, 0 } } }, // E
+    { "CF", { 45, 53, 57, 60, 65 }, { { 1, 0 }, { 2, 3 }, { 3, 2 }, { 4, 1 }, { 5, 1 } } },               // F
+    { "CF#", { 54, 58, 61, 66 }, { { 2, 4 }, { 3, 3 }, { 4, 2 }, { 5, 2 } } },                            // F# / Gb
+    { "CGB", { 54, 58, 61, 66 }, { { 2, 4 }, { 3, 3 }, { 4, 2 }, { 5, 2 } } },                            // F# / Gb
+    { "CG", { 43, 47, 50, 55, 59, 67 }, { { 0, 3 }, { 1, 2 }, { 2, 0 }, { 3, 0 }, { 4, 0 }, { 5, 3 } } }, // G
+    { "CG#", { 51, 56, 60, 68 }, { { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 4 } } },                            // G# / Ab
+    { "CAB", { 51, 56, 60, 68 }, { { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 4 } } },                            // G# / Ab
+    // Minor Chords
+    { "CAM", { 40, 45, 52, 57, 60, 64 }, { { 0, 0 }, { 1, 0 }, { 2, 2 }, { 3, 2 }, { 4, 1 }, { 5, 0 } } }, // Am
+    { "CA#M", { 53, 58, 61, 65 }, { { 2, 3 }, { 3, 3 }, { 4, 2 }, { 5, 1 } } },                            // A#m / Bbm
+    { "CBbM", { 53, 58, 61, 65 }, { { 2, 3 }, { 3, 3 }, { 4, 2 }, { 5, 1 } } },                            // A#m / Bbm
+    { "CBM", { 54, 59, 62, 66 }, { { 2, 4 }, { 3, 4 }, { 4, 3 }, { 5, 2 } } },                             // Bm
+    { "CCM", { 51, 55, 60, 67 }, { { 2, 1 }, { 3, 0 }, { 4, 1 }, { 5, 3 } } },                             // Cm
+    { "CC#M", { 52, 56, 61, 64 }, { { 2, 2 }, { 3, 1 }, { 4, 2 }, { 5, 0 } } },                            // C#m / Dbm
+    { "CDbM", { 52, 56, 61, 64 }, { { 2, 2 }, { 3, 1 }, { 4, 2 }, { 5, 0 } } },                            // C#m / Dbm
+    { "CDM", { 45, 50, 57, 62, 65 }, { { 1, 0 }, { 2, 0 }, { 3, 2 }, { 4, 3 }, { 5, 1 } } },               // Dm
+    { "CD#M", { 51, 58, 63, 66 }, { { 2, 1 }, { 3, 3 }, { 4, 4 }, { 5, 2 } } },                            // D#m / Ebm
+    { "CEBM", { 51, 58, 63, 66 }, { { 2, 1 }, { 3, 3 }, { 4, 4 }, { 5, 2 } } },                            // D#m / Ebm
+    { "CEM", { 40, 47, 52, 55, 59, 64 }, { { 0, 0 }, { 1, 2 }, { 2, 2 }, { 3, 0 }, { 4, 0 }, { 5, 0 } } }, // Em
+    { "CFM", { 53, 56, 60, 65 }, { { 2, 3 }, { 3, 1 }, { 4, 1 }, { 5, 1 } } },                             // Fm
+    { "CF#M", { 54, 57, 61, 66 }, { { 2, 4 }, { 3, 2 }, { 4, 2 }, { 5, 2 } } },                            // F#m / Gbm
+    { "CGBM", { 54, 57, 61, 66 }, { { 2, 4 }, { 3, 2 }, { 4, 2 }, { 5, 2 } } },                            // F#m / Gbm
+    { "CGM", { 50, 58, 62, 67 }, { { 2, 0 }, { 3, 3 }, { 4, 3 }, { 5, 3 } } },                             // Gm
+    { "CG#M", { 56, 59, 63, 68 }, { { 2, 6 }, { 3, 4 }, { 4, 4 }, { 5, 4 } } },                            // G#m / Abm
+    { "CABM", { 56, 59, 63, 68 }, { { 2, 6 }, { 3, 4 }, { 4, 4 }, { 5, 4 } } },                            // G#m / Abm
+    // Seventh Chords
+    { "CA7", { 40, 45, 52, 55, 61, 64 }, { { 0, 0 }, { 1, 0 }, { 2, 2 }, { 3, 0 }, { 4, 2 }, { 5, 0 } } }, // A7
+    { "CA#7", { 53, 58, 62, 68 }, { { 2, 3 }, { 3, 3 }, { 4, 3 }, { 5, 4 } } },                            // A#7 / Bb7
+    { "CBB7", { 53, 58, 62, 68 }, { { 2, 3 }, { 3, 3 }, { 4, 3 }, { 5, 4 } } },                            // A#7 / Bb7
+    { "CB7", { 47, 51, 57, 59, 66 }, { { 1, 2 }, { 2, 1 }, { 3, 2 }, { 4, 0 }, { 5, 2 } } },               // B7
+    { "CC7", { 40, 48, 52, 58, 60, 64 }, { { 0, 0 }, { 1, 3 }, { 2, 2 }, { 3, 3 }, { 4, 1 }, { 5, 0 } } }, // C7
+    { "CC#7", { 53, 56, 59, 65 }, { { 2, 3 }, { 3, 1 }, { 4, 0 }, { 5, 1 } } },                            // C#7 / Db7
+    { "CDB7", { 53, 56, 59, 65 }, { { 2, 3 }, { 3, 1 }, { 4, 0 }, { 5, 1 } } },                            // C#7 / Db7
+    { "CD7", { 45, 50, 57, 60, 66 }, { { 1, 0 }, { 2, 0 }, { 3, 2 }, { 4, 1 }, { 5, 2 } } },               // D7
+    { "CD#7", { 51, 58, 61, 67 }, { { 2, 1 }, { 3, 3 }, { 4, 2 }, { 5, 3 } } },                            // D#7 / Eb7
+    { "CEB7", { 51, 58, 61, 67 }, { { 2, 1 }, { 3, 3 }, { 4, 2 }, { 5, 3 } } },                            // D#7 / Eb7
+    { "CE7", { 40, 47, 50, 56, 59, 64 }, { { 0, 0 }, { 1, 2 }, { 2, 0 }, { 3, 1 }, { 4, 0 }, { 5, 0 } } }, // E7
+    { "CF7", { 45, 51, 57, 60, 65 }, { { 1, 0 }, { 2, 1 }, { 3, 2 }, { 4, 1 }, { 5, 1 } } },               // F7
+    { "CF#7", { 54, 58, 61, 64 }, { { 2, 4 }, { 3, 3 }, { 4, 2 }, { 5, 0 } } },                            // F#7 / Gb7
+    { "CGB7", { 54, 58, 61, 64 }, { { 2, 4 }, { 3, 3 }, { 4, 2 }, { 5, 0 } } },                            // F#7 / Gb7
+    { "CG7", { 43, 47, 50, 55, 59, 65 }, { { 0, 3 }, { 1, 2 }, { 2, 0 }, { 3, 0 }, { 4, 0 }, { 5, 1 } } }, // G7
+    { "CG#7", { 51, 56, 60, 66 }, { { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 2 } } },                            // G#7 / Ab7
+    { "CAB7", { 51, 56, 60, 66 }, { { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 2 } } },                            // G#7 / Ab7
+};
+
+std::list<Chordx> __bassChords = {
+    // Major Chords
+    { "CA", { 33, 37, 40, 45 }, { { 0, 5 }, { 1, 4 }, { 2, 2 }, { 3, 3 } } }, // A
+    { "CB", { 30, 35, 39, 47 }, { { 0, 2 }, { 1, 2 }, { 2, 1 }, { 3, 4 } } }, // B
+    { "CC", { 31, 36, 40, 48 }, { { 0, 3 }, { 1, 3 }, { 2, 2 }, { 3, 5 } } }, // C
+    { "CD", { 30, 38, 39, 45 }, { { 0, 2 }, { 1, 5 }, { 2, 0 }, { 3, 2 } } }, // D
+    { "CE", { 28, 35, 40, 44 }, { { 0, 0 }, { 1, 2 }, { 2, 2 }, { 3, 1 } } }, // E
+    { "CF", { 29, 36, 41, 45 }, { { 0, 1 }, { 1, 3 }, { 2, 3 }, { 3, 2 } } }, // F
+    { "CG", { 31, 35, 38, 43 }, { { 0, 3 }, { 1, 2 }, { 2, 0 }, { 3, 0 } } }, // G
+    // Minor Chords
+    { "CAM", { 33, 36, 40, 45 }, { { 0, 5 }, { 1, 3 }, { 2, 2 }, { 3, 3 } } }, // Am
+    { "CBM", { 30, 35, 38, 47 }, { { 0, 2 }, { 1, 2 }, { 2, 0 }, { 3, 4 } } }, // Bm
+    { "CCM", { 31, 36, 39, 48 }, { { 0, 3 }, { 1, 3 }, { 2, 1 }, { 3, 5 } } }, // Cm
+    { "CDM", { 29, 38, 39, 45 }, { { 0, 1 }, { 1, 5 }, { 2, 0 }, { 3, 2 } } }, // Dm
+    { "CEM", { 28, 35, 40, 43 }, { { 0, 0 }, { 1, 2 }, { 2, 2 }, { 3, 0 } } }, // Em
+    { "CFM", { 29, 36, 41, 44 }, { { 0, 1 }, { 1, 3 }, { 2, 3 }, { 3, 1 } } }, // Fm
+    { "CGM", { 31, 34, 38, 43 }, { { 0, 3 }, { 1, 1 }, { 2, 0 }, { 3, 0 } } }, // Gm
+    // Seventh Chords
+    { "CA7", { 31, 37, 40, 45 }, { { 0, 3 }, { 1, 4 }, { 2, 2 }, { 3, 3 } } }, // A7
+    { "CB7", { 30, 35, 39, 45 }, { { 0, 2 }, { 1, 2 }, { 2, 1 }, { 3, 2 } } }, // B7
+    { "CC7", { 31, 36, 40, 46 }, { { 0, 3 }, { 1, 3 }, { 2, 2 }, { 3, 3 } } }, // C7
+    { "CD7", { 30, 36, 39, 45 }, { { 0, 2 }, { 1, 3 }, { 2, 0 }, { 3, 2 } } }, // D7
+    { "CE7", { 28, 35, 38, 44 }, { { 0, 0 }, { 1, 2 }, { 2, 0 }, { 3, 1 } } }, // E7
+    { "CF7", { 29, 36, 39, 45 }, { { 0, 1 }, { 1, 3 }, { 2, 1 }, { 3, 2 } } }, // F7
+    { "CG7", { 29, 35, 38, 43 }, { { 0, 1 }, { 1, 2 }, { 2, 0 }, { 3, 0 } } }, // G7
+};
+
+std::list<Chordx> __banjoChords = {
+    // Major Chords
+    { "CA", { 52, 57, 61, 64 }, { { 1, 2 }, { 2, 2 }, { 3, 2 }, { 4, 2 } } }, // A
+    { "CA#", { 53, 58, 62, 65 }, { { 1, 3 }, { 2, 3 }, { 3, 3 }, { 4, 3 } } }, // A#
+    { "CBB", { 53, 58, 62, 65 }, { { 1, 3 }, { 2, 3 }, { 3, 3 }, { 4, 3 } } }, // Bb
+    { "CD", { 50, 57, 62, 66 }, { { 1, 0 }, { 2, 2 }, { 3, 3 }, { 4, 4 } } },  // D
+    { "CE", { 52, 56, 59, 64 }, { { 1, 2 }, { 2, 1 }, { 3, 0 }, { 4, 2 } } },  // E
+    { "CF", { 53, 57, 60, 65 }, { { 1, 3 }, { 2, 2 }, { 3, 1 }, { 4, 3 } } },  // F
+    { "CG", { 50, 55, 59, 62 }, { { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 0 } } },  // G
+    // Minor Chords
+    { "CAM", { 52, 57, 60, 64 }, { { 1, 2 }, { 2, 2 }, { 3, 1 }, { 4, 2 } } }, // Am
+    { "CDM", { 53, 57, 62, 65 }, { { 1, 3 }, { 2, 2 }, { 3, 3 }, { 4, 3 } } },  // Dm
+    { "CEM", { 52, 55, 59, 64 }, { { 1, 2 }, { 2, 0 }, { 3, 0 }, { 4, 2 } } },  // Em
+    // Seventh Chords
+    { "CD7", { 50, 57, 60, 62 }, { { 1, 0 }, { 2, 2 }, { 3, 1 }, { 4, 0 } } }, // D7
+    { "CG7", { 50, 55, 59, 65 }, { { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 3 } } },  // G7
+};
+
+std::list<Chordx> __violinChords = {};
 
 bool centresort(const GuitarTiming* first, const GuitarTiming* second)
 {
@@ -171,8 +291,10 @@ public:
             return &guitar;
         else if (type == "Bass Guitar")
             return &bass;
-        else
+        else if (type == "Banjo")
             return &banjo;
+        else
+            return &violin;
     }
 
     static size_t GetStrings(const std::string& type)
@@ -284,6 +406,51 @@ public:
         return _possibleTimings.front()->GetPositionCentre();
     }
 
+    
+    bool listsMatch(const std::list<uint8_t>& list1, const std::list<uint8_t>& list2)
+    {
+        // Check if both lists have the same size
+        if (list1.size() != list2.size())
+            return false;
+
+        // Iterate through each element in list1
+        for (auto it = list1.begin(); it != list1.end(); ++it) {
+            // Check if the current element exists in list2
+            if (std::find(list2.begin(), list2.end(), *it) == list2.end())
+                return false;
+        }
+
+        // All elements match
+        return true;
+    }
+
+    bool CheckChords(const std::string& type)
+    {
+        auto chords = __guitarChords;
+
+        if (type == "Bass")
+            chords = __bassChords;
+        else if (type == "Banjo")
+            chords = __banjoChords;
+        else if (type == "Violin")
+            chords = __violinChords;
+
+        for (auto& it : chords) {
+            if (it._notes.size() == _notes.size()) {
+                if (listsMatch(it._notes, _notes)) {
+                    auto t = new GuitarTiming(_startMS, _endMS);
+                    for (auto it2 : it._guitarTiming) {
+                        t->AddFingerPos(it2.first, it2.second);
+                    }
+                    _possibleTimings.push_back(t);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     void GeneratePossibleTimings(const std::string& type, uint8_t maxFrets)
     {
         static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
@@ -295,6 +462,10 @@ public:
         ClearPossibleTimings();
 
         _notes.sort();
+
+        // check if our notes are one of the well known chords and if so use the defined fingering
+        if (CheckChords(type))
+            return;
 
         uint8_t strings = NoteTiming::GetStrings(type);
 
@@ -358,7 +529,7 @@ public:
         {
             if (it->_fingerPos.size() == _notes.size())
                 allnotes = true;
-            if (it->_fingerPos.size() < max)
+            if (it->_fingerPos.size() > max)
                 max = it->_fingerPos.size();
         }
 
@@ -393,7 +564,7 @@ public:
 
         if (max != _notes.size())
         {
-            logger_base.debug("One or more notes not found on %s at %lu.", (const char*)type.c_str(), _startMS);
+            logger_base.warn("One or more notes not found on %s at %lu.", (const char*)type.c_str(), _startMS);
         }
 
         bool allZero = false;
@@ -501,6 +672,12 @@ void GuitarEffect::SetDefaultParameters() {
     SetChoiceValue(pp->Choice_Guitar_Type, "Guitar");
     SetChoiceValue(pp->Choice_StringAppearance, "On");
     SetSliderValue(pp->Slider_MaxFrets, 19);
+    SetCheckBoxValue(pp->CheckBox_Collapse, false);
+    SetCheckBoxValue(pp->CheckBox_Fade, false);
+    SetCheckBoxValue(pp->CheckBox_ShowStrings, false);
+    SetCheckBoxValue(pp->CheckBox_VaryWaveLengthOnFret, true);
+    SetSliderValue(pp->Slider_StringWaveFactor, 0);
+    SetSliderValue(pp->Slider_BaseWaveFactor, 10);
     SetPanelTimingTracks();
 }
 
@@ -518,15 +695,17 @@ void GuitarEffect::RenameTimingTrack(std::string oldname, std::string newname, E
 
 void GuitarEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderBuffer &buffer) {
     RenderGuitar(buffer,
-                effect->GetParentEffectLayer()->GetParentElement()->GetSequenceElements(),
-		        std::string(SettingsMap.Get("CHOICE_Guitar_Type", "Guitar")),
-                std::string(SettingsMap.Get("CHOICE_Guitar_MIDITrack_APPLYLAST", "")),
-				std::string(SettingsMap.Get("CHOICE_StringAppearance", "On")),
-                SettingsMap.GetInt("SLIDER_MaxFrets", 19),
+                 effect->GetParentEffectLayer()->GetParentElement()->GetSequenceElements(),
+                 std::string(SettingsMap.Get("CHOICE_Guitar_Type", "Guitar")),
+                 std::string(SettingsMap.Get("CHOICE_Guitar_MIDITrack_APPLYLAST", "")),
+                 std::string(SettingsMap.Get("CHOICE_StringAppearance", "On")),
+                 SettingsMap.GetInt("SLIDER_MaxFrets", 19),
                  SettingsMap.GetBool("CHECKBOX_ShowStrings", false),
                  SettingsMap.GetBool("CHECKBOX_Fade", false),
-                 SettingsMap.GetBool("CHECKBOX_Collapse", false)
-        );
+                 SettingsMap.GetBool("CHECKBOX_Collapse", false),
+                 SettingsMap.GetFloat("SLIDER_StringWaveFactor", 0.0) / 10.0,
+                 SettingsMap.GetFloat("SLIDER_BaseWaveFactor", 1.0) / 10.0,
+                 SettingsMap.GetBool("CHECKBOX_VaryWaveLengthOnFret", false));
 }
 
 bool notesort(const NoteTiming* first, const NoteTiming* second)
@@ -587,7 +766,11 @@ public:
                 centre = 0;
 
             // pick the next hand location from the available options
-            centre = it->PickTimingClosestTo(centre, lastString);
+            int nc = it->PickTimingClosestTo(centre, lastString);
+
+            // Dont change the centre if we are playing a full string as that does not need a hand movement
+            if (nc != 0)
+                centre = nc;
 
             lastEnd = it->_endMS;
         }
@@ -614,7 +797,7 @@ public:
 };
 
 //render Guitar fx during sequence:
-void GuitarEffect::RenderGuitar(RenderBuffer& buffer, SequenceElements* elements, const std::string& type, const std::string& MIDITrack, const std::string& stringAppearance, int maxFrets, bool showStrings, bool fade, bool collapse)
+void GuitarEffect::RenderGuitar(RenderBuffer& buffer, SequenceElements* elements, const std::string& type, const std::string& MIDITrack, const std::string& stringAppearance, int maxFrets, bool showStrings, bool fade, bool collapse, double stringWaveFactor, double baseWaveFactor, bool varyWavelengthBasedOnFret)
 {
     GuitarCache* cache = (GuitarCache*)buffer.infoCache[id];
     if (cache == nullptr) {
@@ -653,7 +836,7 @@ void GuitarEffect::RenderGuitar(RenderBuffer& buffer, SequenceElements* elements
 
     uint32_t time = buffer.curPeriod * buffer.frameTimeInMs;
 
-    DrawGuitar(buffer, cache->GetTimingAt(time), stringAppearance, maxFrets, strings, showStrings, fade, collapse);
+    DrawGuitar(buffer, cache->GetTimingAt(time), stringAppearance, maxFrets, strings, showStrings, fade, collapse, stringWaveFactor, baseWaveFactor, varyWavelengthBasedOnFret);
 }
 
 inline uint32_t FlipY(uint32_t y, uint32_t height)
@@ -664,7 +847,7 @@ inline uint32_t FlipY(uint32_t y, uint32_t height)
 void GuitarEffect::DrawGuitarOn(RenderBuffer& buffer, uint8_t string, uint8_t fretPos, uint32_t timePos, uint32_t of, uint8_t maxFrets, uint8_t strings, bool showStrings, bool fade, bool collapse)
 {
     xlColor c;
-    buffer.palette.GetColor(string, c);
+    buffer.palette.GetColor(string % buffer.palette.Size(), c);
 
     xlColor cc = c;
 
@@ -701,10 +884,10 @@ void GuitarEffect::DrawGuitarOn(RenderBuffer& buffer, uint8_t string, uint8_t fr
 
 #define WAVE_RAMP 3.0
 
-void GuitarEffect::DrawGuitarWave(RenderBuffer& buffer, uint8_t string, uint8_t fretPos, uint32_t timePos, uint32_t of, uint8_t maxFrets, uint8_t strings, bool showStrings, bool fade, bool collapse)
+void GuitarEffect::DrawGuitarWave(RenderBuffer& buffer, uint8_t string, uint8_t fretPos, uint32_t timePos, uint32_t of, uint8_t maxFrets, uint8_t strings, bool showStrings, bool fade, bool collapse, double stringWaveFactor, double baseWaveFactor, bool varyWavelengthBasedOnFret)
 {
     xlColor c;
-    buffer.palette.GetColor(string, c);
+    buffer.palette.GetColor(string % buffer.palette.Size(), c);
 
     xlColor cc = c;
 
@@ -722,6 +905,12 @@ void GuitarEffect::DrawGuitarWave(RenderBuffer& buffer, uint8_t string, uint8_t 
         }
     }
 
+    double diffPerFret = 0.0;
+    if (varyWavelengthBasedOnFret)
+    {
+        diffPerFret = 0.3;
+    }
+
     for (uint32_t x = 0; x < maxX; ++x) {
 
         // this foces the wave to zero near the ends
@@ -732,11 +921,13 @@ void GuitarEffect::DrawGuitarWave(RenderBuffer& buffer, uint8_t string, uint8_t 
 
         if (x < WAVE_RAMP) {
             maxY *= ((double)x * 1.0 / WAVE_RAMP);
-        } else if (x >= maxX - WAVE_RAMP) {
-            maxY *= (WAVE_RAMP - (double)(maxX - x - 1)) * 1.0 / WAVE_RAMP;
+        } else if (x >= maxX - WAVE_RAMP - 1) {
+            maxY *= (double)(maxX - x - 1) * 1.0 / WAVE_RAMP;
         }
 
-        uint32_t y = (maxY / 2.0) * sin((PI * 2.0 * cycles * (double)x) / maxX + timePos * 2) + perString / 2.0 + perString * string;
+        #define WAVE_SPEED 2
+        uint32_t y = (maxY / 2.0) * sin((PI * 2.0 * cycles * (double)x / (((double)(strings - string - 1) * stringWaveFactor) + baseWaveFactor + (maxFrets - fretPos) * diffPerFret)) / maxX + (timePos * WAVE_SPEED));
+        y += (perString / 2.0) + (perString * string);
         buffer.SetPixel(x, FlipY(y, buffer.BufferHt), c);
     }
 }
@@ -752,7 +943,7 @@ void GuitarEffect::DrawString(RenderBuffer& buffer, uint8_t string, uint8_t stri
     }
 }
 
-void GuitarEffect::DrawGuitar(RenderBuffer& buffer, GuitarTiming* pdata, const std::string& stringAppearance, uint8_t maxFrets, uint8_t strings, bool showStrings, bool fade, bool collapse)
+void GuitarEffect::DrawGuitar(RenderBuffer& buffer, GuitarTiming* pdata, const std::string& stringAppearance, uint8_t maxFrets, uint8_t strings, bool showStrings, bool fade, bool collapse, double stringWaveFactor, double baseWaveFactor, bool varyWavelengthBasedOnFret)
 {
     if (pdata != nullptr) {
         uint32_t pos = (buffer.curPeriod * buffer.frameTimeInMs - pdata->_startMS) / buffer.frameTimeInMs;
@@ -764,7 +955,7 @@ void GuitarEffect::DrawGuitar(RenderBuffer& buffer, GuitarTiming* pdata, const s
             }
         } else if (stringAppearance == "Wave") {
             for (const auto& it : pdata->_fingerPos) {
-                DrawGuitarWave(buffer, it.first, it.second, pos, len, maxFrets, strings, showStrings, fade, collapse);
+                DrawGuitarWave(buffer, it.first, it.second, pos, len, maxFrets, strings, showStrings, fade, collapse, stringWaveFactor, baseWaveFactor, varyWavelengthBasedOnFret);
             }
         }
     }
@@ -832,6 +1023,7 @@ std::list<std::string> GuitarEffect::ExtractNotes(const std::string& label)
                 (it == '#') ||
                 (it == 'S') ||
                 (it == 'P') ||
+                (it == 'M') ||
                 (it >= '0' && it <= '9'))
             {
                 s += it;
@@ -987,15 +1179,39 @@ std::list<NoteTiming*> GuitarEffect::LoadTimingTrack(const std::string& track, i
         std::string label = el->GetEffect(j)->GetEffectName();
         std::list<std::string> notelabels = ExtractNotes(label);
         for (const auto& s : notelabels) {
-            uint8_t n = ConvertNote(s);
-            if (n != 0xFF) {
-                notes.push_back(n);
-            } else {
-                uint8_t string;
-                uint8_t pos;
-                ConvertStringPos(s, string, pos);
-                if (string != 0xFF && string != 0 && pos != 0xFF && pos <= maxFrets) {
-                    t.AddFingerPos(strings - (string - 1) - 1, pos);
+            bool chord = false;
+            auto chords = __guitarChords;
+
+            if (type == "Bass")
+                chords = __bassChords;
+            else if (type == "Banjo")
+                chords = __banjoChords;
+            else if (type == "Violin")
+                chords = __violinChords;
+
+            // If the label matches one of our chord names then use the chord notes
+            std::string n = s;
+            std::transform(n.begin(), n.end(), n.begin(), ::toupper);
+            for (const auto& c : chords) {
+                if (n == c._name) {
+                    for (auto nn : c._notes) {
+                        notes.push_back(nn);
+                    }
+                    chord = true;
+                }
+            }
+
+            if (!chord) {
+                uint8_t n = ConvertNote(s);
+                if (n != 0xFF) {
+                    notes.push_back(n);
+                } else {
+                    uint8_t string;
+                    uint8_t pos;
+                    ConvertStringPos(s, string, pos);
+                    if (string != 0xFF && string != 0 && pos != 0xFF && pos <= maxFrets) {
+                        t.AddFingerPos(strings - (string - 1) - 1, pos);
+                    }
                 }
             }
         }

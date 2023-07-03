@@ -24,13 +24,20 @@
 #endif
 
 #pragma region Constructors and Destructors
-TwinklyOutput::TwinklyOutput(wxXmlNode* node) :
-    IPOutput(node)
+TwinklyOutput::TwinklyOutput(wxXmlNode* node, bool isActive) :
+    IPOutput(node, isActive)
 {
+    _httpPort = wxAtoi(node->GetAttribute("HTTPPort", "80"));
 }
 
 TwinklyOutput::TwinklyOutput()
 {
+}
+
+TwinklyOutput::TwinklyOutput(TwinklyOutput* output) :
+    IPOutput(output)
+{
+    _httpPort = output->_httpPort;
 }
 
 TwinklyOutput::~TwinklyOutput()
@@ -42,7 +49,13 @@ TwinklyOutput::~TwinklyOutput()
 }
 wxXmlNode* TwinklyOutput::Save()
 {
-    return IPOutput::Save();
+    wxXmlNode* node = new wxXmlNode(wxXML_ELEMENT_NODE, "network");
+
+    node->AddAttribute("HTTPPort", wxString::Format("%d", _httpPort));
+
+    IPOutput::Save(node);
+
+    return node;
 }
 #pragma endregion
 
@@ -259,7 +272,9 @@ void TwinklyOutput::AllOff()
 bool TwinklyOutput::MakeCall(const std::string& method, const std::string& path, wxJSONValue& result, const char* body)
 {
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
-    logger_base.debug("Twinkly: Invoke " + method + " http://" + _ip + path);
+    logger_base.debug("Twinkly: Invoke " + method + " http://" + _ip + (_httpPort == 80
+                          ? ""
+                          : wxString::Format(":%d", _httpPort)) + path);
     if (body != nullptr)
         logger_base.debug("         '%s'", body);
 
@@ -275,7 +290,7 @@ bool TwinklyOutput::MakeCall(const std::string& method, const std::string& path,
     }
 
     int responseCode;
-    std::string httpResponse = Curl::HTTPSPost("http://" + _ip + path, bod, "", "", "JSON", HTTP_TIMEOUT, customHeaders, &responseCode);
+    std::string httpResponse = Curl::HTTPSPost("http://" + _ip + (_httpPort == 80 ? "" : wxString::Format(":%d", _httpPort)) + path, bod, "", "", "JSON", HTTP_TIMEOUT, customHeaders, &responseCode);
 
     if (responseCode != 200) {
         logger_base.error("Twinkly: Error %d : %s", responseCode, (const char*)httpResponse.c_str());
@@ -351,14 +366,14 @@ void TwinklyOutput::OpenDatagram()
         localaddr.Hostname(GetForceLocalIPToUse());
     }
 
-    _datagram = new wxDatagramSocket(localaddr, wxSOCKET_NOWAIT);
+    _datagram = new wxDatagramSocket(localaddr, wxSOCKET_BLOCK); // dont use NOWAIT as it can result in dropped packets
     if (_datagram == nullptr) {
         logger_base.error("Twinkly: %s Error opening datagram.", (const char*)localaddr.IPAddress().c_str());
     } else if (!_datagram->IsOk()) {
         logger_base.error("Twinkly: %s Error opening datagram. Network may not be connected? OK : FALSE", (const char*)localaddr.IPAddress().c_str());
         delete _datagram;
         _datagram = nullptr;
-    } else if (_datagram->Error() != wxSOCKET_NOERROR) {
+    } else if (_datagram->Error()) {
         logger_base.error("Twinkly: %s Error creating Twinkly datagram => %d : %s.", (const char*)localaddr.IPAddress().c_str(), _datagram->LastError(), (const char*)DecodeIPError(_datagram->LastError()).c_str());
         delete _datagram;
         _datagram = nullptr;
@@ -366,13 +381,13 @@ void TwinklyOutput::OpenDatagram()
 }
 #pragma endregion
 
-bool TwinklyOutput::GetLayout(const std::string& ip, std::vector<std::tuple<float, float, float>>& result)
+bool TwinklyOutput::GetLayout(const std::string& ip, std::vector<std::tuple<float, float, float>>& result, uint16_t httpPort)
 {
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
 
     std::vector<std::pair<std::string, std::string>> customHeaders = {};
     int responseCode;
-    std::string httpResponse = Curl::HTTPSGet("http://" + ip + "/xled/v1/led/layout/full", "", "", HTTP_TIMEOUT, customHeaders, &responseCode);
+    std::string httpResponse = Curl::HTTPSGet("http://" + ip + (httpPort == 80 ? "" : wxString::Format(":%d", httpPort)) + "/xled/v1/led/layout/full", "", "", HTTP_TIMEOUT, customHeaders, &responseCode);
 
     if (responseCode != 200) {
         logger_base.error("Twinkly: Error %d : %s", responseCode, (const char*)httpResponse.c_str());
@@ -444,7 +459,7 @@ wxJSONValue TwinklyOutput::Query(const std::string& ip, uint8_t type, const std:
     }
 
     logger_base.debug(" Twinkly query using %s", (const char*)localaddr.IPAddress().c_str());
-    wxDatagramSocket* datagram = new wxDatagramSocket(localaddr, wxSOCKET_NOWAIT);
+    wxDatagramSocket* datagram = new wxDatagramSocket(localaddr, wxSOCKET_BLOCK); // dont use NOWAIT as it can result in dropped packets
 
     if (datagram == nullptr) {
         logger_base.error("Error initialising Twinkly query datagram.");
@@ -452,7 +467,7 @@ wxJSONValue TwinklyOutput::Query(const std::string& ip, uint8_t type, const std:
         logger_base.error("Error initialising Twinkly query datagram ... is network connected? OK : FALSE");
         delete datagram;
         datagram = nullptr;
-    } else if (datagram->Error() != wxSOCKET_NOERROR) {
+    } else if (datagram->Error()) {
         logger_base.error("Error creating Twinkly query datagram => %d : %s.", datagram->LastError(), (const char*)DecodeIPError(datagram->LastError()).c_str());
         delete datagram;
         datagram = nullptr;
@@ -468,7 +483,7 @@ wxJSONValue TwinklyOutput::Query(const std::string& ip, uint8_t type, const std:
     if (datagram != nullptr) {
         logger_base.info("Twinkly sending query packet.");
         datagram->SendTo(remoteaddr, &packet, sizeof(packet));
-        if (datagram->Error() != wxSOCKET_NOERROR) {
+        if (datagram->Error()) {
             logger_base.error("Error sending Twinkly query datagram => %d : %s.", datagram->LastError(), (const char*)DecodeIPError(datagram->LastError()).c_str());
         } else {
             logger_base.info("Twinkly sent query packet. Sleeping for 1 second.");

@@ -806,7 +806,7 @@ void xLightsFrame::WriteVideoModelFile(const wxString& filenames, long numChans,
 
     int origwidth;
     int origheight;
-    model->GetBufferSize("Default", "2D", "None", origwidth, origheight);
+    model->GetBufferSize("Default", "2D", "None", origwidth, origheight, 0);
 
     int width = origwidth;
     int height = origheight;
@@ -1218,7 +1218,7 @@ void xLightsFrame::WriteGIFForPreset(const std::string& preset)
                        { _presetModel },
                        { _presetModel },
                        0, frames - 1,
-                       false, true, []() {});
+                       false, true, [](bool) {});
 
                 // wait for all rendering to complete
                 while (!renderProgressInfo.empty()) {
@@ -1239,7 +1239,7 @@ void xLightsFrame::WriteGIFModelFile(const wxString& filename, long numChans, un
 
     int width;
     int height;
-    model->GetBufferSize("Default", "2D", "None", width, height);
+    model->GetBufferSize("Default", "2D", "None", width, height, 0);
 
     // must be a multiple of 2
     logger_base.debug("   GIF dimensions %dx%d.", width, height);
@@ -1307,7 +1307,7 @@ void xLightsFrame::WriteMinleonNECModelFile(const wxString& filename, long numCh
 
     int width;
     int height;
-    model->GetBufferSize("Default", "2D", "None", width, height);
+    model->GetBufferSize("Default", "2D", "None", width, height, 0);
 
     wxFile f;
     if (!f.Create(filename, true)) {
@@ -1436,6 +1436,8 @@ static void addRanges(Model* m, std::map<uint32_t, uint32_t>& ranges)
 
 void xLightsFrame::WriteFalconPiFile(const wxString& filename, bool allowSparse)
 {
+    static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+
     ConvertParameters write_params(filename,                               // filename
                                    _seqData,                               // sequence data object
                                    &_outputManager,                        // global network info
@@ -1452,9 +1454,13 @@ void xLightsFrame::WriteFalconPiFile(const wxString& filename, bool allowSparse)
         int numElements = _sequenceElements.GetElementCount();
         for (int i = 0; i < numElements; ++i) {
             Element* element = _sequenceElements.GetElement(i);
+            if (element == nullptr)
+                logger_base.crit("Element %d returns as null.", i);
             if (element->GetType() == ElementType::ELEMENT_TYPE_MODEL) {
                 std::string modelName = element->GetModelName();
                 Model* m = this->GetModel(modelName);
+                if (m == nullptr)
+                    logger_base.crit("Model %s returns as null.", (const char*)modelName.c_str());
                 addRanges(m, ranges);
             }
         }
