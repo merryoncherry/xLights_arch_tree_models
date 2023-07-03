@@ -189,30 +189,6 @@ int ViewObjectPanel::AddObjectToTree(ViewObject *view_object, wxTreeListItem* pa
                                                          GetObjectTreeIcon(view_object, true),
                                                          new ObjectTreeData(view_object, nativeOrder));
 
-    /*if( model->GetDisplayAs() == "ModelGroup" ) {
-        static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
-        ModelGroup *grp = (ModelGroup*)model;
-        int i = 0;
-        for (auto it = grp->ModelNames().begin(); it != grp->ModelNames().end(); ++it) {
-            Model *m = xlights->AllModels[*it];
-
-            if (m == nullptr)
-            {
-                logger_base.error("Model group %s thought it contained model. '%s' but it didnt. This would have crashed.", (const char *)grp->GetName().c_str(), (const char *)it->c_str());
-            }
-            else if (m == grp)
-            {
-                // This is bad ... a model group contains itself
-                logger_base.error("Model group contains itself. '%s'", (const char *)grp->GetName().c_str());
-            }
-            else
-            {
-                AddModelToTree(m, &item, false, i, true);
-                i++;
-            }
-        }
-    }*/
-
     if (expanded) TreeListViewObjects->Expand(item);
 
     return width;

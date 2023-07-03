@@ -1274,13 +1274,15 @@ int LayoutPanel::AddModelToTree(Model *model, wxTreeListItem* parent, bool expan
         wxASSERT(false);
     }
 
+    bool deepExpandTree = false; // MoC TODO make it configurable
+
     //logger_base.debug("Adding model %s", (const char *)model->GetFullName().c_str());
 
     wxTreeListItem item = TreeListViewModels->AppendItem(*parent, TreeModelName(model, fullName),
                                                          LayoutUtils::GetModelTreeIcon(model->DisplayAs, LayoutUtils::GroupMode::Closed),
                                                          LayoutUtils::GetModelTreeIcon(model->DisplayAs, LayoutUtils::GroupMode::Opened),
                                                          new ModelTreeData(model, nativeOrder, fullName));
-    if( model->GetDisplayAs() != "ModelGroup" ) {
+    if ( model->GetDisplayAs() != "ModelGroup" ) {
         wxString endStr = model->GetLastChannelInStartChannelFormat(xlights->GetOutputManager());
         wxString startStr = model->GetStartChannelInDisplayFormat(xlights->GetOutputManager());
         if (model->GetDisplayAs() == "SubModel" || (model->CouldComputeStartChannel && model->IsValidStartChannelString()))
@@ -1300,7 +1302,8 @@ int LayoutPanel::AddModelToTree(Model *model, wxTreeListItem* parent, bool expan
     for (int x = 0; x < model->GetNumSubModels(); x++) {
         AddModelToTree(model->GetSubModel(x), &item, false, x);
     }
-    if( model->GetDisplayAs() == "ModelGroup" ) {
+
+    if ( deepExpandTree && model->GetDisplayAs() == "ModelGroup" ) {
         ModelGroup *grp = (ModelGroup*)model;
         int i = 0;
         for (const auto& it : grp->ModelNames()) {
