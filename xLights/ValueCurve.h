@@ -26,8 +26,69 @@ class AudioManager;
 class SequenceElements;
 class ValueCurve;
 
-struct VCParamDesc
+class vcSortablePoint
 {
+public:
+    static float Normalise(float v)
+    {
+        return std::round(v * VC_X_POINTS) / VC_X_POINTS;
+    }
+    static float perPoint()
+    {
+        return (float)(1.0f / VC_X_POINTS);
+    }
+    float x;
+    float y;
+    bool wrapped;
+    vcSortablePoint(float xx, float yy, bool wrap)
+    {
+        x = Normalise(xx);
+        y = yy;
+        wrapped = wrap;
+    }
+    bool IsNear(float xx, float yy) const
+    {
+        return (x == Normalise(xx) && yy >= y - 0.05 && yy <= y + 0.05);
+    }
+    void ClearWrap()
+    {
+        wrapped = false;
+    }
+    bool IsWrapped() const
+    {
+        return wrapped;
+    }
+    bool operator==(const vcSortablePoint& r) const
+    {
+        return x == r.x;
+    }
+    bool operator==(const float r) const
+    {
+        return x == Normalise(r);
+    }
+    bool operator<(const vcSortablePoint& r) const
+    {
+        return x < r.x;
+    }
+    bool operator<(const float r) const
+    {
+        return x < Normalise(r);
+    }
+    bool operator<=(const vcSortablePoint& r) const
+    {
+        return x <= r.x;
+    }
+    bool operator<=(const float r) const
+    {
+        return x <= Normalise(r);
+    }
+    bool operator>(const vcSortablePoint& r) const
+    {
+        return x > r.x;
+    }
+};
+
+struct VCParamDesc {
     bool exists = false;
     std::string pname = "N/A";
 
@@ -75,67 +136,15 @@ struct VCTypeChoice
     void (*reverseVC)(ValueCurve* vc) = nullptr;
     // Does this support flip?
     void (*flipVC)(ValueCurve* vc) = nullptr;
+    // For choices with a mathematical formula, get the value
+    //  This is scaled between min and max, because the params are
+    float (*getValueScaled)(ValueCurve* vc, float x) = nullptr;
+    // What about discrete point functions?
+    void (*getDiscretePoints)(ValueCurve* vc, std::vector<vcSortablePoint> &values) = nullptr;
 
     static VCTypeChoice* choices;
     static size_t nChoices;
     static const VCTypeChoice* getChoice(const char* name);
-};
-
-class vcSortablePoint
-{
-public:
-
-    static float Normalise(float v)
-    {
-        return std::round(v * VC_X_POINTS) / VC_X_POINTS;
-    }
-    static float perPoint()
-    {
-        return (float)(1.0f / VC_X_POINTS);
-    }
-    float x;
-    float y;
-    bool wrapped;
-    vcSortablePoint(float xx, float yy, bool wrap)
-    {
-        x = Normalise(xx);
-        y = yy;
-        wrapped = wrap;
-    }
-    bool IsNear(float xx, float yy) const
-    {
-        return (x == Normalise(xx) && yy >= y - 0.05 && yy <= y + 0.05);
-    }
-    void ClearWrap() { wrapped = false; }
-    bool IsWrapped() const { return wrapped; }
-    bool operator==(const vcSortablePoint& r) const
-    {
-        return x == r.x;
-    }
-    bool operator==(const float r) const
-    {
-        return x == Normalise(r);
-    }
-    bool operator<(const vcSortablePoint& r) const
-    {
-        return x < r.x;
-    }
-    bool operator<(const float r) const
-    {
-        return x < Normalise(r);
-    }
-    bool operator<=(const vcSortablePoint& r) const
-    {
-        return x <= r.x;
-    }
-    bool operator<=(const float r) const
-    {
-        return x <= Normalise(r);
-    }
-    bool operator>(const vcSortablePoint& r) const
-    {
-        return x > r.x;
-    }
 };
 
 class ValueCurve
@@ -223,7 +232,6 @@ public:
     void SetWrap(bool wrap);
     int GetTimeOffset() const { return _timeOffset; }
     float GetParameter1() const { return _parameter1; }
-    float GetParameter1_100() const;
     float GetParameter2() const { return _parameter2; }
     float GetParameter3() const { return _parameter3; }
     float GetParameter4() const { return _parameter4; }

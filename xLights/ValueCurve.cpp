@@ -33,9 +33,16 @@ static VCTypeChoice vcChoices[] = {
             VCParamDesc("Level", 50)
         },
         false, // TT
-        [](ValueCurve *vc){}, // Reverse
+        [](ValueCurve* vc) {}, // Reverse
         [](ValueCurve* vc) {   // Flip
             vc->SetParameter1(vc->GetMax() - vc->GetParameter1() + vc->GetMin());
+        },
+        [](ValueCurve* vc, float x) {
+           return vc->_parameter1;
+        },
+        [](ValueCurve* vc, std::vector<vcSortablePoint>& pts) {
+          pts.push_back(vcSortablePoint(0.0, vc->_parameter1, false));
+          pts.push_back(vcSortablePoint(1.0, vc->_parameter1, false));
         }
     },
     {
@@ -1905,12 +1912,6 @@ void ValueCurve::SetWrap(bool wrap)
     RenderType();
 }
 
-float ValueCurve::GetParameter1_100() const
-{
-    float range = _max - _min;
-    return (GetParameter1() - _min) * 100 / range;
-}
-
 float ValueCurve::FindMinPointLessThan(float point) const
 {
     float res = 0.0;
@@ -2045,8 +2046,10 @@ void ValueCurve::ScaleAndOffsetValues(float scale, int offset)
         newVal = std::min(newVal, _max);
         newVal = std::max(newVal, _min);
         return (val * scale ) + offset;
+        // MoC TODO: Redo this calculation
     };
 
+    // MoC TODO: Only the applicable parameters
     _parameter1 = ScaleVal(_parameter1);
     _parameter2 = ScaleVal(_parameter2);
     _parameter3 = ScaleVal(_parameter3);

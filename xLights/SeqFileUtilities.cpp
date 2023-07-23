@@ -1127,6 +1127,7 @@ void MapXLightsEffects(EffectLayer *target, EffectLayer *src, std::vector<Effect
             Replace(settings, ",X_Effect_Locked=True", "");
 
             // if we are mapping the effect onto a group and it is a per preview render buffer then use the goups default camera
+            // MoC TODO Review - does this clobber the camera angle on import sequence
             if (!target->IsTimingLayer()) {
                 Model* m = target->GetParentElement()->GetSequenceElements()->GetXLightsFrame()->GetModel(target->GetParentElement()->GetModelName());
                 if (m != nullptr) {
@@ -1276,9 +1277,10 @@ ModelElement * AddModel(Model *m, SequenceElements &se) {
 
 // backwards compatible for tabSequencer call
 void xLightsFrame::ImportXLights(SequenceElements &se, const std::vector<Element *> &elements, const wxFileName &filename,
-bool modelBlending, bool showModelBlending, bool allowAllModels, bool clearSrc) {
-SequencePackage xsqPkg(filename, this);
-ImportXLights(se, elements, xsqPkg, modelBlending, showModelBlending, allowAllModels, clearSrc);
+    bool modelBlending, bool showModelBlending, bool allowAllModels, bool clearSrc)
+{
+    SequencePackage xsqPkg(filename, this);
+    ImportXLights(se, elements, xsqPkg, modelBlending, showModelBlending, allowAllModels, clearSrc);
 }
 
 void xLightsFrame::ImportXLights(SequenceElements& se, const std::vector<Element*>& elements, SequencePackage& xsqPkg,
