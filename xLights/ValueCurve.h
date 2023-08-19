@@ -88,6 +88,29 @@ public:
     }
 };
 
+/// <summary>
+/// Describes a parameter to the curve generation function.
+///   This is a name, range, and speficication of treatment should the
+///    range of output value change.
+/// IMO one of the things that generated a lot of confusion over the years
+///   is how the range of parameters is handled.  Some parameters have
+///   a meaning that needs no context such as the "cycle count",
+///   "offset", etc.  For these, minMaxIsVarRange is false, and the minVal
+///   and maxVal have to be set to the range the curve generator function
+///   will accept.
+/// The other kind of parameter is one whose numerical value is related to
+///   the output range of the curve function, for example "Level", "Start Value",
+///   "Amplitude", etc.  For these, if the range or scale divisor of the slider
+///   controlled by the curve changes, we may need to do something to produce the
+///   same values.  For these, minMaxIsVarRange is set to true.
+/// Now, as an artifact of history, the "Amplitude" and "Vertical Offset" of
+///   "Decaying Sine" is expressed as 0-100%, but is related to the min/max of
+///   the controlled slider parameter value.  This is a confused mix of both,
+///   and is special-cased.
+/// The final historical exception is Sine - Amplitude, which uses the min value as
+///   zero amplitude, even if the min range goes negative.  It is very confusing to
+///   the users, and requires a special upgrade path if the range changes
+/// </summary>
 struct VCParamDesc {
     bool exists = false;
     std::string pname = "N/A";
