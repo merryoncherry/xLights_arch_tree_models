@@ -1236,11 +1236,17 @@ void xLightsFrame::OpenRenderAndSaveSequences(const wxArrayString &origFilenames
             mLastAutosaveCount = mSavedChangeCount;
 
             if (saveVideo) {
-                ExportVideoPreview("PreviewVideo.mp4");
+                wxAuiPaneInfo& pi = m_mgr->GetPane("HousePreview");
+                pi.Show();
+                pi.SetFlag(pi.optionFloating, true);
+                pi.FloatingSize(1920, 1080);
+
+                ExportVideoPreview(GetShowDirectory() + wxFileName::GetPathSeparator() + "PreviewVideo.mp4");
             }
 
             auto nFileNames = fileNames;
             nFileNames.RemoveAt(0);
+            logger_base.info("Go to next file.");
             CallAfter(&xLightsFrame::OpenRenderAndSaveSequencesF, nFileNames, (exitOnDone ? RENDER_EXIT_ON_DONE : 0));
         } else {
             logger_base.info("Render was aborted, retrying.");
