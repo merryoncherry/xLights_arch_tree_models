@@ -1467,8 +1467,9 @@ protected:
     void CreateMissingDirectories(wxString targetDirName, wxString lastCreatedDirectory, std::string& errors);
     static constexpr int RENDER_EXIT_ON_DONE = 1;
     static constexpr int RENDER_ALREADY_RETRIED = 2;
+    static constexpr int RENDER_SAVE_PREVIEW_VIDEO = 4;
     void OpenRenderAndSaveSequencesF(const wxArrayString &filenames, int flags);
-    void OpenRenderAndSaveSequences(const wxArrayString& filenames, bool exitOnDone, bool alreadyRetried = false);
+    void OpenRenderAndSaveSequences(const wxArrayString& filenames, bool exitOnDone, bool alreadyRetried = false, bool saveVideo = false);
     void OpenAndCheckSequence(const wxArrayString& origFilenames, bool exitOnDone);
     std::string OpenAndCheckSequence(const std::string& origFilenames);
     void AddAllModelsToSequence();

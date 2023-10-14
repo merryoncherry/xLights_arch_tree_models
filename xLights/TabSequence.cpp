@@ -1144,10 +1144,10 @@ void xLightsFrame::OpenAndCheckSequence(const wxArrayString& origFilenames, bool
 
 void xLightsFrame::OpenRenderAndSaveSequencesF(const wxArrayString& origFileNames, int flags)
 {
-    OpenRenderAndSaveSequences(origFileNames, flags & RENDER_EXIT_ON_DONE, flags & RENDER_ALREADY_RETRIED);
+    OpenRenderAndSaveSequences(origFileNames, flags & RENDER_EXIT_ON_DONE, flags & RENDER_ALREADY_RETRIED, flags & RENDER_SAVE_PREVIEW_VIDEO);
 }
 
-void xLightsFrame::OpenRenderAndSaveSequences(const wxArrayString &origFilenames, bool exitOnDone, bool alreadyRetried) {
+void xLightsFrame::OpenRenderAndSaveSequences(const wxArrayString &origFilenames, bool exitOnDone, bool alreadyRetried, bool saveVideo) {
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
 
     if (origFilenames.IsEmpty()) {
@@ -1208,7 +1208,7 @@ void xLightsFrame::OpenRenderAndSaveSequences(const wxArrayString &origFilenames
     RenderIseqData(true, nullptr); // render ISEQ layers below the Nutcracker layer
     logger_base.info("   iseq below effects done.");
     ProgressBar->SetValue(10);
-    RenderGridToSeqData([this, sw, fileNames, exitOnDone, alreadyRetried] (bool aborted) {
+    RenderGridToSeqData([this, sw, fileNames, exitOnDone, alreadyRetried, saveVideo] (bool aborted) {
         static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
         logger_base.info("   Effects done.");
         ProgressBar->SetValue(90);
@@ -1233,12 +1233,17 @@ void xLightsFrame::OpenRenderAndSaveSequences(const wxArrayString &origFilenames
             mSavedChangeCount = _sequenceElements.GetChangeCount();
             mLastAutosaveCount = mSavedChangeCount;
 
+            if (saveVideo) {
+                ExportVideoPreview("PreviewVideo.mp4");
+            }
+
             auto nFileNames = fileNames;
             nFileNames.RemoveAt(0);
             CallAfter(&xLightsFrame::OpenRenderAndSaveSequencesF, nFileNames, (exitOnDone ? RENDER_EXIT_ON_DONE : 0));
         } else {
             logger_base.info("Render was aborted, retrying.");
-            CallAfter(&xLightsFrame::OpenRenderAndSaveSequencesF, fileNames, (exitOnDone ? RENDER_EXIT_ON_DONE : 0) | RENDER_ALREADY_RETRIED);
+            CallAfter(&xLightsFrame::OpenRenderAndSaveSequencesF, fileNames,
+                (exitOnDone ? RENDER_EXIT_ON_DONE : 0) | RENDER_ALREADY_RETRIED | (saveVideo ? RENDER_SAVE_PREVIEW_VIDEO : 0));
         }
     } );
 }

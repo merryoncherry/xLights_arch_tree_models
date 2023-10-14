@@ -479,6 +479,7 @@ bool xLightsApp::OnInit()
     {
         { wxCMD_LINE_SWITCH, "h", "help", "displays help on the command line parameters", wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
         { wxCMD_LINE_SWITCH, "r", "render", "render files and exit"},
+        { wxCMD_LINE_SWITCH, "p", "previewvid", "save preview video (use with --render)" }
         { wxCMD_LINE_SWITCH, "cs", "checksequence", "run check sequence and exit" },
         { wxCMD_LINE_OPTION, "m", "media", "specify media directory"},
         { wxCMD_LINE_OPTION, "s", "show", "specify show directory" },
@@ -640,7 +641,8 @@ bool xLightsApp::OnInit()
     __frame = topFrame;
 
     if (renderOnlyMode) {
-        topFrame->CallAfter(&xLightsFrame::OpenRenderAndSaveSequencesF, sequenceFiles, xLightsFrame::RENDER_EXIT_ON_DONE);
+        bool savePV = parser.Found("p");
+        topFrame->CallAfter(&xLightsFrame::OpenRenderAndSaveSequencesF, sequenceFiles, xLightsFrame::RENDER_EXIT_ON_DONE | (savePV ? xLightsFrame::RENDER_SAVE_PREVIEW_VIDEO : 0));
     }
 
     if (parser.Found("cs")) {
