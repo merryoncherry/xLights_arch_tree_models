@@ -672,35 +672,47 @@ VideoExporter::VideoExporter(wxWindow* parent,
         throw std::runtime_error("VideoExporter - assumes mono or stereo for input and creating stereo for output currently");
 }
 
-bool VideoExporter::Export(wxAppProgressIndicator* appIndicator)
+bool VideoExporter::Export(wxAppProgressIndicator* appIndicator, bool showProgress)
 {
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     bool status = true;
 
-    int style = wxPD_APP_MODAL | wxPD_AUTO_HIDE | wxPD_CAN_ABORT;
-    wxProgressDialog dlg(_("Export progress"), _("Exporting video..."), 100, _parent, style);
-    appIndicator->SetRange(100);
-    appIndicator->SetValue(0);
+    logger_base.info("Set up progress dialog");
+    std::unique_ptr<wxProgressDialog> progressDlg(nullptr);
 
-    auto cancelLambda = [&dlg]() {
-        return dlg.WasCancelled();
-    };
-    setQueryForCancelCallback(cancelLambda);
+    if (showProgress) {
+        int style = wxPD_APP_MODAL | wxPD_AUTO_HIDE | wxPD_CAN_ABORT;
+        progressDlg.reset(new wxProgressDialog(_("Export progress"), _("Exporting video..."), 100, _parent, style));
+        logger_base.info("Adjust indicator");
+        appIndicator->SetRange(100);
+        appIndicator->SetValue(0);
 
-    auto progressLambda = [&dlg, &appIndicator](int value) {
-        dlg.Update(value);
-        appIndicator->SetValue(value);
-    };
-    setProgressReportCallback(progressLambda);
+        auto cancelLambda = [&progressDlg]() {
+            return progressDlg->WasCancelled();
+        };
+        logger_base.info("Cancel callback - setting");
+        setQueryForCancelCallback(cancelLambda);
+        logger_base.info("Cancel callback set");
+
+        auto progressLambda = [&progressDlg, &appIndicator](int value) {
+            progressDlg->Update(value);
+            if (appIndicator) {
+                appIndicator->SetValue(value);
+            }
+        };
+        setProgressReportCallback(progressLambda);
+        logger_base.info("Progress callback set");
+    }
 
     try {
+        logger_base.info("VideoExporter - initialize");
         initialize();
         auto ip = inputParams();
         auto op = outputParams();
         logger_base.info("VideoExporter - exporting %d x %d video from %d x %d", op.width, op.height, ip.width, ip.height);
 
         exportFrames(_frameCount);
-        bool canceled = dlg.WasCancelled();
+        bool canceled = progressDlg ? progressDlg->WasCancelled() : false;
         if (canceled)
             logger_base.info("VideoExporter - exporting was canceled");
 
@@ -710,9 +722,11 @@ bool VideoExporter::Export(wxAppProgressIndicator* appIndicator)
         logger_base.error("Exception caught in VideoExporter - '%s'", (const char*)re.what());
         status = false;
     }
-    appIndicator->SetValue(0);
-    appIndicator->Reset();
-    dlg.Hide();
+    if (showProgress) {
+        appIndicator->SetValue(0);
+        appIndicator->Reset();
+        progressDlg->Hide();
+    }
 
     return status;
 }

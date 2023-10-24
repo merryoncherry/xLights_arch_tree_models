@@ -116,7 +116,7 @@ public:
                   const std::string& outPath, const std::string& codec,
                   int videoBitrate);
 
-    bool Export(wxAppProgressIndicator * appIndicator);
+    bool Export(wxAppProgressIndicator * appIndicator, bool showProgress = true);
 
 protected:
     wxWindow * const    _parent;

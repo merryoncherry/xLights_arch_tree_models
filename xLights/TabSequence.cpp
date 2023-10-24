@@ -1236,12 +1236,7 @@ void xLightsFrame::OpenRenderAndSaveSequences(const wxArrayString &origFilenames
             mLastAutosaveCount = mSavedChangeCount;
 
             if (saveVideo) {
-                wxAuiPaneInfo& pi = m_mgr->GetPane("HousePreview");
-                pi.Show();
-                pi.SetFlag(pi.optionFloating, true);
-                pi.FloatingSize(1920, 1080);
-
-                ExportVideoPreview(GetShowDirectory() + wxFileName::GetPathSeparator() + "PreviewVideo.mp4");
+                ExportVideoPreview(GetShowDirectory() + wxFileName::GetPathSeparator() + "PreviewVideo.mp4", false);
             }
 
             auto nFileNames = fileNames;

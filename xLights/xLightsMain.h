@@ -408,7 +408,7 @@ public:
     void PopTraceContext();
     void AddTraceMessage(const std::string &msg);
     void ClearTraceMessages();
-    bool ExportVideoPreview(wxString const& path);
+    bool ExportVideoPreview(wxString const& path, bool showProgress = true);
 
 	void SetAudioControls();
     void ImportXLights(const wxFileName &filename, std::string const& mapFile = std::string());

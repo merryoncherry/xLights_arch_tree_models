@@ -3240,8 +3240,10 @@ void xLightsFrame::OnMenuItem_File_Export_VideoSelected(wxCommandEvent& event)
     ExportVideoPreview(pExportDlg.GetPath());
 }
 
-bool xLightsFrame::ExportVideoPreview(wxString const& path)
+bool xLightsFrame::ExportVideoPreview(wxString const& path, bool showProgress)
 {
+    static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+    logger_base.debug("ExportPreviewVideo");
     int frameCount = _seqData.NumFrames();
 
     if (CurrentSeqXmlFile == nullptr || frameCount == 0) {
@@ -3268,7 +3270,6 @@ bool xLightsFrame::ExportVideoPreview(wxString const& path)
 
     wxStopWatch sw;
 
-    static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.debug("Writing house-preview video to %s.", (const char*)path.c_str());
 
     int width = housePreview->getWidth();
@@ -3320,7 +3321,9 @@ bool xLightsFrame::ExportVideoPreview(wxString const& path)
         };
         videoExporter.setGetVideoCallback(videoLambda);
 
-        exportStatus = videoExporter.Export(_appProgress.get());
+        logger_base.debug("videoExporter.Export");
+        exportStatus = videoExporter.Export(_appProgress.get(), showProgress);
+        logger_base.debug("videoExporter.Export done");
     } catch (const std::runtime_error& re) {
         emsg = (const char*)re.what();
         logger_base.error("Error exporting video : %s", (const char*)re.what());
