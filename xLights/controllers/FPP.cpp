@@ -47,6 +47,7 @@
 #include "../outputs/Output.h"
 #include "../outputs/E131Output.h"
 #include "../outputs/DDPOutput.h"
+#include "../outputs/ArtNetOutput.h"
 #include "../outputs/KinetOutput.h"
 #include "../outputs/TwinklyOutput.h"
 #include "../outputs/ControllerEthernet.h"
@@ -219,9 +220,15 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp) {
     return dt->readData(ptr, buffer_size);
 }
 
+static size_t writeFunction(void* ptr, size_t size, size_t nmemb, std::string* data) {
+
+    if (data == nullptr) return 0;
+    data->append((char*)ptr, size * nmemb);
+    return size * nmemb;
+}
 CURL *FPP::setupCurl(const std::string &url, bool isGet, int timeout) {
     CURL* curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, BaseController::writeFunction);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlInputBuffer);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, defaultConnectTimeout);
@@ -849,17 +856,21 @@ int progress_callback(void *clientp,
 
 
 void prepareCurlForMulti(V7ProgressStruct *ps) {
-    constexpr uint64_t BLOCK_SIZE = 64*1024*1024;
+    static log4cpp::Category& logger_curl = log4cpp::Category::getInstance(std::string("log_curl"));
+    
+    constexpr uint64_t BLOCK_SIZE = 16*1024*1024;
     CurlManager::CurlPrivateData *cpd = nullptr;
     CURL *curl = CurlManager::INSTANCE.createCurl(ps->fullUrl, &cpd, true);
 
-    //if we cannot upload it in 5 minutes, we have serious issues
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000*5*60);
+    //if we cannot upload a single chunk in 3 minutes, we have serious issues
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000*3*60);
 
     struct curl_slist *headers = nullptr;
-    headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
+    headers = curl_slist_append(headers, "Content-Type: application/offset+octet-stream");
     headers = curl_slist_append(headers, "X-Requested-With: FPPConnect");
-
+    headers = curl_slist_append(headers, "Expect:");
+    headers = curl_slist_append(headers, "Connection: keep-alive");
+    
     std::string offsetHeader = "Upload-Offset: " + std::to_string(ps->offset);
     headers = curl_slist_append(headers, offsetHeader.c_str());
     headers = curl_slist_append(headers, ps->fileSizeHeader.c_str());
@@ -887,10 +898,14 @@ void prepareCurlForMulti(V7ProgressStruct *ps) {
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)remaining);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, cpd->req->data());
     
+    logger_curl.info("FPPConnect Adding CURL - URL: %s    Method: PATCH    Start: %zd   Length: %zd   Total: %zd", ps->fullUrl.c_str(), ps->offset, remaining, ps->length);
+    
     CurlManager::INSTANCE.addCURL(ps->fullUrl, curl, [headers, remaining, ps] (CURL *c) {
+
         curl_slist_free_all(headers);
         long response_code = 0;
         curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &response_code);
+        logger_curl.info("    FPPConnect CURL Callbak - URL: %s    Response: %d", ps->fullUrl.c_str(), response_code);
         ps->offset += remaining;
         uint64_t pct = (ps->offset * 1000) / ps->length;
         bool cancelled = ps->instance->updateProgress(pct, false);
@@ -1059,6 +1074,53 @@ static void FindHostSpecificMedia(const std::string &hostName, std::string &medi
         }
     }
 }
+bool FPP::CheckUploadMedia(const std::string &media, std::string &mediaBaseName) {
+    bool cancelled = false;
+    wxFileName mfn(FromUTF8(media));
+    std::string mediaFile = media;
+    mediaBaseName = ToUTF8(mfn.GetFullName());
+
+    if (majorVersion >= 6) {
+        FindHostSpecificMedia(hostName, mediaBaseName, mediaFile, mfn);
+    }
+    
+    std::string url = "/api/media/" + URLEncode(mediaBaseName) + "/meta";
+    std::string fullUrl = ipAddress + url;
+    std::string ipAddForGet = ipAddress;
+    if (!_fppProxy.empty()) {
+        fullUrl = "http://" + _fppProxy + "/proxy/" + fullUrl;
+        ipAddForGet = _fppProxy;
+    } else {
+        fullUrl = "http://" + fullUrl;
+    }
+    if (username != "") {
+        CurlManager::INSTANCE.setHostUsernamePassword(ipAddForGet, username, password);
+    }
+    int response_code = 0;
+    CurlManager::INSTANCE.addGet(fullUrl, [this, mfn, mediaBaseName, mediaFile](int rc, const std::string &resp) {
+        bool doMediaUpload = true;
+        if (rc == 200) {
+            wxJSONValue currentMeta;
+            wxJSONReader reader;
+            reader.Parse(resp, &currentMeta);
+            if (currentMeta.HasMember("format") && currentMeta["format"].HasMember("size") &&
+                (mfn.GetSize() == std::atoi(currentMeta["format"]["size"].AsString().c_str()))) {
+                doMediaUpload = false;
+            }
+        }
+        if (doMediaUpload) {
+            std::string dir = "music";
+            for (auto &a : FPP_VIDEO_EXT) {
+                if (mfn.GetExt() == a) {
+                    dir = "videos";
+                }
+            }
+            uploadOrCopyFile(mediaBaseName, mediaFile, dir);
+        }
+    });
+        
+    return cancelled;
+}
 
 bool FPP::PrepareUploadSequence(FSEQFile *file,
                                 const std::string &seq,
@@ -1079,33 +1141,9 @@ bool FPP::PrepareUploadSequence(FSEQFile *file,
     std::string mediaBaseName = "";
     bool cancelled = false;
     if (media != "" && fppType == FPP_TYPE::FPP) {
-        wxFileName mfn(FromUTF8(media));
-        std::string mediaFile = media;
-        mediaBaseName = ToUTF8(mfn.GetFullName());
-
-        if (majorVersion >= 6) {
-            FindHostSpecificMedia(hostName, mediaBaseName, mediaFile, mfn);
-        }
-
-        bool doMediaUpload = true;
-        wxJSONValue currentMeta;
-        if (GetURLAsJSON("/api/media/" + URLEncode(mediaBaseName) + "/meta", currentMeta, false)) {
-            if (currentMeta.HasMember("format") && currentMeta["format"].HasMember("size") &&
-                (mfn.GetSize() == std::atoi(currentMeta["format"]["size"].AsString().c_str()))) {
-                doMediaUpload = false;
-            }
-        }
-        if (doMediaUpload) {
-            std::string dir = "music";
-            for (auto &a : FPP_VIDEO_EXT) {
-                if (mfn.GetExt() == a) {
-                    dir = "videos";
-                }
-            }
-            cancelled |= uploadOrCopyFile(mediaBaseName, mediaFile, dir);
-        }
+        cancelled = CheckUploadMedia(media, mediaBaseName);
         if (cancelled) {
-            return cancelled;
+            return true;
         }
     }
     sequences[baseName].sequence = baseName;
@@ -1291,7 +1329,11 @@ bool FPP::FinalizeUploadSequence() {
         }
         outputFile = nullptr;
         if (tempFileName != "" && (fppType == FPP_TYPE::FPP || fppType == FPP_TYPE::ESPIXELSTICK)) {
-            cancelled = uploadOrCopyFile(baseSeqName, tempFileName, "sequences");
+            std::string directory = "sequences";
+            if (EndsWith(baseSeqName, ".eseq")) {
+                directory = "effects";
+            }
+            cancelled = uploadOrCopyFile(baseSeqName, tempFileName, directory);
             if (!outputFileIsOriginal) {
                 ::wxRemoveFile(tempFileName);
             }
@@ -1852,8 +1894,10 @@ wxJSONValue FPP::CreateUniverseFile(const std::list<Controller*>& selected, bool
             universe["id"] = it->GetUniverse();
             universe["startChannel"] = c;
             universe["channelCount"] = it->GetChannels();
-            universe["priority"] = 0;
             universe["address"] = wxString("");
+            universe["priority"] = 0;
+            universe["deDuplicate"] = eth->IsSuppressDuplicateFrames() ? 1 : 0;
+            universe["monitor"] = eth->IsMonitoring() ? 1 : 0;
 
             if (rngs && it->GetChannels() > 0 && controllerEnabled == Controller::ACTIVESTATE::ACTIVE) {
                 (*rngs)[c] = c + it->GetChannels() - 1;
@@ -1864,6 +1908,12 @@ wxJSONValue FPP::CreateUniverseFile(const std::list<Controller*>& selected, bool
                 if (!input && (it->GetIP() != "MULTICAST")) {
                     universe["address"] = wxString(it->GetIP());
                 }
+                if (it->GetIP() == "MULTICAST") {
+                    universe["monitor"] = 0;
+                }
+
+                E131Output* e131 = dynamic_cast<E131Output*>(it);
+                universe["priority"] = e131->GetPriority();
 
                 // TODO this needs work to restore the loading of multiple universes as a single line
                 if (allSameSize) {
@@ -1872,6 +1922,7 @@ wxJSONValue FPP::CreateUniverseFile(const std::list<Controller*>& selected, bool
                     break;
                 }
                 universe["universeCount"] = 1;
+
                 universes.Append(universe);
             } else if (it->GetType() == OUTPUT_DDP || it->GetType() == OUTPUT_ZCPP) {
                 if (!input) {
@@ -1892,11 +1943,15 @@ wxJSONValue FPP::CreateUniverseFile(const std::list<Controller*>& selected, bool
                 if (!input && (it->GetIP() != "MULTICAST")) {
                     universe["address"] = wxString(it->GetIP());
                 }
+                if (it->GetIP() == "MULTICAST") {
+                    universe["monitor"] = 0;
+                }
                 if (allSameSize) {
                     universe["universeCount"] = it2->GetOutputCount();
                     universes.Append(universe);
                     break;
                 }
+                //ArtNetOutput* ano = dynamic_cast<ArtNetOutput*>(it);
                 universe["universeCount"] = 1;
                 universes.Append(universe);
             } else if (it->GetType() == OUTPUT_KINET) {

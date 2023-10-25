@@ -666,6 +666,32 @@ void FPPConnectDialog::LoadSequencesFromFolder(wxString dir) const
             }
         }
     }
+
+    // we also need to load eseq files which may not have the same name as an xsq file
+    files.clear();
+    GetAllFilesInDir(dir, files, "*.eseq");
+    for (auto& filename : files) {
+        wxFileName fn(filename);
+        wxString file = fn.GetFullName();
+
+        logger_base.debug("ESEQ:  %s", (const char*)file.c_str());
+
+        // The eseq may already be in the list
+        bool found = false;
+        for (auto item = CheckListBox_Sequences->GetFirstItem(); !found && item.IsOk(); item = CheckListBox_Sequences->GetNextItem(item)) {
+            if (filename == CheckListBox_Sequences->GetItemText(item)) {
+                found = true;
+            }
+        }
+
+        if (!found) {
+            wxTreeListItem item = CheckListBox_Sequences->AppendItem(CheckListBox_Sequences->GetRootItem(),
+                                                                        filename);
+
+            DisplayDateModified(filename, item);
+        }
+    }
+
     if (ChoiceFilter->GetSelection() == 0) {
         wxString file;
         bool fcont = directory.GetFirst(&file, wxEmptyString, wxDIR_DIRS);
@@ -927,14 +953,21 @@ void FPPConnectDialog::doUpload(FPPUploadProgressDialog *prgs, std::vector<bool>
                             // need to adjust so they are unique
                             if (fseqType == 1) fseqType = 5;
                             if (fseqType == 2) fseqType = 6;
-                        }
-                        else {
+                        } else {
                             fseqType = 3;
                         }
                         cancelled |= inst->PrepareUploadSequence(seq,
                                                                 fseq, m2,
                                                                 fseqType);
-
+                    }
+                    row++;
+                }
+                while (CurlManager::INSTANCE.processCurls()) {
+                    wxYield();
+                }
+                row = 0;
+                for (const auto& inst : instances) {
+                    if (!cancelled && doUpload[row]) {
                         if (inst->WillUploadSequence()) {
                             uploadCount++;
                             if (inst->NeedCustomSequence()) {
@@ -975,10 +1008,8 @@ void FPPConnectDialog::doUpload(FPPUploadProgressDialog *prgs, std::vector<bool>
                             //Read a bunch of frames so each parallel thread has more info to work with before returning out here
                             while (lastBuffered < FRAMES_TO_BUFFER && frame < seq->getNumFrames()) {
                                 FSEQFile::FrameData *f = seq->getFrame(frame);
-                                if (f != nullptr)
-                                {
-                                    if (!f->readFrame(&frames[lastBuffered][0], frames[lastBuffered].size()))
-                                    {
+                                if (f != nullptr) {
+                                    if (!f->readFrame(&frames[lastBuffered][0], frames[lastBuffered].size())) {
                                         logger_base.error("FPPConnect FSEQ file corrupt.");
                                     }
                                     delete f;
