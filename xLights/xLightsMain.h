@@ -286,7 +286,7 @@ class xLightsFrame: public xlFrame
 {
 public:
 
-    xLightsFrame(wxWindow* parent, int ab, wxWindowID id = -1, bool renderOnlyMode = false);
+    xLightsFrame(wxWindow* parent, int ab, wxWindowID id = -1, bool renderOnlyMode = false, int startInLayoutDim = 0);
     virtual ~xLightsFrame();
 
     static bool IsCheckSequenceOptionDisabled(const std::string& option);
@@ -1389,7 +1389,8 @@ public:
     unsigned int modelsChangeCount;
     bool _renderMode = false;
     bool _checkSequenceMode = false;
-
+    int startInDim = 0; // Start in 2=2D, 3=3D, or 0=read config
+    
     void SuspendAutoSave(bool dosuspend) { _suspendAutoSave = dosuspend; }
     void ClearLastPeriod();
     void WriteVirFile(const wxString& filename, long numChans, unsigned int startFrame, unsigned int endFrame, SeqDataType *dataBuf); //       Vixen *.vir

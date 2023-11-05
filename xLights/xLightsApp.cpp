@@ -480,6 +480,8 @@ bool xLightsApp::OnInit()
         { wxCMD_LINE_SWITCH, "h", "help", "displays help on the command line parameters", wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
         { wxCMD_LINE_SWITCH, "r", "render", "render files and exit"},
         { wxCMD_LINE_SWITCH, "p", "previewvid", "save preview video (use with --render)" },
+        { wxCMD_LINE_SWITCH, "2d", "start2d", "start in 2D (rather than checkbox setting)" },
+        { wxCMD_LINE_SWITCH, "3d", "start3d", "start in 3D (rather than checkbox setting)" },
         { wxCMD_LINE_SWITCH, "cs", "checksequence", "run check sequence and exit" },
         { wxCMD_LINE_OPTION, "m", "media", "specify media directory"},
         { wxCMD_LINE_OPTION, "s", "show", "specify show directory" },
@@ -557,6 +559,7 @@ bool xLightsApp::OnInit()
 #endif
 
     int ab = 0;
+    int startDim = 0;
 
     wxCmdLineParser parser(cmdLineDesc, argc, argv);
     switch (parser.Parse()) {
@@ -581,6 +584,13 @@ bool xLightsApp::OnInit()
         } else if (parser.Found("b")) {
             logger_base.info("-b: B port enabled.");
             ab = 2;
+        }
+
+        if (parser.Found("2d")) {
+            startDim = 2;
+        }
+        if (parser.Found("3d")) {
+            startDim = 3;
         }
 
         if (parser.Found("m", &mediaDir)) {
@@ -628,7 +638,7 @@ bool xLightsApp::OnInit()
     BitmapCache::SetupArtProvider();
     if (wxsOK)
     {
-    	xLightsFrame* Frame = new xLightsFrame(nullptr, ab, -1, renderOnlyMode);
+    	xLightsFrame* Frame = new xLightsFrame(nullptr, ab, -1, renderOnlyMode, startDim);
         if (Frame->CurrentDir == "") {
             logger_base.info("Show directory not set");
         }

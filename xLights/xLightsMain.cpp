@@ -573,14 +573,15 @@ wxBEGIN_EVENT_TABLE(xlMacDockIcon, wxTaskBarIcon)
     SplashDialog* splash = nullptr;
 };
 
-xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderOnlyMode) :
+xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderOnlyMode, int startInDim) :
     _sequenceElements(this),
     jobPool("RenderPool"),
     AllModels(&_outputManager, this),
     AllObjects(this),
     _presetSequenceElements(this),
     color_mgr(this),
-    _renderMode(renderOnlyMode)
+    _renderMode(renderOnlyMode),
+    startInDim(startInDim)
 {
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.debug("xLightsFrame being constructed.");

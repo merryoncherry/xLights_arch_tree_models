@@ -473,7 +473,13 @@ LayoutPanel::LayoutPanel(wxWindow* parent, xLightsFrame *xl, wxPanel* sequencer)
     wxConfigBase* config = wxConfigBase::Get();
     int msp = config->Read("LayoutModelSplitterSash", -1);
     int sp = config->Read("LayoutMainSplitterSash", -1);
-    is_3d = config->ReadBool("LayoutMode3D", false);
+    if (xlights->startInDim == 2) {
+        is_3d = false;
+    } else if (xlights->startInDim == 3) {
+        is_3d = true;
+    } else {
+        is_3d = config->ReadBool("LayoutMode3D", false);
+    }
 
     CheckBox_3D->SetValue(is_3d);
     xlights->GetHousePreview()->Set3D(is_3d);
