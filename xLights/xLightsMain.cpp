@@ -124,6 +124,8 @@
 
 #include <xlsxwriter.h>
 
+#include "wxWEBPHandler/wx/imagwebp.h"
+
 //(*InternalHeaders(xLightsFrame)
 #include <wx/bitmap.h>
 #include <wx/image.h>
@@ -1874,6 +1876,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     EnableNetworkChanges();
 
     wxImage::AddHandler(new wxGIFHandler);
+    wxImage::AddHandler(new wxWEBPHandler);
 
     config->Read("xLightse131Sync", &me131Sync, false);
     _outputManager.SetSyncEnabled(me131Sync);
