@@ -34,6 +34,7 @@ constexpr double PI = 3.141592653589793238463;
 
 // Consolidated set of utility functions
 void CleanupIpAddress(wxString& IpAddr);
+void DisableWarningPopups();
 void DisplayError(const std::string& err, wxWindow* win = nullptr);
 void DisplayWarning(const std::string& warn, wxWindow* win = nullptr);
 void DisplayInfo(const std::string& info, wxWindow* win = nullptr);

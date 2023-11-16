@@ -633,6 +633,7 @@ bool xLightsApp::OnInit()
     if (parser.Found("r")) {
         logger_base.info("-r: Render mode is ON");
         renderOnlyMode = true;
+        DisableWarningPopups();
     }
 
     //(*AppInitialize
