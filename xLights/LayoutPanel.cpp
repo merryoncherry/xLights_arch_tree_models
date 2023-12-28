@@ -69,6 +69,7 @@
 #include "ModelStateDialog.h"
 #include "CustomModelDialog.h"
 #include "SubModelsDialog.h"
+#include "xlColourData.h"
 
 #include "LayoutUtils.h"
 
@@ -157,6 +158,7 @@ const long LayoutPanel::ID_PREVIEW_BULKEDIT_PIXELSIZE = wxNewId();
 const long LayoutPanel::ID_PREVIEW_BULKEDIT_PIXELSTYLE = wxNewId();
 const long LayoutPanel::ID_PREVIEW_BULKEDIT_TRANSPARENCY = wxNewId();
 const long LayoutPanel::ID_PREVIEW_BULKEDIT_BLACKTRANSPARENCY = wxNewId();
+const long LayoutPanel::ID_PREVIEW_BULKEDIT_SHADOWMODELFOR = wxNewId();
 const long LayoutPanel::ID_PREVIEW_BULKEDIT_CONTROLLERGAMMA = wxNewId();
 const long LayoutPanel::ID_PREVIEW_BULKEDIT_CONTROLLERCOLOURORDER = wxNewId();
 const long LayoutPanel::ID_PREVIEW_BULKEDIT_CONTROLLERBRIGHTNESS = wxNewId();
@@ -473,6 +475,7 @@ LayoutPanel::LayoutPanel(wxWindow* parent, xLightsFrame *xl, wxPanel* sequencer)
     wxConfigBase* config = wxConfigBase::Get();
     int msp = config->Read("LayoutModelSplitterSash", -1);
     int sp = config->Read("LayoutMainSplitterSash", -1);
+
     if (xlights->startInDim == 2) {
         is_3d = false;
     } else if (xlights->startInDim == 3) {
@@ -481,10 +484,12 @@ LayoutPanel::LayoutPanel(wxWindow* parent, xLightsFrame *xl, wxPanel* sequencer)
         is_3d = config->ReadBool("LayoutMode3D", false);
     }
 
+    bool allow_3d_previews = true; //false; //set to false for previous behavior
+
     CheckBox_3D->SetValue(is_3d);
     xlights->GetHousePreview()->Set3D(is_3d);
 
-    if (is_3d)
+    if (!allow_3d_previews && is_3d)
     {
         ChoiceLayoutGroups->Disable();
         ChoiceLayoutGroups->SetToolTip("3D is only supported in the Default preview.");
@@ -1180,6 +1185,7 @@ std::string LayoutPanel::TreeModelName(const Model* model, bool fullname)
         return "<" + name + ">";
     }
 }
+
 void LayoutPanel::FreezeTreeListView() {
     TreeListViewModels->Freeze();
     //turn off the column width auto-resize.  Makes it REALLY slow to populate the tree
@@ -1212,8 +1218,10 @@ void LayoutPanel::SetTreeListViewItemText(wxTreeListItem &item, int col, const w
 
 void LayoutPanel::refreshModelList() {
 
+    static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     static log4cpp::Category& logger_work = log4cpp::Category::getInstance(std::string("log_work"));
     logger_work.debug("        refreshModelList.");
+    wxStopWatch sw;
 
     FreezeTreeListView();
 
@@ -1254,6 +1262,9 @@ void LayoutPanel::refreshModelList() {
         }
     }
     ThawTreeListView();
+
+    if (sw.Time() > 500)
+        logger_base.debug("        LayoutPanel::refreshModelList took %lums", sw.Time());
 }
 
 void LayoutPanel::RenameModelInTree(Model *model, const std::string& new_name)
@@ -1352,7 +1363,9 @@ void LayoutPanel::UpdateModelList(bool full_refresh) {
 
 void LayoutPanel::UpdateModelList(bool full_refresh, std::vector<Model*> &models) {
 
-    //static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+    static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+    wxStopWatch sw;
+
     FreezeTreeListView();
     unsigned sortcol;
     bool ascending;
@@ -1461,11 +1474,15 @@ void LayoutPanel::UpdateModelList(bool full_refresh, std::vector<Model*> &models
     xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_REDRAW_LAYOUTPREVIEW, "LayoutPanel::UpdateModelList");
 
     ThawTreeListView();
+
+    if (sw.Time() > 500)
+        logger_base.debug("        LayoutPanel::UpdateModelList took %lums", sw.Time());
 }
 
 void LayoutPanel::UpdateModelsForPreview(const std::string &group, LayoutGroup* layout_grp, std::vector<Model *> &prev_models, bool filtering)
 {
-    //static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+    static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+    wxStopWatch sw;
     //logger_base.debug("Updated models for preview: %s.", (const char*)group.c_str());
 
     std::set<std::string> modelsAdded;
@@ -1592,6 +1609,9 @@ void LayoutPanel::UpdateModelsForPreview(const std::string &group, LayoutGroup* 
             }
         }
     }
+
+    if (sw.Time() > 500)
+        logger_base.debug("        LayoutPanel::UpdateModelsForPreview took %lums", sw.Time());
 }
 
 void LayoutPanel::BulkEditDimmingCurves()
@@ -1875,6 +1895,7 @@ void LayoutPanel::BulkEditControllerName()
         ReselectTreeModels(selectedModelPaths);
     }
 }
+
 void LayoutPanel::BulkEditPixelSize() {
     std::vector<Model*> modelsToEdit = GetSelectedModelsForEdit();
     // remember the selected models
@@ -1901,6 +1922,7 @@ void LayoutPanel::BulkEditPixelSize() {
         ReselectTreeModels(selectedModelPaths);
     }
 }
+
 void LayoutPanel::BulkEditPixelStyle() {
     std::vector<Model*> modelsToEdit = GetSelectedModelsForEdit();
     // remember the selected models
@@ -1931,6 +1953,7 @@ void LayoutPanel::BulkEditPixelStyle() {
         ReselectTreeModels(selectedModelPaths);
     }
 }
+
 void LayoutPanel::BulkEditTransparency() {
     std::vector<Model*> modelsToEdit = GetSelectedModelsForEdit();
     // remember the selected models
@@ -1957,6 +1980,7 @@ void LayoutPanel::BulkEditTransparency() {
         ReselectTreeModels(selectedModelPaths);
     }
 }
+
 void LayoutPanel::BulkEditBlackTranparency() {
     std::vector<Model*> modelsToEdit = GetSelectedModelsForEdit();
     // remember the selected models
@@ -1983,6 +2007,39 @@ void LayoutPanel::BulkEditBlackTranparency() {
         ReselectTreeModels(selectedModelPaths);
     }
 }
+
+void LayoutPanel::BulkEditShadowModelFor()
+{
+    std::vector<Model*> modelsToEdit = GetSelectedModelsForEdit();
+    // remember the selected models
+    std::vector<std::list<std::string>> selectedModelPaths = GetSelectedTreeModelPaths();
+
+    wxArrayString choices;
+    choices.Add("");
+
+    for (size_t i = 0; i < modelPreview->GetModels().size(); i++) {
+        if (modelPreview->GetModels()[i]->GetName() != selectedBaseObject->GetName()) {
+            choices.Add(modelPreview->GetModels()[i]->GetName());
+        }
+    }
+
+    wxSingleChoiceDialog dlg(this, "", "Select the model to shadow.", choices);
+    dlg.SetSelection(0);
+    OptimiseDialogPosition(&dlg);
+
+    if (dlg.ShowModal() == wxID_OK) {
+        for (Model* model : modelsToEdit) {
+            model->SetShadowModelFor(dlg.GetStringSelection());
+        }
+
+        // see comment in BulkEditActive()
+        xlights->GetOutputModelManager()->ClearSelectedModel();
+        xlights->GetOutputModelManager()->AddImmediateWork(OutputModelManager::WORK_RELOAD_ALLMODELS, "BulkEditBlackShadowModelFor");
+        // reselect all the models
+        ReselectTreeModels(selectedModelPaths);
+    }
+}
+
 void LayoutPanel::BulkEditTagColour()
 {
     std::vector<Model*> modelsToEdit = GetSelectedModelsForEdit();
@@ -1999,14 +2056,9 @@ void LayoutPanel::BulkEditTagColour()
         }
     }
 
-    wxColourData colorData;
-    colorData.SetColour(colour);
-    wxColourDialog dialog(this, &colorData);
-    OptimiseDialogPosition(&dialog);
-    if (dialog.ShowModal() == wxID_OK)
-    {
-        colorData = dialog.GetColourData();
-        colour = colorData.GetColour();
+    auto const& [res, color] = xlColourData::INSTANCE.ShowColorDialog(this, colour);
+    if (res == wxID_OK) {
+        colour = color;
 
         for (Model* model: modelsToEdit) {
             model->SetTagColour(colour);
@@ -2274,6 +2326,8 @@ private:
 void LayoutPanel::UnSelectAllModels(bool addBkgProps)
 {
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+    wxStopWatch sw;
+
     highlightedBaseObject = nullptr;
     selectedBaseObject = nullptr;
     selectionLatched = false;
@@ -2329,6 +2383,9 @@ void LayoutPanel::UnSelectAllModels(bool addBkgProps)
     if (!updatingProperty && addBkgProps) {
         showBackgroundProperties();
     }
+
+    if (sw.Time() > 500)
+        logger_base.debug("        LayoutPanel::UnSelectAllModels took %lums", sw.Time());
 }
 
 void LayoutPanel::showBackgroundProperties()
@@ -2432,6 +2489,8 @@ void LayoutPanel::SelectAllModels()
 
 void LayoutPanel::SetupPropGrid(BaseObject *base_object) {
 
+    // static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
+
     if (base_object == nullptr || propertyEditor == nullptr) return;
     if (dynamic_cast<ModelGroup*>(base_object) != nullptr) {
         //groups don't use the property grid
@@ -2512,6 +2571,7 @@ void LayoutPanel::SetupPropGrid(BaseObject *base_object) {
             }
         }
     }
+
     if (!frozen) propertyEditor->Thaw();
 
     if (_lastSelProp != "") {
@@ -4421,12 +4481,30 @@ void LayoutPanel::AddSingleModelOptionsToBaseMenu(wxMenu &menu) {
     }
     if (editing_models)
     {
+        bool anySelectedModelLocked = false;
+        bool anySelectedModelUnlocked = false;
+        bool allSelectedModelsFromBase = true;
+        bool anySelectedModelFromBase = false;
+
+        std::vector<Model*> selectedModels = GetSelectedModelsForEdit();
+        for (const auto& it : selectedModels) {
+            if (it->IsLocked())
+                anySelectedModelLocked = true;
+            else
+                anySelectedModelUnlocked = true;
+
+            if (!it->IsFromBase())
+                allSelectedModelsFromBase = false;
+            else
+                anySelectedModelFromBase = true;
+        }
+
         auto lm = menu.Append(ID_PREVIEW_MODEL_LOCK, "Lock");
-        lm->Enable(!selectedBaseObject->IsLocked() && !selectedBaseObject->IsFromBase());
+        lm->Enable(anySelectedModelUnlocked && !allSelectedModelsFromBase);
         auto um = menu.Append(ID_PREVIEW_MODEL_UNLOCK, "Unlock");
-        um->Enable(selectedBaseObject->IsLocked() && !selectedBaseObject->IsFromBase());
+        um->Enable(anySelectedModelLocked && !allSelectedModelsFromBase);
         auto ul = menu.Append(ID_PREVIEW_MODEL_UNLINKFROMBASE, "Unlink from base show folder");
-        ul->Enable(selectedBaseObject->IsFromBase());
+        ul->Enable(anySelectedModelFromBase);
         
         Model* model = dynamic_cast<Model*>(selectedBaseObject);
         if (model != nullptr && model->GetDisplayAs() != "ModelGroup" && model->GetDisplayAs() != "SubModel") {
@@ -4480,6 +4558,7 @@ void LayoutPanel::AddBulkEditOptionsToMenu(wxMenu* mnuBulkEdit) {
         mnuBulkEdit->Append(ID_PREVIEW_BULKEDIT_PIXELSTYLE, "Pixel Style");
         mnuBulkEdit->Append(ID_PREVIEW_BULKEDIT_TRANSPARENCY, "Transparency");
         mnuBulkEdit->Append(ID_PREVIEW_BULKEDIT_BLACKTRANSPARENCY, "Black Transparency");
+        mnuBulkEdit->Append(ID_PREVIEW_BULKEDIT_SHADOWMODELFOR, "Shadow Model For");
 
         mnuBulkEdit->AppendSeparator();
         mnuBulkEdit->Append(ID_PREVIEW_BULKEDIT_CONTROLLERCONNECTION, "Controller Port");
@@ -4700,6 +4779,8 @@ void LayoutPanel::OnPreviewModelPopup(wxCommandEvent& event)
         BulkEditTransparency();
     } else if (event.GetId() == ID_PREVIEW_BULKEDIT_BLACKTRANSPARENCY) {
         BulkEditBlackTranparency();
+    } else if (event.GetId() == ID_PREVIEW_BULKEDIT_SHADOWMODELFOR) {
+        BulkEditShadowModelFor();
     } else if (event.GetId() == ID_PREVIEW_BULKEDIT_PREVIEW) {
         BulkEditControllerPreview();
     } else if (event.GetId() == ID_PREVIEW_BULKEDIT_DIMMINGCURVES) {
@@ -6592,7 +6673,7 @@ void LayoutPanel::RemoveSelectedModelsFromGroup() {
 void LayoutPanel::DeleteSelectedModels()
 {
     // I deliberately allow objects that come from base to be deleted.
-    if (selectedBaseObject != nullptr && !selectedBaseObject->GetBaseObjectScreenLocation().IsLocked()) {
+    if (selectedBaseObject != nullptr) {
         xlights->AddTraceMessage("LayoutPanel::Delete Selected Model");
 
         wxArrayString modelsToDelete;
@@ -6618,13 +6699,9 @@ void LayoutPanel::DeleteSelectedModels()
             for (const auto& it : modelsToDelete) {
                 auto model = xlights->AllModels[it];
                 if (model != nullptr) {
-                    if (!model->IsLocked()) {
-                        xlights->GetDisplayElementsPanel()->RemoveModelFromLists(it);
-                        allDeleted = xlights->AllModels.Delete(it) && allDeleted;
-                        xlights->AddTraceMessage(wxString::Format("LayoutPanel::Delete Selected Model : %s", it));
-                    } else {
-                        allDeleted = false;
-                    }
+                    xlights->GetDisplayElementsPanel()->RemoveModelFromLists(it);
+                    allDeleted = xlights->AllModels.Delete(it) && allDeleted;
+                    xlights->AddTraceMessage(wxString::Format("LayoutPanel::Delete Selected Model : %s", it));
                 }
                 else {
                     allDeleted = false;
@@ -6633,7 +6710,7 @@ void LayoutPanel::DeleteSelectedModels()
 
             if (!allDeleted) {
                 wxBell();
-                wxMessageBox("One or models unable to be deleted. They may be locked or have effects on them.", "Delete failed", 5L, this);
+                wxMessageBox("One or more models cannot be deleted. They may have effects on them.", "Delete failed", 5L, this);
             }
 
             selectedBaseObject = nullptr;
@@ -6723,6 +6800,8 @@ void LayoutPanel::ReplaceModel()
 
         if (replaceModel == nullptr) return;
 
+        CreateUndoPoint("All", "", "");
+
         // Prompt user to copy the target models start channel ...but only if
         // they are not already the same and the new model uses a chaining start
         // channel ... the theory being if you took time to set the start channel
@@ -6759,7 +6838,10 @@ void LayoutPanel::ReplaceModel()
             }
         }
 
-        if (wxMessageBox("Use original size and position", "Use original size and position", wxYES_NO) == wxYES) {
+        auto rmn = replaceModel->GetName();
+        auto riw = modelToReplaceItWith->GetName();
+
+        if (wxMessageBox("Use original size and position of " + rmn, "Use original size and position", wxYES_NO) == wxYES) {
             modelToReplaceItWith->GetModelScreenLocation().SetRotation(replaceModel->GetModelScreenLocation().GetRotation());
             modelToReplaceItWith->SetHcenterPos(replaceModel->GetHcenterPos());
             modelToReplaceItWith->SetVcenterPos(replaceModel->GetVcenterPos());
@@ -6769,8 +6851,6 @@ void LayoutPanel::ReplaceModel()
             modelToReplaceItWith->SetDepth(replaceModel->GetDepth());    
         }
 
-        auto rmn = replaceModel->GetName();
-        auto riw = modelToReplaceItWith->GetName();
         xlights->AllModels.RenameInListOnly(dlg.GetStringSelection().ToStdString(), "Iamgoingtodeletethismodel");
         replaceModel->Rename("Iamgoingtodeletethismodel");
         xlights->AllModels.RenameInListOnly(modelToReplaceItWith->GetName(), dlg.GetStringSelection().ToStdString());
@@ -7428,6 +7508,8 @@ void LayoutPanel::OnModelsPopup(wxCommandEvent& event) {
         BulkEditTransparency();
     } else if (event.GetId() == ID_PREVIEW_BULKEDIT_BLACKTRANSPARENCY) {
         BulkEditBlackTranparency();
+    } else if (event.GetId() == ID_PREVIEW_BULKEDIT_SHADOWMODELFOR) {
+        BulkEditShadowModelFor();
     } else if (event.GetId() == ID_PREVIEW_BULKEDIT_PREVIEW) {
         BulkEditControllerPreview();
     } else if (event.GetId() == ID_PREVIEW_BULKEDIT_DIMMINGCURVES) {
@@ -8433,6 +8515,8 @@ void LayoutPanel::HandleSelectionChanged() {
         return;
     }
 
+    wxStopWatch sw;
+
     BaseObject* lastSelectedBaseObject = selectedBaseObject;
     Model* lastSelectedModel = dynamic_cast<Model*>(lastSelectedBaseObject);
     wxTreeListItems selectedItems;
@@ -8440,6 +8524,9 @@ void LayoutPanel::HandleSelectionChanged() {
 
     UnSelectAllModels(false);
     resetPropertyGrid();
+
+    if (sw.Time() > 500)
+        logger_base.debug("        LayoutPanel::HandleSelectionChanged after reset of property grid %lums", sw.Time());
 
     if (selectedItems.size() > 0) {
         bool isPrimary = false;
@@ -8483,6 +8570,8 @@ void LayoutPanel::HandleSelectionChanged() {
                 }
             }
         }
+        if (sw.Time() > 500)
+            logger_base.debug("        LayoutPanel::HandleSelectionChanged after select in tree %lums", sw.Time());
 
         // if we still don't have a primary model selected then force one if we can
         if (selectedPrimaryTreeItem == nullptr) {
@@ -8498,6 +8587,9 @@ void LayoutPanel::HandleSelectionChanged() {
                 SetTreeGroupModelsSelected(model, true);
             }
         }
+
+        if (sw.Time() > 500)
+            logger_base.debug("        LayoutPanel::HandleSelectionChanged after force select %lums", sw.Time());
 
         // determine which panel and tooltip to show if any
         int mSize = selectedTreeModels.size();
@@ -8543,6 +8635,9 @@ void LayoutPanel::HandleSelectionChanged() {
 
         SetToolTipForTreeList(TreeListViewModels, tooltip);
 
+        if (sw.Time() > 500)
+            logger_base.debug("        LayoutPanel::HandleSelectionChanged after tooltip %lums", sw.Time());
+
         // removing below or Keyboard Cut/Copy/Paste/etc will not fire when making selections in preview
         // #ifndef LINUX
         // TreeListViewModels->SetFocus();
@@ -8557,6 +8652,7 @@ void LayoutPanel::HandleSelectionChanged() {
         }
 
         xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_REDRAW_LAYOUTPREVIEW, "LayoutPanel::HandleSelectionChanged");
+
     } else {
         selectedBaseObject = nullptr;
         UnSelectAllModels(true);
@@ -8564,6 +8660,9 @@ void LayoutPanel::HandleSelectionChanged() {
         SetToolTipForTreeList(TreeListViewModels, "");
         xlights->SetStatusText("");
     }
+
+    if (sw.Time() > 500)
+        logger_base.debug("        LayoutPanel::HandleSelectionChanged took %lums", sw.Time());
 }
 
 void LayoutPanel::ModelGroupUpdated(ModelGroup *grp, bool full_refresh) {
@@ -8742,8 +8841,9 @@ std::string CopyPasteBaseObject::Serialise() const
 void LayoutPanel::OnCheckBox_3DClick(wxCommandEvent& event)
 {
     is_3d = CheckBox_3D->GetValue();
+    bool allow_3d_previews = true; //false; //set to false for previous behavior
 
-    if (is_3d) {
+    if (!allow_3d_previews && is_3d) {
         if (ChoiceLayoutGroups->GetStringSelection() != "Default") {
             ChoiceLayoutGroups->SetStringSelection("Default");
             wxCommandEvent e;

@@ -19,8 +19,9 @@ class FPPUploadProgressDialog;
 class Discovery;
 
 enum class FPP_TYPE { FPP,
-                      FALCONV4,
-                      ESPIXELSTICK };
+                      FALCONV4V5,
+                      ESPIXELSTICK,
+                      GENIUS };
 
 class FPP : public BaseController
 {
@@ -77,7 +78,6 @@ class FPP : public BaseController
     bool IsDDPInputEnabled();
 
     bool IsVersionAtLeast(uint32_t maj, uint32_t min, uint32_t patch = 0) const;
-    bool IsDrive();
 
 #ifndef DISCOVERYONLY
     bool PrepareUploadSequence(FSEQFile *file,
@@ -115,6 +115,8 @@ class FPP : public BaseController
                              Controller* controller);
     bool SetInputUniversesBridge(Controller* controller);
 
+    bool UploadControllerProxies(OutputManager* outputManager);
+
     bool SetRestartFlag();
     bool Restart(bool ifNeeded = false);
     void SetDescription(const std::string &st);
@@ -149,15 +151,12 @@ class FPP : public BaseController
 private:
     FPPUploadProgressDialog *progressDialog = nullptr;
     wxGauge *progress = nullptr;
-
     
     void DumpJSON(const wxJSONValue& json);
 
-    bool GetPathAsJSON(const std::string &path, wxJSONValue &val);
     bool GetURLAsJSON(const std::string& url, wxJSONValue& val, bool recordError = true);
     bool GetURLAsString(const std::string& url, std::string& val, bool recordError = true);
 
-    bool WriteJSONToPath(const std::string& path, const wxJSONValue& val);
     int PostJSONToURL(const std::string& url, const wxJSONValue& val);
     int PostJSONToURLAsFormData(const std::string& url, const std::string &extra, const wxJSONValue& val);
     int PostToURL(const std::string& url, const std::string &val, const std::string &contentType = "application/octet-stream");
@@ -175,9 +174,6 @@ private:
     bool uploadFileV7(const std::string &filename,
                       const std::string &file,
                       const std::string &dir);
-    bool copyFile(const std::string &filename,
-                  const std::string &file,
-                  const std::string &dir);
     bool callMoveFile(const std::string &filename);
 
     bool parseSysInfo(wxJSONValue& v);

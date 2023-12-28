@@ -57,6 +57,7 @@
 #include "../Parallel.h"
 #include "ControllerCaps.h"
 #include "../ExternalHooks.h"
+#include "../TempFileManager.h"
 
 #include <log4cpp/Category.hh>
 #include "ControllerUploadData.h"
@@ -261,7 +262,7 @@ bool FPP::GetURLAsString(const std::string& url, std::string& val, bool recordEr
     std::string fullUrl = ipAddress + url;
     std::string ipAddForGet = ipAddress;
     if (fppType == FPP_TYPE::ESPIXELSTICK) {
-        fullUrl = ipAddress + "/fpp?path=" +  url;
+        fullUrl = ipAddress + "/fpp?path=" + url;
     }
     if (!_fppProxy.empty()) {
         fullUrl = "http://" + _fppProxy + "/proxy/" + fullUrl;
@@ -427,14 +428,12 @@ bool FPP::parseSysInfo(wxJSONValue& val) {
 }
 
 bool FPP::IsDDPInputEnabled() {
-    if (!IsDrive()) {
-        wxJSONValue origRoot;
-        if (GetURLAsJSON("/api/configfile/ci-universes.json", origRoot, false)) {
-            if (origRoot.HasMember("channelInputs") && origRoot.ItemAt("channelInputs").HasMember(0)
-                && origRoot.ItemAt("channelInputs").ItemAt(0).HasMember("enabled") &&
-                origRoot.ItemAt("channelInputs").ItemAt(0).ItemAt("enabled").AsInt() == 1) {
-                return true;
-            }
+    wxJSONValue origRoot;
+    if (GetURLAsJSON("/api/configfile/ci-universes.json", origRoot, false)) {
+        if (origRoot.HasMember("channelInputs") && origRoot.ItemAt("channelInputs").HasMember(0)
+            && origRoot.ItemAt("channelInputs").ItemAt(0).HasMember("enabled") &&
+            origRoot.ItemAt("channelInputs").ItemAt(0).ItemAt("enabled").AsInt() == 1) {
+            return true;
         }
     }
     return false;
@@ -523,11 +522,6 @@ void FPP::parseConfig(const std::string& v) {
     }
 }
 
-
-bool FPP::IsDrive() {
-    return ipAddress.find("/") != std::string::npos || ipAddress.find("\\") != std::string::npos;
-}
-
 bool FPP::IsVersionAtLeast(uint32_t maj, uint32_t min, uint32_t patch) const{
     if (majorVersion < maj) {
         return false;
@@ -599,30 +593,6 @@ static inline void addString(wxMemoryBuffer &buffer, const char *str) {
 }
 static inline void addString(wxMemoryBuffer &buffer, const std::string &str) {
     buffer.AppendData(str.c_str(), str.length());
-}
-
-bool FPP::GetPathAsJSON(const std::string &path, wxJSONValue &val) {
-    wxFileName fn;
-    fn = ToWXString(path);
-    if (FileExists(fn)) {
-        wxJSONReader reader;
-        wxFile tf(fn.GetFullPath());
-        wxString json;
-        tf.ReadAll(&json);
-        reader.Parse(json, &val);
-        tf.Close();
-        return true;
-    }
-    return false;
-}
-bool FPP::WriteJSONToPath(const std::string& path, const wxJSONValue& val) {
-    wxFileName fn;
-    fn = ToWXString(path);
-    wxFileOutputStream ufile(fn.GetFullPath());
-    wxJSONWriter writer(wxJSONWRITER_STYLED, 0, 3);
-    writer.Write(val, ufile);
-    ufile.Close();
-    return true;
 }
 
 int FPP::PostJSONToURL(const std::string& url, const wxJSONValue& val) {
@@ -822,13 +792,15 @@ bool FPP::callMoveFile(const std::string &filename) {
     return GetURLAsString("/fppxml.php?command=moveFile&file=" + URLEncode(filename), val);
 }
 
-struct V7ProgressStruct {
+class V7ProgressStruct {
+public:
     wxFile in;
     FPP *instance;
     size_t length;
 
     size_t offset = 0;
     int lastPct = 0;
+    int errorCount = 0;
     
     std::string fullUrl;
     std::string fileSizeHeader;
@@ -884,6 +856,7 @@ void prepareCurlForMulti(V7ProgressStruct *ps) {
     cpd->req->resize(remaining);
     uint64_t read = ps->in.Read(cpd->req->data(), remaining);
     if (read != remaining) {
+        logger_curl.info("ERROR Uploading file: " + ps->filename + "     Could not read source file.");
         ps->instance->messages.push_back("ERROR Uploading file: " + ps->filename + "     Could not read source file.");
     }
     std::string contentSizeHeader = "Content-Length: " + std::to_string(remaining);
@@ -906,9 +879,20 @@ void prepareCurlForMulti(V7ProgressStruct *ps) {
         long response_code = 0;
         curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &response_code);
         logger_curl.info("    FPPConnect CURL Callbak - URL: %s    Response: %d", ps->fullUrl.c_str(), response_code);
-        ps->offset += remaining;
+        bool cancelled = false;
+        if (response_code != 200 && ps->errorCount < 3) {
+            // strange error on upload, let's restart and try again (up to three attempts)
+            ps->offset = 0;
+            ps->in.Seek(0);
+            ++ps->errorCount;
+        } else if (response_code != 200) {
+            ps->instance->messages.push_back("ERROR Uploading file: " + ps->filename + ". Response code: " + std::to_string(response_code));
+            cancelled = true;
+        } else {
+            ps->offset += remaining;
+        }
         uint64_t pct = (ps->offset * 1000) / ps->length;
-        bool cancelled = ps->instance->updateProgress(pct, false);
+        cancelled |= ps->instance->updateProgress(pct, false);
         if (cancelled || ps->offset >= ps->length) {
             delete ps;
         } else {
@@ -949,58 +933,10 @@ bool FPP::uploadFileV7(const std::string &filename,
     return cancelled;
 }
 
-bool FPP::copyFile(const std::string &filename,
-                   const std::string &file,
-                   const std::string &dir) {
-    static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
-    bool cancelled = false;
-    cancelled |= updateProgress(0, true);
-
-    wxFile in;
-    in.Open(ToWXString(file));
-
-    if (in.IsOpened()) {
-        wxFile out;
-        wxString target = ipAddress +  wxFileName::GetPathSeparator() + dir +  wxFileName::GetPathSeparator() + filename;
-        out.Open(target, wxFile::write);
-
-        if (out.IsOpened()) {
-            wxFileOffset length = in.Length();
-            wxFileOffset done = 0;
-
-            uint8_t buffer[8192]; // 8KB at a time
-            while (!in.Eof() && !cancelled) {
-                size_t read = in.Read(&buffer[0], sizeof(buffer));
-                size_t written = out.Write(&buffer[0], read);
-                while (written < read) {
-                    written += out.Write(&buffer[written], read - written);
-                }
-                done += read;
-
-                int prgs = done * 1000 / length;
-                cancelled |= updateProgress(prgs, true);
-            }
-            cancelled |= updateProgress(1000, true);
-            in.Close();
-            out.Close();
-        } else {
-            cancelled |= updateProgress(1000, true);
-            logger_base.warn("   Copy of file %s failed ... target file %s could not be opened.", (const char *)file.c_str(), (const char *)target.c_str());
-        }
-    } else {
-        cancelled |= updateProgress(1000, true);
-        logger_base.warn("   Copy of file %s failed ... file could not be opened.", (const char *)file.c_str());
-    }
-    return cancelled;
-}
-
 bool FPP::uploadOrCopyFile(const std::string &filename,
                            const std::string &file,
                            const std::string &dir) {
-    if (IsDrive()) {
-        return copyFile(filename, file, dir);
-    }
-    if (IsVersionAtLeast(6, 3, 2)) {
+    if (fppType == FPP_TYPE::FPP && IsVersionAtLeast(6, 3, 2)) {
         return uploadFileV7(filename, file, dir);
     }
     return uploadFile(filename, file);
@@ -1149,13 +1085,9 @@ bool FPP::PrepareUploadSequence(FSEQFile *file,
     sequences[baseName].media = mediaBaseName;
     sequences[baseName].duration = ((float)(file->getStepTime() * file->getNumFrames())) / 1000.0f;
 
-    std::string fileName;
-    if (IsDrive()) {
-        fileName = ipAddress + GetPathSeparator() + "sequences" + GetPathSeparator() + baseName;
-    } else {
-        tempFileName = ToStdString(wxFileName::CreateTempFileName(ToWXString(baseName)));
-        fileName = tempFileName;
-    }
+    tempFileName = ToStdString(wxFileName::CreateTempFileName(ToWXString(baseName)));
+    TempFileManager::GetTempFileManager().AddTempFile(tempFileName);
+    std::string fileName = tempFileName;
 
     FSEQFile::CompressionType ctype = ::FSEQFile::CompressionType::zstd;
     if (type == 3 || type == 4) {
@@ -1169,7 +1101,7 @@ bool FPP::PrepareUploadSequence(FSEQFile *file,
     int currentChannelCount = 0;
     std::vector<std::pair<uint32_t, uint32_t>> currentRanges;
     std::vector<std::pair<uint32_t, uint32_t>> newRanges;
-    if (!IsDrive() && fppType == FPP_TYPE::FPP) {
+    if (fppType == FPP_TYPE::FPP) {
         wxJSONValue currentMeta;
         if (GetURLAsJSON("/api/sequence/" + URLEncode(baseName) + "/meta", currentMeta, false)) {
             doSeqUpload = false;
@@ -1365,13 +1297,7 @@ static bool PlaylistContainsEntry(wxJSONValue &pl, const std::string &media, con
 
 bool FPP::UploadPlaylist(const std::string &name) {
     wxJSONValue origJson;
-    std::string fn;
-    if (IsDrive()) {
-        fn = (ipAddress + GetPathSeparator() + "playlists" +GetPathSeparator() + name + ".json");
-        GetPathAsJSON(fn, origJson);
-    } else {
-        GetURLAsJSON("/api/playlist/" + URLEncode(name), origJson, false);
-    }
+    GetURLAsJSON("/api/playlist/" + URLEncode(name), origJson, false);
 
     for (const auto& info : sequences) {
         if (!PlaylistContainsEntry(origJson["mainPlaylist"], info.second.media, info.first)) {
@@ -1397,55 +1323,34 @@ bool FPP::UploadPlaylist(const std::string &name) {
     origJson.Remove(wxString("playlistInfo"));
     origJson["name"] = name;
 
-    if (IsDrive()) {
-        WriteJSONToPath(fn, origJson);
-    } else {
-        PostJSONToURL("/api/playlist/" + URLEncode(name), origJson);
-    }
+    PostJSONToURL("/api/playlist/" + URLEncode(name), origJson);
     return false;
 }
 
 bool FPP::UploadModels(const wxJSONValue &models) {
-    if (IsDrive()) {
-        std::string fn = (ipAddress +GetPathSeparator() + "config" +GetPathSeparator() + "model-overlays.json");
-        WriteJSONToPath(fn, models);
-    } else {
-        PostJSONToURL("/api/models", models);
-    }
+    PostJSONToURL("/api/models", models);
     return false;
 }
 
 bool FPP::UploadDisplayMap(const std::string &displayMap) {
-    if (IsDrive()) {
-        wxFileName fn = (ipAddress + wxFileName::GetPathSeparator() + "config/virtualdisplaymap");
-        wxFile tf(fn.GetFullPath());
-        tf.Write(displayMap);
-        tf.Close();
-    } else {
-        PostToURL("/api/configfile/virtualdisplaymap", displayMap);
-    }
+    PostToURL("/api/configfile/virtualdisplaymap", displayMap);
     return false;
 }
 
 bool FPP::UploadUDPOut(const wxJSONValue &udp) {
-    if (IsDrive()) {
-        std::string fn = ipAddress +GetPathSeparator() + "config" +GetPathSeparator() + "co-universes.json";
-        WriteJSONToPath(fn, udp);
-    } else {
-        wxJSONValue orig;
-        wxJSONValue newudp = udp;
-        
-        if (GetURLAsJSON("/api/channel/output/universeOutputs", orig)) {
-            if (orig.HasMember("channelOutputs")) {
-                for (int x = 0; x < orig["channelOutputs"].Size(); x++) {
-                    if (orig["channelOutputs"][x]["type"].AsString() == "universes" && orig["channelOutputs"][x].HasMember("interface")) {
-                        newudp["channelOutputs"][0]["interface"] = orig["channelOutputs"][x]["interface"].AsString();
-                    }
+    wxJSONValue orig;
+    wxJSONValue newudp = udp;
+
+    if (GetURLAsJSON("/api/channel/output/universeOutputs", orig)) {
+        if (orig.HasMember("channelOutputs")) {
+            for (int x = 0; x < orig["channelOutputs"].Size(); x++) {
+                if (orig["channelOutputs"][x]["type"].AsString() == "universes" && orig["channelOutputs"][x].HasMember("interface")) {
+                    newudp["channelOutputs"][0]["interface"] = orig["channelOutputs"][x]["interface"].AsString();
                 }
             }
         }
-        PostJSONToURL("/api/channel/output/universeOutputs", newudp);
     }
+    PostJSONToURL("/api/channel/output/universeOutputs", newudp);    
     return false;
 }
 
@@ -1652,7 +1557,7 @@ std::string FPP::CreateVirtualDisplayMap(ModelManager* allmodels) {
                 modelPts.insert(std::make_tuple(x, y, z, ch));
             }
         }
-        for (auto [x,y,z, ch] : modelPts) {
+        for (auto const&[x,y,z, ch] : modelPts) {
             ret += ToUTF8(wxString::Format("%d,%d,%d,%d,%d,%s\n",
                 (int)std::round(x), (int)std::round(y), (int)std::round(z), ch,
                 model->GetChanCountPerNode(), stringType.c_str()));
@@ -1980,12 +1885,8 @@ wxJSONValue FPP::CreateUniverseFile(const std::list<Controller*>& selected, bool
 }
 
 bool FPP::SetRestartFlag() {
-    std::string val;
-    if (!IsDrive()) {
-        restartNeeded = true;
-        return PutToURL("/api/settings/restartFlag", "2", "text/plain");
-    }
-    return false;
+    restartNeeded = true;
+    return PutToURL("/api/settings/restartFlag", "2", "text/plain");
 }
 
 bool FPP::Restart( bool ifNeeded) {
@@ -2002,7 +1903,7 @@ bool FPP::Restart( bool ifNeeded) {
 void FPP::UpdateChannelRanges()
 {
     // This probably should handle drives correctly but as is it doesnt bail for now until we add drive support
-    if (fppType != FPP_TYPE::FPP || IsDrive()) {
+    if (fppType != FPP_TYPE::FPP) {
         return;
     }
     wxJSONValue jval;
@@ -2038,9 +1939,7 @@ void FPP::UpdateChannelRanges()
 }
 
 void FPP::SetDescription(const std::string &st) {
-    if (!IsDrive()) {
-        PutToURL("/api/settings/HostDescription", st, "text/plain");
-    }
+    PutToURL("/api/settings/HostDescription", st, "text/plain");
 }
 
 bool FPP::SetInputUniversesBridge(Controller* controller) {
@@ -2058,12 +1957,7 @@ bool FPP::SetInputUniversesBridge(Controller* controller) {
 
     wxJSONValue udp = CreateUniverseFile(std::list<Controller*>({ controller }), true);
     if (udp["channelInputs"][0]["universes"].Size() != 0 || forceUpload) {
-        if (IsDrive()) {
-            std::string fn = (c->GetResolvedIP() +GetPathSeparator() + "config" +GetPathSeparator() + "ci-universes.json");
-            WriteJSONToPath(fn, udp);
-        } else {
-            PostJSONToURL("/api/channel/output/universeInputs", udp);
-        }
+        PostJSONToURL("/api/channel/output/universeInputs", udp);
     }
 
     return false;
@@ -2254,11 +2148,7 @@ bool FPP::UploadPanelOutputs(ModelManager* allmodels,
         startChannel--;
     }
     if (startChannel >= 0 || fullcontrol) {
-        if (IsDrive()) {
-            GetPathAsJSON(ipAddress +GetPathSeparator() + "config" +GetPathSeparator() + "channeloutputs.json", origJson);
-        } else {
-            GetURLAsJSON("/api/channel/output/channelOutputsJSON", origJson, false);
-        }
+        GetURLAsJSON("/api/channel/output/channelOutputsJSON", origJson, false);
     }
     if (startChannel >= 0) {
         std::map<int, int> rngs;
@@ -2284,12 +2174,8 @@ bool FPP::UploadPanelOutputs(ModelManager* allmodels,
         }
     }
     if (changed) {
-        if (IsDrive()) {
-            WriteJSONToPath(ipAddress +GetPathSeparator() + "config" +GetPathSeparator() + "channeloutputs.json", origJson);
-        } else {
-            PostJSONToURL("/api/channel/output/channelOutputsJSON", origJson);
-            SetRestartFlag();
-        }
+        PostJSONToURL("/api/channel/output/channelOutputsJSON", origJson);
+        SetRestartFlag();
     }
     return false;
 }
@@ -2308,11 +2194,7 @@ bool FPP::UploadVirtualMatrixOutputs(ModelManager* allmodels,
     bool changed = false;
     wxJSONValue origJson;
     if (fullcontrol || (rules->SupportsVirtualMatrix() && cud.GetMaxVirtualMatrixPort())) {
-        if (IsDrive()) {
-            GetPathAsJSON(ipAddress +GetPathSeparator()  + "config" +GetPathSeparator()  + "co-other.json", origJson);
-        } else {
-            GetURLAsJSON("/api/channel/output/co-other", origJson, false);
-        }
+        GetURLAsJSON("/api/channel/output/co-other", origJson, false);
         if (fullcontrol) {
             for (int x = 0; x < origJson["channelOutputs"].Size(); x++) {
                 if (origJson["channelOutputs"][x]["type"].AsString() == "VirtualMatrix") {
@@ -2417,12 +2299,8 @@ bool FPP::UploadVirtualMatrixOutputs(ModelManager* allmodels,
         }
     }
     if (changed) {
-        if (IsDrive()) {
-            WriteJSONToPath(ipAddress +GetPathSeparator() + "config" +GetPathSeparator() + "co-other.json", origJson);
-        } else {
-            PostJSONToURL("/api/channel/output/co-other", origJson);
-            SetRestartFlag();
-        }
+        PostJSONToURL("/api/channel/output/co-other", origJson);
+        SetRestartFlag();
     }
 
     return false;
@@ -2517,21 +2395,12 @@ bool FPP::UploadSerialOutputs(ModelManager* allmodels,
 
             wxJSONValue otherOrigRoot = otherData;
             bool changed = true;
-            if (IsDrive()) {
-                GetPathAsJSON(ipAddress +GetPathSeparator() + "config" +GetPathSeparator() + "co-other.json", otherOrigRoot);
+            if (GetURLAsJSON("/api/configfile/co-other.json", otherOrigRoot, false)) {
                 changed = mergeSerialInto(otherData, otherOrigRoot, false);
-            } else {
-                if (GetURLAsJSON("/api/configfile/co-other.json", otherOrigRoot, false)) {
-                    changed = mergeSerialInto(otherData, otherOrigRoot, false);
-                }
             }
             if (changed) {
-                if (IsDrive()) {
-                    WriteJSONToPath(ipAddress +GetPathSeparator() + "config" +GetPathSeparator() + "co-other.json", otherOrigRoot);
-                } else {
-                    PostJSONToURL("/api/configfile/co-other.json", otherOrigRoot);
-                    SetRestartFlag();
-                }
+                PostJSONToURL("/api/configfile/co-other.json", otherOrigRoot);
+                SetRestartFlag();
                 SetNewRanges(rngs);
             }
         }
@@ -2577,11 +2446,7 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
     fnOrig.AssignTempFileName("pixelOutputs");
     std::string file = fnOrig.GetFullPath().ToStdString();
     wxJSONValue origJson;
-    if (IsDrive()) {
-        GetPathAsJSON(ipAddress +GetPathSeparator() + "config" +GetPathSeparator() + fppFileName +".json", origJson);
-    } else {
-        GetURLAsJSON("/api/channel/output/" + fppFileName, origJson, false);
-    }
+    GetURLAsJSON("/api/channel/output/" + fppFileName, origJson, false);
     logger_base.debug("Original JSON");
     DumpJSON(origJson);
 
@@ -2671,13 +2536,19 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
             port->CreateVirtualStrings(false);
             for (const auto& pvs : port->GetVirtualStrings()) {
                 wxJSONValue vs;
-                vs["description"] = pvs->_description;
-                vs["startChannel"] = pvs->_startChannel - 1; // we need 0 based
-                vs["pixelCount"] = pvs->Channels() / pvs->_channelsPerPixel;
+                if (pvs->_isDummy) {
+                    vs["description"] = wxString("");
+                    vs["startChannel"] = 0;
+                    vs["pixelCount"] = 0;
+                } else {
+                    vs["description"] = pvs->_description;
+                    vs["startChannel"] = pvs->_startChannel - 1; // we need 0 based
+                    vs["pixelCount"] = pvs->Channels() / pvs->_channelsPerPixel;
 
-                rngs[pvs->_startChannel - 1] = pvs->Channels();
+                    rngs[pvs->_startChannel - 1] = pvs->Channels();
+                }
 
-                if (origStrings.find(vs["description"].AsString()) != origStrings.end()) {
+                if (!pvs->_isDummy && (origStrings.find(vs["description"].AsString()) != origStrings.end())) {
                     wxJSONValue &vo = origStrings[vs["description"].AsString()];
                     vs["groupCount"] = vo["groupCount"];
                     vs["reverse"] = vo["reverse"];
@@ -2938,21 +2809,12 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
     } else {
         wxJSONValue otherOrigRoot = otherDmxData;
         bool changed = true;
-        if (IsDrive()) {
-            GetPathAsJSON(ipAddress +GetPathSeparator()  + "config" +GetPathSeparator()  + "co-other.json", otherOrigRoot);
+        if (GetURLAsJSON("/api/configfile/co-other.json", otherOrigRoot, false)) {
             changed = mergeSerialInto(otherDmxData, otherOrigRoot, true);
-        } else {
-            if (GetURLAsJSON("/api/configfile/co-other.json", otherOrigRoot, false)) {
-                changed = mergeSerialInto(otherDmxData, otherOrigRoot, true);
-            }
         }
         if (changed) {
-            if (IsDrive()) {
-                WriteJSONToPath(ipAddress +GetPathSeparator()  + "config" +GetPathSeparator()  + "co-other.json", otherOrigRoot);
-            } else {
-                PostJSONToURL("/api/configfile/co-other.json", otherOrigRoot);
-                SetRestartFlag();
-            }
+            PostJSONToURL("/api/configfile/co-other.json", otherOrigRoot);
+            SetRestartFlag();
         }
     }
 
@@ -2969,16 +2831,37 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
         writer.Write(root, ufile);
         ufile.Close();
 
-        if (IsDrive()) {
-            WriteJSONToPath(ipAddress +GetPathSeparator()  + "config" +GetPathSeparator()  + fppFileName +".json", root);
-        } else {
-            PostJSONToURL("/api/channel/output/" + fppFileName, root);
-            SetRestartFlag();
-        }
+        PostJSONToURL("/api/channel/output/" + fppFileName, root);
+        SetRestartFlag();
     } else {
         logger_base.debug("Skipping JSON upload as it has not changed.");
     }
     SetNewRanges(rngs);
+    return false;
+}
+
+bool FPP::UploadControllerProxies(OutputManager* outputManager)
+{
+    auto currentProxies = GetProxies();
+    std::vector<std::string> newProxies;
+
+    for (const auto& it : outputManager->GetControllers()) {
+        auto c = dynamic_cast<ControllerEthernet*>(it);
+        if (c != nullptr) {
+            std::string proxy_ip = ip_utils::ResolveIP(c->GetFPPProxy());
+            if (ipAddress.compare(proxy_ip) == 0) {
+                auto controllerip = c->GetIP();
+                if (std::find(currentProxies.begin(), currentProxies.end(), controllerip) == currentProxies.end()) {
+                    newProxies.push_back(controllerip);
+                    currentProxies.push_back(controllerip);
+                }
+            }
+        }
+    }
+
+    for (const auto& nprox : newProxies) {
+        PostToURL("/api/proxies/" + nprox, "", "text/plain");
+    }
     return false;
 }
 #endif
@@ -2995,7 +2878,7 @@ static void setRangesToChannelCount(DiscoveredData *inst) {
     int min = 9999999; int max = 0;
     if (inst->ranges != "") {
         wxArrayString r1 = wxSplit(wxString(inst->ranges), ',');
-        for (auto a : r1) {
+        for (auto const& a : r1) {
             wxArrayString r = wxSplit(a, '-');
             int start = wxAtoi(r[0]);
             int len = 4; //at least 4
@@ -3245,7 +3128,7 @@ static void ProcessFPPSystems(Discovery &discovery, const std::string &systemsSt
                     }
                     return true;
                 });
-            } else if (found->typeId >= 0xD0) {
+            } else if (found->typeId >= 0x80) {
                 discovery.AddCurl(ipAddr, "/", [&discovery, ipAddr, found](int rc, const std::string &buffer, const std::string &err) {
                     if (rc == 200 && buffer != "") {
                         found->extraData["httpConnected"] = true;
@@ -3717,8 +3600,14 @@ static bool supportedForFPPConnect(DiscoveredData* res, OutputManager* outputMan
         return res->majorVersion >= 4 && res->mode == "remote";
     }
 
-    if (res->typeId == 0x88 || res->typeId == 0x89) {
-        // F16V4 / F48V4
+    if (res->typeId == 0x88 || res->typeId == 0x89 ||
+        res->typeId == 0x90 || res->typeId == 0x91) {
+        // F16V4 / F48V4 / F16V5 / F48V5
+        return res->mode != "bridge";
+    }
+
+    if (res->typeId >= 0xA0 && res->typeId <= 0xAF) {
+        // Genius
         return res->mode != "bridge";
     }
 
@@ -3817,10 +3706,13 @@ void FPP::MapToFPPInstances(Discovery &discovery, std::list<FPP*> &instances, Ou
 void FPP::TypeIDtoControllerType(int typeId, FPP* inst) {
     if (typeId < 0x80) {
         inst->fppType = FPP_TYPE::FPP;
-    } else if (typeId == 0x88 || typeId == 0x89) {
-        inst->fppType = FPP_TYPE::FALCONV4;
+    } else if (typeId == 0x88 || typeId == 0x89 ||
+               typeId == 0x90 || typeId == 0x91) {
+        inst->fppType = FPP_TYPE::FALCONV4V5;
     } else if (typeId == 0xC2 || typeId == 0xC3) {
         inst->fppType = FPP_TYPE::ESPIXELSTICK;
+    } else if (typeId >= 0xA0 && typeId <= 0xAF) {
+        inst->fppType = FPP_TYPE::GENIUS;
     }
 }
 

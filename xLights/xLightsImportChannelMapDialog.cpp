@@ -31,6 +31,7 @@
 #include "../../xSchedule/wxJSON/jsonreader.h"
 #include "../../xSchedule/wxJSON/jsonwriter.h"
 #include <algorithm>
+#include "xlColourData.h"
 
 #include <log4cpp/Category.hh>
 
@@ -44,6 +45,28 @@ int wxCALLBACK MyCompareFunctionAsc(wxIntPtr item1, wxIntPtr item2, wxIntPtr sor
 int wxCALLBACK MyCompareFunctionDesc(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortData)
 {
     return item1 == item2 ? 0 : ((item1 < item2) ? 1 : -1);
+}
+
+int wxCALLBACK MyCompareFunctionAscEffects(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortData)
+{
+    wxListCtrl* list = (wxListCtrl*)sortData;
+    auto i1 = list->GetItemText(item1, 0);
+    auto i2 = list->GetItemText(item2, 0);
+    auto it1 = wxAtoi(list->GetItemText(item1, 1));
+    auto it2 = wxAtoi(list->GetItemText(item2, 1));
+
+    return it1 == it2 ? 0 : ((it1 < it2) ? -1 : 1);
+}
+
+int wxCALLBACK MyCompareFunctionDescEffects(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortData)
+{
+    wxListCtrl* list = (wxListCtrl*)sortData;
+    auto i1 = list->GetItemText(item1, 0);
+    auto i2 = list->GetItemText(item2, 0);
+    auto it1 = wxAtoi(list->GetItemText(item1, 1));
+    auto it2 = wxAtoi(list->GetItemText(item2, 1));
+
+    return it1 == it2 ? 0 : ((it1 < it2) ? 1 : -1);
 }
 
 class MDDropSource : public wxDropSource
@@ -81,7 +104,6 @@ public:
 
 class ColorRenderer : public wxDataViewCustomRenderer
 {
-    static wxColourData _colorData;
     wxColor _color;
 
 public:
@@ -92,12 +114,9 @@ public:
 
     virtual bool ActivateCell(const wxRect &cell, wxDataViewModel *model, const wxDataViewItem &item, unsigned int col, const wxMouseEvent *mouseEvent) override
     {
-        _colorData.SetColour(_color);
-        wxColourDialog dlg(GetOwner()->GetOwner()->GetParent(), &_colorData);
-
-        if (dlg.ShowModal() == wxID_OK) {
-            _colorData = dlg.GetColourData();
-            _color = dlg.GetColourData().GetColour();
+        auto const& [res, newcolor] = xlColourData::INSTANCE.ShowColorDialog(GetOwner()->GetOwner()->GetParent(), _color);
+        if (res == wxID_OK) {
+            _color = newcolor;
             model->SetValue(wxVariant(_color.GetAsString()), item, col);
         }
 
@@ -137,7 +156,7 @@ public:
     }
 };
 
-wxColourData ColorRenderer::_colorData;
+//wxColourData ColorRenderer::_colorData;
 
 xLightsImportTreeModel::xLightsImportTreeModel()
 {
@@ -422,6 +441,7 @@ const long xLightsImportChannelMapDialog::ID_STATICTEXT2 = wxNewId();
 const long xLightsImportChannelMapDialog::ID_TEXTCTRL2 = wxNewId();
 const long xLightsImportChannelMapDialog::ID_BUTTON3 = wxNewId();
 const long xLightsImportChannelMapDialog::ID_BUTTON4 = wxNewId();
+const long xLightsImportChannelMapDialog::ID_BUTTON6 = wxNewId();
 const long xLightsImportChannelMapDialog::ID_BUTTON5 = wxNewId();
 const long xLightsImportChannelMapDialog::ID_BUTTON1 = wxNewId();
 const long xLightsImportChannelMapDialog::ID_BUTTON2 = wxNewId();
@@ -521,13 +541,15 @@ xLightsImportChannelMapDialog::xLightsImportChannelMapDialog(wxWindow* parent, c
     SizerMap->AddGrowableCol(0);
     SizerMap->AddGrowableRow(0);
     Sizer1->Add(SizerMap, 0, wxEXPAND, 0);
-    FlexGridSizer2 = new wxFlexGridSizer(0, 7, 0, 0);
+    FlexGridSizer2 = new wxFlexGridSizer(0, 8, 0, 0);
     FlexGridSizer2->AddGrowableCol(2);
     Button_Ok = new wxButton(Panel1, ID_BUTTON3, _("Ok"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON3"));
     FlexGridSizer2->Add(Button_Ok, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Button_Cancel = new wxButton(Panel1, ID_BUTTON4, _("Cancel"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
     FlexGridSizer2->Add(Button_Cancel, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     FlexGridSizer2->Add(-1,-1,1, wxALL|wxEXPAND, 5);
+    Button_UpdateAliases = new wxButton(Panel1, ID_BUTTON6, _("Update Model Aliases Using Mapping"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON6"));
+    FlexGridSizer2->Add(Button_UpdateAliases, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Button_AutoMap = new wxButton(Panel1, ID_BUTTON5, _("Auto Map"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON5"));
     FlexGridSizer2->Add(Button_AutoMap, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     FlexGridSizer2->Add(-1,-1,1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
@@ -537,6 +559,8 @@ xLightsImportChannelMapDialog::xLightsImportChannelMapDialog(wxWindow* parent, c
     FlexGridSizer2->Add(Button02, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Sizer1->Add(FlexGridSizer2, 1, wxALL|wxEXPAND, 0);
     Panel1->SetSizer(Sizer1);
+    Sizer1->Fit(Panel1);
+    Sizer1->SetSizeHints(Panel1);
     Panel2 = new wxPanel(SplitterWindow1, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL2"));
     Sizer2 = new wxFlexGridSizer(0, 1, 0, 0);
     Sizer2->AddGrowableCol(0);
@@ -551,25 +575,29 @@ xLightsImportChannelMapDialog::xLightsImportChannelMapDialog(wxWindow* parent, c
     ListCtrl_Available = new wxListCtrl(Panel2, ID_LISTCTRL1, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(100,-1)), wxLC_REPORT|wxLC_SINGLE_SEL|wxVSCROLL, wxDefaultValidator, _T("ID_LISTCTRL1"));
     Sizer2->Add(ListCtrl_Available, 1, wxALL|wxEXPAND, 5);
     Panel2->SetSizer(Sizer2);
+    Sizer2->Fit(Panel2);
+    Sizer2->SetSizeHints(Panel2);
     SplitterWindow1->SplitVertically(Panel1, Panel2);
     OldSizer->Add(SplitterWindow1, 1, wxALL|wxEXPAND, 5);
     SetSizer(OldSizer);
+    OldSizer->Fit(this);
     OldSizer->SetSizeHints(this);
 
-    Connect(ID_CHECKBOX1, wxEVT_COMMAND_CHECKBOX_CLICKED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnCheckBox_MapCCRStrandClick);
-    Connect(ID_CHECKBOX3, wxEVT_COMMAND_CHECKBOX_CLICKED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnCheckBoxImportMediaClick);
-    Connect(ID_BUTTON_IMPORT_OPTIONS, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButtonImportOptionsClick);
-    Connect(ID_TEXTCTRL2, wxEVT_COMMAND_TEXT_UPDATED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnTextCtrl_FindToText);
-    Connect(ID_BUTTON3, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButton_OkClick);
-    Connect(ID_BUTTON4, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButton_CancelClick);
-    Connect(ID_BUTTON5, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButton_AutoMapClick);
-    Connect(ID_BUTTON1, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::LoadMapping);
-    Connect(ID_BUTTON2, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::SaveMapping);
-    Connect(ID_TEXTCTRL1, wxEVT_COMMAND_TEXT_UPDATED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnTextCtrl_FindFromText);
-    Connect(ID_LISTCTRL1, wxEVT_COMMAND_LIST_BEGIN_DRAG, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnListCtrl_AvailableBeginDrag);
-    Connect(ID_LISTCTRL1, wxEVT_COMMAND_LIST_ITEM_SELECTED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnListCtrl_AvailableItemSelect);
-    Connect(ID_LISTCTRL1, wxEVT_COMMAND_LIST_ITEM_ACTIVATED, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnListCtrl_AvailableItemActivated);
-    Connect(ID_LISTCTRL1, wxEVT_COMMAND_LIST_COL_CLICK, (wxObjectEventFunction)&xLightsImportChannelMapDialog::OnListCtrl_AvailableColumnClick);
+    Connect(ID_CHECKBOX1,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnCheckBox_MapCCRStrandClick);
+    Connect(ID_CHECKBOX3,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnCheckBoxImportMediaClick);
+    Connect(ID_BUTTON_IMPORT_OPTIONS,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButtonImportOptionsClick);
+    Connect(ID_TEXTCTRL2,wxEVT_COMMAND_TEXT_UPDATED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnTextCtrl_FindToText);
+    Connect(ID_BUTTON3,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButton_OkClick);
+    Connect(ID_BUTTON4,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButton_CancelClick);
+    Connect(ID_BUTTON6,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButton_UpdateAliasesClick);
+    Connect(ID_BUTTON5,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnButton_AutoMapClick);
+    Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::LoadMapping);
+    Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::SaveMapping);
+    Connect(ID_TEXTCTRL1,wxEVT_COMMAND_TEXT_UPDATED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnTextCtrl_FindFromText);
+    Connect(ID_LISTCTRL1,wxEVT_COMMAND_LIST_BEGIN_DRAG,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnListCtrl_AvailableBeginDrag);
+    Connect(ID_LISTCTRL1,wxEVT_COMMAND_LIST_ITEM_SELECTED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnListCtrl_AvailableItemSelect);
+    Connect(ID_LISTCTRL1,wxEVT_COMMAND_LIST_ITEM_ACTIVATED,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnListCtrl_AvailableItemActivated);
+    Connect(ID_LISTCTRL1,wxEVT_COMMAND_LIST_COL_CLICK,(wxObjectEventFunction)&xLightsImportChannelMapDialog::OnListCtrl_AvailableColumnClick);
     //*)
 
     Connect(ID_CHECKLISTBOX1, wxEVT_CONTEXT_MENU, (wxObjectEventFunction)&xLightsImportChannelMapDialog::RightClickTimingTracks);
@@ -600,8 +628,8 @@ xLightsImportChannelMapDialog::xLightsImportChannelMapDialog(wxWindow* parent, c
     }
 
     wxConfigBase* config = wxConfigBase::Get();
-    CheckBox_LockEffects->SetValue(config->ReadBool("ImportEffectsLocked", true));
-    
+    CheckBox_LockEffects->SetValue(config->ReadBool("ImportEffectsLocked", false));
+
     EnsureWindowHeaderIsOnScreen(this);
 }
 
@@ -853,15 +881,15 @@ void xLightsImportChannelMapDialog::AddModel(Model *m, int &ms) {
         }
     }
 
-    xLightsImportModelNode *lastmodel = new xLightsImportModelNode(nullptr, m->GetName(), std::string(""), true, *wxWHITE, (m->GetDisplayAs() == "ModelGroup"));
+    xLightsImportModelNode* lastmodel = new xLightsImportModelNode(nullptr, m->GetName(), std::string(""), true, m->GetAliases(), *wxWHITE, (m->GetDisplayAs() == "ModelGroup"));
     _dataModel->BulkInsert(lastmodel, ms++);
     for (int s = 0; s < m->GetNumSubModels(); ++s) {
         Model *subModel = m->GetSubModel(s);
         xLightsImportModelNode* laststrand;
         if (channelColors.find(subModel->GetName()) != channelColors.end()) {
-            laststrand = new xLightsImportModelNode(lastmodel, m->GetName(), subModel->GetName(), std::string(""), true, channelColors.find(subModel->GetName())->second.asWxColor());
+            laststrand = new xLightsImportModelNode(lastmodel, m->GetName(), subModel->GetName(), std::string(""), true, m->GetAliases(), channelColors.find(subModel->GetName())->second.asWxColor());
         } else {
-            laststrand = new xLightsImportModelNode(lastmodel, m->GetName(), subModel->GetName(), std::string(""), true, *wxWHITE);
+            laststrand = new xLightsImportModelNode(lastmodel, m->GetName(), subModel->GetName(), std::string(""), true, m->GetAliases(), *wxWHITE);
         }
         lastmodel->Append(laststrand);
     }
@@ -873,9 +901,9 @@ void xLightsImportChannelMapDialog::AddModel(Model *m, int &ms) {
         }
         xLightsImportModelNode* laststrand;
         if (channelColors.find(sn.ToStdString()) != channelColors.end()) {
-            laststrand = new xLightsImportModelNode(lastmodel, m->GetName(), sn, std::string(""), true, channelColors.find(sn.ToStdString())->second.asWxColor());
+            laststrand = new xLightsImportModelNode(lastmodel, m->GetName(), sn, std::string(""), true, m->GetAliases(), channelColors.find(sn.ToStdString())->second.asWxColor());
         } else {
-            laststrand = new xLightsImportModelNode(lastmodel, m->GetName(), sn, std::string(""), true, *wxWHITE);
+            laststrand = new xLightsImportModelNode(lastmodel, m->GetName(), sn, std::string(""), true, m->GetAliases(), *wxWHITE);
         }
         lastmodel->Append(laststrand);
         for (int n = 0; n < m->GetStrandLength(s); ++n) {
@@ -885,9 +913,9 @@ void xLightsImportChannelMapDialog::AddModel(Model *m, int &ms) {
             }
             xLightsImportModelNode* lastnode;
             if (channelColors.find(nn.ToStdString()) != channelColors.end()) {
-                lastnode = new xLightsImportModelNode(laststrand, m->GetName(), sn, nn, std::string(""), true, channelColors.find(nn.ToStdString())->second.asWxColor());
+                lastnode = new xLightsImportModelNode(laststrand, m->GetName(), sn, nn, std::string(""), true, m->GetAliases(), channelColors.find(nn.ToStdString())->second.asWxColor());
             } else {
-                lastnode = new xLightsImportModelNode(laststrand, m->GetName(), sn, nn, std::string(""), true, *wxWHITE);
+                lastnode = new xLightsImportModelNode(laststrand, m->GetName(), sn, nn, std::string(""), true, m->GetAliases(), *wxWHITE);
             }
             laststrand->Insert(lastnode, n);
         }
@@ -1730,12 +1758,26 @@ void xLightsImportChannelMapDialog::OnListCtrl_AvailableItemSelect(wxListEvent& 
 
 void xLightsImportChannelMapDialog::OnListCtrl_AvailableColumnClick(wxListEvent& event)
 {
-    if (_sortOrder == 0) {
-        _sortOrder = 1;
-        ListCtrl_Available->SortItems(MyCompareFunctionAsc, (wxIntPtr) ListCtrl_Available);
-    } else {
-        _sortOrder = 0;
-        ListCtrl_Available->SortItems(MyCompareFunctionDesc, (wxIntPtr)ListCtrl_Available);
+    if (event.m_col == 0) {
+        if (_sortOrder == 0) {
+            _sortOrder = 1;
+            ListCtrl_Available->SortItems(MyCompareFunctionAsc, (wxIntPtr)ListCtrl_Available);
+        } else {
+            _sortOrder = 0;
+            ListCtrl_Available->SortItems(MyCompareFunctionDesc, (wxIntPtr)ListCtrl_Available);
+        }
+    }
+    else if (event.m_col == 1)
+    {
+        if (_sortOrder == 3) {
+            _sortOrder = 4;
+            ListCtrl_Available->SortItems(MyCompareFunctionAsc, (wxIntPtr)ListCtrl_Available); // put it back in start order as otherwise this does not work
+            ListCtrl_Available->SortItems(MyCompareFunctionAscEffects, (wxIntPtr)ListCtrl_Available);
+        } else {
+            _sortOrder = 3;
+            ListCtrl_Available->SortItems(MyCompareFunctionAsc, (wxIntPtr)ListCtrl_Available); // put it back in start order as otherwise this does not work
+            ListCtrl_Available->SortItems(MyCompareFunctionDescEffects, (wxIntPtr)ListCtrl_Available);
+        }
     }
 }
 
@@ -2113,7 +2155,7 @@ void xLightsImportChannelMapDialog::MarkUsed()
         if (!std::binary_search(used.begin(), used.end(), ListCtrl_Available->GetItemText(i).ToStdString())) {
             // not used
             ImportChannel* im = GetImportChannel(ListCtrl_Available->GetItemText(i).ToStdString());
-            if (im != nullptr && im->name == "ModelGroup") {
+            if (im != nullptr && im->type == "ModelGroup") {
                 ListCtrl_Available->SetItemTextColour(i, CyanOrBlue());
             } else {
                 ListCtrl_Available->SetItemTextColour(i, wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT));
@@ -2179,25 +2221,28 @@ wxString xLightsImportChannelMapDialog::AggressiveAutomap(const wxString& name) 
 }
 
 void xLightsImportChannelMapDialog::DoAutoMap(
-    std::function<bool (const std::string&, const std::string&, const std::string&, const std::string&)> lambda_model,
-    std::function<bool (const std::string&, const std::string&, const std::string&, const std::string&)> lambda_strand,
-    std::function<bool (const std::string&, const std::string&, const std::string&, const std::string&)> lambda_node,
+    std::function<bool(const std::string&, const std::string&, const std::string&, const std::string&, const std::list<std::string>&)> lambda_model,
+    std::function<bool(const std::string&, const std::string&, const std::string&, const std::string&, const std::list<std::string>&)> lambda_strand,
+    std::function<bool(const std::string&, const std::string&, const std::string&, const std::string&, const std::list<std::string>&)> lambda_node,
     const std::string& extra1, const std::string& extra2, const std::string& mg)
 {
     for (unsigned int i = 0; i < _dataModel->GetChildCount(); ++i) {
         auto model = _dataModel->GetNthChild(i);
         if (model != nullptr) {
+
+            auto aliases = model->GetAliases();
+
             if ((model->IsGroup() && (mg == "B" || mg == "G")) || (!model->IsGroup() && (mg == "B" || mg == "M"))) {
                 for (int j = 0; j < ListCtrl_Available->GetItemCount(); ++j) {
                     wxString const availName = ListCtrl_Available->GetItemText(j).Trim(true).Trim(false).Lower();
                     if (availName.Contains("/")) {
                         wxArrayString const parts = wxSplit(availName, '/');
-                        if (lambda_model(model->_model, parts[0], extra1, extra2)) {
+                        if (lambda_model(model->_model, parts[0], extra1, extra2, aliases)) {
                             // matched the model name ... need to look at strands and submodels
                             for (unsigned int k = 0; k < model->GetChildCount(); ++k) {
                                 auto strand = model->GetNthChild(k);
                                 if (strand != nullptr) {
-                                    if (lambda_strand(strand->_strand, parts[1], extra1, extra2)) {
+                                    if (lambda_strand(strand->_strand, parts[1], extra1, extra2, aliases)) {
                                         // matched to the strand level
                                         if (parts.size() == 2) {
                                             if (strand->_mapping.empty()) {
@@ -2210,7 +2255,7 @@ void xLightsImportChannelMapDialog::DoAutoMap(
                                                 auto node = strand->GetNthChild(m);
                                                 if (node != nullptr) {
                                                     if (node->_mapping.empty()) {
-                                                        if (lambda_node(node->_node, parts[2], extra1, extra2)) {
+                                                        if (lambda_node(node->_node, parts[2], extra1, extra2, aliases)) {
                                                             // matched to the node level
                                                             if (parts.size() == 3) {
                                                                 node->_mapping = ListCtrl_Available->GetItemText(j);
@@ -2228,22 +2273,22 @@ void xLightsImportChannelMapDialog::DoAutoMap(
                             }
                         }
                     } else {
-                        if (model->_mapping.empty() && lambda_model(model->_model, availName, extra1, extra2)) {
+                        if (model->_mapping.empty() && lambda_model(model->_model, availName, extra1, extra2, aliases)) {
                             model->_mapping = ListCtrl_Available->GetItemText(j);
                             model->_mappingExists = true;
                         }
-                        for (unsigned int k = 0; k < model->GetChildCount(); ++k) {
-                            auto strand = model->GetNthChild(k);
-                            if (strand != nullptr) {
-                                if (strand->_mapping.empty() &&lambda_strand(model->_model + "/" + strand->_strand, availName, extra1, extra2)) {
-                                    strand->_mapping = ListCtrl_Available->GetItemText(j);
-                                    strand->_mappingExists = true;
-                                }
+                        //for (unsigned int k = 0; k < model->GetChildCount(); ++k) {
+                        //    auto strand = model->GetNthChild(k);
+                        //    if (strand != nullptr) {
+                        //        if (strand->_mapping.empty() && lambda_strand(model->_model + "/" + strand->_strand, availName, extra1, extra2, aliases)) {
+                        //            strand->_mapping = ListCtrl_Available->GetItemText(j) + "/" + strand->_strand;
+                        //            strand->_mappingExists = true;
+                        //        }
                                 //for (unsigned int m = 0; m < strand->GetChildCount(); ++m) {
                                 //    auto node = strand->GetNthChild(m);
                                 //    if (node != nullptr) {
                                 //        if (node->_mapping.empty()) {
-                                //            if (lambda_node(model->_model + "/" + strand->_strand + "/" + node->_node, availName, extra1, extra2)) {
+                                //            if (lambda_node(model->_model + "/" + strand->_strand + "/" + node->_node, availName, extra1, extra2, aliases)) {
                                 //                // matched to the node level
                                 //                node->_mapping = ListCtrl_Available->GetItemText(j);
                                 //                node->_mappingExists = true;
@@ -2251,8 +2296,8 @@ void xLightsImportChannelMapDialog::DoAutoMap(
                                 //        }
                                 //    }
                                 //}
-                            }
-                        }
+                       //     }
+                      //  }
                     }
                 }
             }
@@ -2572,5 +2617,15 @@ void xLightsImportChannelMapDialog::OnTextCtrl_FindToText(wxCommandEvent& event)
 
         // scroll to it
         TreeListCtrl_Mapping->EnsureVisible(index);
+    }
+}
+
+void xLightsImportChannelMapDialog::OnButton_UpdateAliasesClick(wxCommandEvent& event)
+{
+    for (size_t i = 0; i < _dataModel->GetChildCount(); ++i) {
+        xLightsImportModelNode* m = _dataModel->GetNthChild(i);
+        if (m->HasMapping()) {
+            xlights->GetModel(m->_model)->AddAlias(m->_mapping);
+        }
     }
 }
