@@ -699,11 +699,11 @@ void FacesEffect::drawoutline(RenderBuffer& buffer, int Phoneme, bool outline, c
 
     FacesRenderCache* cache = (FacesRenderCache*)buffer.infoCache[id];
     if (cache == nullptr) {
-        int maxEyeDelay = GetMaxEyeDelay(eyeBlinkFreq);
-        cache = new FacesRenderCache(intRand(0, maxEyeDelay));
+        cache = new FacesRenderCache(0);
         buffer.infoCache[id] = cache;
         cache->seedConsistently(buffer.curPeriod, buffer.BufferWi, buffer.BufferHt, buffer.GetModelName().c_str(), id);
-        cache->nextBlinkTime = cache->prngintc(0, 5000);
+        int maxEyeDelay = GetMaxEyeDelay(eyeBlinkFreq);
+        cache->nextBlinkTime = cache->prngintc(0, maxEyeDelay);
     }
 
     int Ht = BufferHt - 1;
@@ -926,9 +926,9 @@ void FacesEffect::RenderFaces(RenderBuffer& buffer,
 
     FacesRenderCache* cache = (FacesRenderCache*)buffer.infoCache[id];
     if (cache == nullptr) {
+        cache = new FacesRenderCache(0);
         int maxEyeDelay = GetMaxEyeDelay(eyeBlinkFreq);
-        cache = new FacesRenderCache(intRand(0, maxEyeDelay));
-
+        cache->nextBlinkTime = cache->prngintc(0, maxEyeDelay);
         buffer.infoCache[id] = cache;
     }
 
