@@ -21,6 +21,8 @@
 #include "xLightsMain.h"
 #include "support/VectorMath.h"
 #include "models/CustomModel.h"
+#include "utils/string_utils.h"
+#include "xlColourData.h"
 
 #include <log4cpp/Category.hh>
 
@@ -63,6 +65,8 @@ const long ModelStateDialog::ID_SPLITTERWINDOW1 = wxNewId();
 const long ModelStateDialog::ID_TIMER1 = wxNewId();
 
 const long ModelStateDialog::STATE_DIALOG_IMPORT_SUB = wxNewId();
+const long ModelStateDialog::STATE_DIALOG_IMPORT_ALL_SUB = wxNewId();
+const long ModelStateDialog::STATE_DIALOG_COPY_STATES = wxNewId();
 const long ModelStateDialog::STATE_DIALOG_IMPORT_MODEL = wxNewId();
 const long ModelStateDialog::STATE_DIALOG_IMPORT_FILE = wxNewId();
 const long ModelStateDialog::STATE_DIALOG_COPY = wxNewId();
@@ -74,8 +78,6 @@ BEGIN_EVENT_TABLE(ModelStateDialog,wxDialog)
 	//(*EventTable(ModelStateDialog)
 	//*)
 END_EVENT_TABLE()
-
-wxColourData ModelStateDialog::_colorData;
 
 enum {
     SINGLE_NODE_STATE = 0,
@@ -580,12 +582,12 @@ void ModelStateDialog::ClearNodeColor(Model* m) {
 }
 
 xlColor ModelStateDialog::GetRowColor(wxGrid* grid, int const row, bool const prev, bool const force) {
-    if (prev) {
-        return xlColor(255, 100, 255);
-    }
     if (force) {
         return xlColor(grid->GetCellBackgroundColour(row, COLOUR_COL));
     }
+    if (prev) {
+        return xlColor(255, 100, 255);
+    }    
     return xlWHITE;
 }
 
@@ -606,7 +608,7 @@ void ModelStateDialog::SelectRow(wxGrid* grid, int const r) {
                 SetSingleNodeColor(grid, i, c, false);
             }
             // redo the selected row to ensure it is white
-            xlColor const cc = GetRowColor(grid, r, false, CustomColorNodeRanges->IsChecked());
+            xlColor const cc = GetRowColor(grid, r, false, CustomColorSingleNode->IsChecked());
             SetSingleNodeColor(grid, r, cc, true);
         }
     } else if (StateTypeChoice->GetSelection() == NODE_RANGE_STATE) {
@@ -745,11 +747,9 @@ void ModelStateDialog::OnNodeRangeGridCellLeftDClick(wxGridEvent& event)
     else if (event.GetCol() == COLOUR_COL) {
         std::string name = NameChoice->GetString(NameChoice->GetSelection()).ToStdString();
         wxColor c = NodeRangeGrid->GetCellBackgroundColour(event.GetRow(), COLOUR_COL);
-        _colorData.SetColour(c);
-        wxColourDialog dlg(this, &_colorData);
-        if (dlg.ShowModal() == wxID_OK) {
-            _colorData = dlg.GetColourData();
-            NodeRangeGrid->SetCellBackgroundColour(event.GetRow(), COLOUR_COL, dlg.GetColourData().GetColour());
+        auto const& [res, color] = xlColourData::INSTANCE.ShowColorDialog(this, c);
+        if (res == wxID_OK) {
+            NodeRangeGrid->SetCellBackgroundColour(event.GetRow(), COLOUR_COL, color);
             NodeRangeGrid->Refresh();
             GetValue(NodeRangeGrid, event.GetRow(), event.GetCol(), stateData[name]);
         }
@@ -762,11 +762,9 @@ void ModelStateDialog::OnSingleNodeGridCellLeftDClick(wxGridEvent& event)
     if (event.GetCol() == COLOUR_COL) {
         std::string name = NameChoice->GetString(NameChoice->GetSelection()).ToStdString();
         wxColor c = SingleNodeGrid->GetCellBackgroundColour(event.GetRow(), COLOUR_COL);
-        _colorData.SetColour(c);
-        wxColourDialog dlg(this, &_colorData);
-        if (dlg.ShowModal() == wxID_OK) {
-            _colorData = dlg.GetColourData();
-            SingleNodeGrid->SetCellBackgroundColour(event.GetRow(), COLOUR_COL, dlg.GetColourData().GetColour());
+        auto const& [res, color] = xlColourData::INSTANCE.ShowColorDialog(this, c);
+        if (res == wxID_OK) {
+            SingleNodeGrid->SetCellBackgroundColour(event.GetRow(), COLOUR_COL, color);
             SingleNodeGrid->Refresh();
             GetValue(SingleNodeGrid, event.GetRow(), event.GetCol(), stateData[name]);
         }
@@ -807,6 +805,7 @@ void ModelStateDialog::OnNodeRangeGridCellRightClick(wxGridEvent& event)
     wxMenu mnu;
 
     mnu.Append(STATE_DIALOG_IMPORT_SUB, "Import SubModel");
+    mnu.Append(STATE_DIALOG_COPY_STATES, "Copy States");
 
     mnu.Bind(wxEVT_COMMAND_MENU_SELECTED, [gridevent = event, this](wxCommandEvent & rightClkEvent) mutable {
         OnGridPopup(rightClkEvent.GetId(), gridevent);
@@ -853,6 +852,7 @@ void ModelStateDialog::OnButton_ImportClick(wxCommandEvent& event)
     }
     mnu.Append(STATE_DIALOG_IMPORT_MODEL, "Import From Model");
     mnu.Append(STATE_DIALOG_IMPORT_FILE, "Import From File");
+    mnu.Append(STATE_DIALOG_IMPORT_ALL_SUB, "Import From SubModels");
     mnu.AppendSeparator();
     mnu.Append(STATE_DIALOG_SHIFT, "Shift Nodes");
     mnu.Append(STATE_DIALOG_REVERSE, "Reverse Nodes");
@@ -984,9 +984,10 @@ void ModelStateDialog::ValidateWindow()
 
 void ModelStateDialog::OnGridPopup(const int rightEventID, wxGridEvent& gridEvent)
 {
-    if (rightEventID == STATE_DIALOG_IMPORT_SUB)
-    {
+    if (rightEventID == STATE_DIALOG_IMPORT_SUB) {
         ImportSubmodel(gridEvent);
+    } else if (rightEventID == STATE_DIALOG_COPY_STATES) {
+        CopyStates(gridEvent);
     }
 }
 
@@ -1072,32 +1073,22 @@ wxString ModelStateDialog::getSubmodelNodes(Model* sm)
 
 void ModelStateDialog::OnAddBtnPopup(wxCommandEvent& event)
 {
-    if (event.GetId() == STATE_DIALOG_IMPORT_MODEL)
-    {
+    if (event.GetId() == STATE_DIALOG_IMPORT_MODEL) {
         ImportStatesFromModel();
-    }
-    else if (event.GetId() == STATE_DIALOG_IMPORT_FILE)
-    {
+    } else if (event.GetId() == STATE_DIALOG_IMPORT_FILE) {
         const wxString filename = wxFileSelector(_("Choose Model file"), wxEmptyString, wxEmptyString, wxEmptyString, "xModel Files (*.xmodel)|*.xmodel", wxFD_OPEN);
         if (filename.IsEmpty()) return;
-
         ImportStates(filename);
-    }
-    else if (event.GetId() == STATE_DIALOG_COPY)
-    {
+    } else if (event.GetId() == STATE_DIALOG_COPY) {
         CopyStateData();
-    }
-    else if (event.GetId() == STATE_DIALOG_RENAME)
-    {
+    }    else if (event.GetId() == STATE_DIALOG_RENAME) {
         RenameState();
-    }
-    else if(event.GetId() == STATE_DIALOG_SHIFT)
-    {
+    } else if(event.GetId() == STATE_DIALOG_SHIFT) {
         ShiftStateNodes();
-    }
-    else if(event.GetId() == STATE_DIALOG_REVERSE)
-    {
+    } else if(event.GetId() == STATE_DIALOG_REVERSE) {
         ReverseStateNodes();
+    } else if (event.GetId() == STATE_DIALOG_IMPORT_ALL_SUB) {
+        ImportStatesFromSubModels();
     }
 }
 
@@ -1178,6 +1169,58 @@ void ModelStateDialog::ImportStates(const wxString & filename)
     }
 }
 
+void ModelStateDialog::ImportStatesFromSubModels()
+{
+    if (model->GetSubModels().size() == 0) {
+        wxMessageBox("No SubModels Found.");
+        return;
+    }
+    wxTextEntryDialog dlg(this, "New State Model", "Enter name for new state model definition");
+    if (dlg.ShowModal() == wxID_OK) {
+        std::string name = dlg.GetValue().ToStdString();
+        if (NameChoice->FindString(name) == wxNOT_FOUND) {
+            NameChoice->Append(name);
+            NameChoice->SetStringSelection(name);
+            NameChoice->Enable();
+            DeleteButton->Enable();
+            StateTypeChoice->ChangeSelection(NODE_RANGE_STATE);
+            UpdateStateType();
+
+            int idx { 0 };
+            for (Model* sm : model->GetSubModels()) {
+                auto subname = cleanSubName(sm->Name());
+                const auto nodes = getSubmodelNodes(sm);
+                auto newNodeArrray = wxSplit(ExpandNodes(nodes), ',');
+
+                // sort
+                std::sort(newNodeArrray.begin(), newNodeArrray.end(),
+                          [](const wxString& a, const wxString& b) {
+                              return wxAtoi(a) < wxAtoi(b);
+                          });
+
+                // make unique
+                newNodeArrray.erase(std::unique(newNodeArrray.begin(), newNodeArrray.end()), newNodeArrray.end());
+                NodeRangeGrid->SetCellValue(idx, NAME_COL, subname);
+                NodeRangeGrid->SetCellValue(idx, CHANNEL_COL, CompressNodes(wxJoin(newNodeArrray, ',')));
+                GetValue(NodeRangeGrid, idx, NAME_COL, stateData[name]);
+                GetValue(NodeRangeGrid, idx, CHANNEL_COL, stateData[name]);
+                ++idx;
+                if (idx >= 200) {//state max out at 200
+                    break;
+                }
+            }
+            NodeRangeGrid->Refresh();
+        }
+    }
+}
+
+std::string ModelStateDialog::cleanSubName(std::string name)
+{
+    name = ::Lower(name);
+    Replace(name, " ", "_");
+    return name;
+}
+
 void ModelStateDialog::AddStates(std::map<std::string, std::map<std::string, std::string> > states)
 {
     bool overRide = false;
@@ -1229,6 +1272,60 @@ wxArrayString ModelStateDialog::getModelList(ModelManager * modelManager)
         choices.Add(m->Name());
     }
     return choices;
+}
+
+void ModelStateDialog::CopyStates(wxGridEvent& event)
+{
+    std::string name = NameChoice->GetString(NameChoice->GetSelection()).ToStdString();
+    wxArrayString choices;
+
+    for (auto [k, v] : stateData) {
+        if (v["Type"] != stateData[name]["Type"]) {
+            continue;
+        }
+        choices.push_back(ToWXString(k));
+    }
+
+    if (choices.empty()) {
+        DisplayError("No State Definitions Found.");
+        return;
+    }
+
+    wxMultiChoiceDialog dlg(GetParent(), "", "Select States", choices);
+    if (dlg.ShowModal() == wxID_OK) {
+        wxArrayString allNodes;
+        int stateIdx { 1 };
+        for (auto const& idx : dlg.GetSelections()) {
+            auto sd = stateData[choices.at(idx)];
+            for (int x = 1; x <= 200; x++) {
+                std::string pname = "s" + std::to_string(x);
+                if (sd.find(pname) != end(sd) || sd.find(pname + "-Name") != end(sd) || sd.find(pname + "-Color") != end(sd)) {
+                    auto val = sd[pname];
+                    if (val.empty()) {
+                        continue;
+                    }
+
+                    auto n = sd[pname + "-Name"];
+                    if (n.empty()) {
+                        continue;
+                    }
+                    auto c = sd[pname + "-Color"];
+
+                    if ("1" != stateData[name]["CustomColors"]) {
+                        c = "";
+                    }
+                    
+                    std::string newname = "s" + std::to_string(stateIdx);
+                    stateData[name].insert({ newname, val });
+                    stateData[name].insert({ newname + "-Name", n });
+                    stateData[name].insert({ newname + "-Color", c });
+                    ++stateIdx;
+                } 
+            }
+        }
+        SelectStateModel(name);
+        ValidateWindow();
+    }
 }
 
 void ModelStateDialog::OnPreviewLeftUp(wxMouseEvent& event)
