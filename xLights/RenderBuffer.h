@@ -212,6 +212,11 @@ public:
         return std::max(1, (int)color.size());
     }
 
+    size_t ExplicitSize() const
+    {
+        return color.size();
+    }
+
     const ColorCurve& GetColorCurve(size_t idx) const
     {
         if (idx >= cc.size()) {
@@ -445,7 +450,7 @@ public:
     Model* GetModel() const;
     Model* GetPermissiveModel() const; // gets the model even if it is a submodel/strand
     std::string GetModelName() const;
-    wxString GetXmlHeaderInfo(HEADER_INFO_TYPES node_type) const;
+    const wxString &GetXmlHeaderInfo(HEADER_INFO_TYPES node_type) const;
 
     void AlphaBlend(const RenderBuffer& src);
     bool IsNodeBuffer() const { return _nodeBuffer; }
@@ -468,6 +473,14 @@ public:
     void SetPixel(int x, int y, const xlColor &color, bool wrap = false, bool useAlpha = false, bool dmx_ignore = false);
     void SetPixel(int x, int y, const HSVValue& hsv, bool wrap = false);
 
+    //optimized/direct versions only usable in cases where x/y are known to be within bounds
+    void SetPixelDirect(int x, int y, const xlColor &color) {
+        pixels[y * BufferWi + x] = color;
+    }
+    const xlColor& GetPixelDirect(int x, int y) const {
+        return pixels[y * BufferWi + x];
+    }
+
     int GetNodeCount() const { return Nodes.size();}
     void SetNodePixel(int nodeNum, const xlColor &color, bool dmx_ignore = false);
     void CopyNodeColorsToPixels(std::vector<uint8_t> &done);
@@ -485,12 +498,14 @@ public:
     void Fill(const xlColor& color);
     void DrawHLine(int y, int xstart, int xend, const xlColor& color, bool wrap = false);
     void DrawVLine(int x, int ystart, int yend, const xlColor& color, bool wrap = false);
-    void DrawBox(int x1, int y1, int x2, int y2, const xlColor& color, bool wrap = false);
+    void DrawBox(int x1, int y1, int x2, int y2, const xlColor& color, bool wrap = false, bool useAlpha = false);
     void DrawFadingCircle(int x0, int y0, int radius, const xlColor& rgb, bool wrap = false);
     void DrawCircle(int xc, int yc, int r, const xlColor& color, bool filled = false, bool wrap = false);
     void DrawLine(const int x1_, const int y1_, const int x2_, const int y2_, const xlColor& color, bool useAlpha = false);
     void DrawThickLine(const int x1_, const int y1_, const int x2_, const int y2_, const xlColor& color, int thickness, bool useAlpha = false);
     void DrawThickLine(const int x1_, const int y1_, const int x2_, const int y2_, const xlColor& color, bool direction);
+
+    void FillConvexPoly(const std::vector<std::pair<int, int>>& poly, const xlColor& color);
 
     //approximation of sin/cos, but much faster
     static float sin(float rad);
@@ -567,8 +582,6 @@ public:
 
     /* Places to store and data that is needed from one frame to another */
     std::map<int, EffectRenderCache*> infoCache;
-    int tempInt = 0;
-    int tempInt2 = 0;
 
     //place for GPU Renderers to attach extra data/objects it needs
     void *gpuRenderData = nullptr;
