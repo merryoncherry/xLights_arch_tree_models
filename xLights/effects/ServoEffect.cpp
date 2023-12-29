@@ -28,6 +28,7 @@
 #include "../models/DMX/DmxServo.h"
 #include "../models/DMX/DmxServo3D.h"
 #include "../models/DMX/Servo.h"
+#include "../models/ModelGroup.h"
 
 ServoEffect::ServoEffect(int id) : RenderableEffect(id, "Servo", servo_16, servo_24, servo_32, servo_48, servo_64)
 {
@@ -80,6 +81,10 @@ void ServoEffect::SetDefaultParameters() {
 
     dp->ValueCurve_Servo->SetActive(false);
     SetSliderValue(dp->Slider_Servo, 0);
+    dp->Choice_Channel->SetSelection(-1);
+    SetCheckBoxValue(dp->CheckBox_Timing_Track, false);
+    SetCheckBoxValue(dp->CheckBox_16bit, false);
+    dp->Choice_Servo_TimingTrack->SetSelection(-1);
 }
 
 void ServoEffect::Render(Effect *effect, const SettingsMap &SettingsMap, RenderBuffer &buffer) {
@@ -262,13 +267,20 @@ void ServoEffect::SetPanelStatus(Model *cls) {
         return;
     }
 
+    Model* m = cls;
+    if (cls->GetDisplayAs() == "ModelGroup") {
+        m = dynamic_cast<ModelGroup*>(cls)->GetFirstModel();
+        if (m == nullptr)
+            m = cls;
+    }
+
     p->Choice_Servo_TimingTrack->Clear();
     for (const auto& it : wxSplit(GetTimingTracks(0, 3), '|'))
     {
         p->Choice_Servo_TimingTrack->Append(it);
     }
 
-    int num_channels = cls->GetNumChannels();
+    int num_channels = m->GetNumChannels();
 
     wxString choice_ctrl = "ID_CHOICE_Channel";
     wxChoice* choice = (wxChoice*)(p->FindWindowByName(choice_ctrl));
@@ -276,7 +288,7 @@ void ServoEffect::SetPanelStatus(Model *cls) {
     if( choice != nullptr ) {
         choice->Clear();
         for(int i = 0; i <= num_channels; ++i) {
-            std::string name = cls->GetNodeName(i);
+            std::string name = m->GetNodeName(i);
             if( name != "" && name[0] != '-' ) {
                 choice->Append(name);
             }

@@ -123,7 +123,9 @@ void DmxImage::AddTypeProperties(wxPropertyGridInterface *grid) {
     grid->Append(new wxPropertyCategory(base_name, base_name + "Properties"));
 
     wxPGProperty* prop = grid->Append(new wxImageFileProperty("Image", base_name + "Image", _imageFile));
-    prop->SetAttribute(wxPG_FILE_WILDCARD, "Image files|*.png;*.bmp;*.jpg;*.gif;*.jpeg|All files (*.*)|*.*");
+    prop->SetAttribute(wxPG_FILE_WILDCARD, "Image files|*.png;*.bmp;*.jpg;*.gif;*.jpeg"
+                                           ";*.webp"
+                                           "|All files (*.*)|*.*");
 
     prop = grid->Append(new wxFloatProperty("Offset X", base_name + "OffsetX", offset_x * OFFSET_SCALE));
     prop->SetAttribute("Precision", 1);
@@ -376,12 +378,13 @@ void DmxImage::Draw(BaseObject* base, ModelPreview* preview, xlGraphicsProgram *
 
             
             xlColor pink = xlColor(255, 0, 255);
-            vac->AddCircleAsTriangles(0, 0, 0, mw, xlBLACK);
-            vac->AddCircleAsTriangles(0, 0, 0, mw2, pink);
-            vac->AddVertex(0.0-mw/2, 0.0-mw/2, 0, xlBLACK);
-            vac->AddVertex(0.0+mw/2, 0.0+mw/2, 0, xlBLACK);
-            vac->AddVertex(0.0-mw/2, 0.0+mw/2, 0, xlBLACK);
-            vac->AddVertex(0.0+mw/2, 0.0-mw/2, 0, xlBLACK);
+            //stack z coordinates
+            vac->AddCircleAsTriangles(0, 0, 0.001f, mw, xlBLACK);
+            vac->AddCircleAsTriangles(0, 0, 0.002f, mw2, pink);
+            vac->AddVertex(0.0-mw/2, 0.0-mw/2, 0.003f, xlBLACK);
+            vac->AddVertex(0.0+mw/2, 0.0+mw/2, 0.003f, xlBLACK);
+            vac->AddVertex(0.0-mw/2, 0.0+mw/2, 0.003f, xlBLACK);
+            vac->AddVertex(0.0+mw/2, 0.0-mw/2, 0.003f, xlBLACK);
         }
 
         int end = vac->getCount();

@@ -32,11 +32,19 @@
 
 #include "ExternalHooks.h"
 #include <log4cpp/Category.hh>
+#include "utils/string_utils.h"
 
 #include "TraceLog.h"
 using namespace TraceLog;
 
-const std::string Job::EMPTY_STRING = "";
+
+std::string Job::GetStatus() {
+    return xlEMPTY_STRING;
+}
+const std::string Job::GetName() const {
+    return xlEMPTY_STRING;
+}
+
 
 class JobPoolWorker
 {
@@ -391,6 +399,35 @@ void JobPool::PushJob(Job *job)
         UnlockThreads();
     }
     signal.notify_one();
+}
+void JobPool::PushJobs(std::list<Job *> jobs) {
+    std::unique_lock<std::mutex> locker(queueLock);
+    for (auto job : jobs) {
+        queue.push_back(job);
+        ++inFlight;
+    }
+    int count = inFlight;
+    count -= idleThreads;
+    count -= numThreads;
+    count = std::min(count, maxNumThreads - numThreads);
+    locker.unlock();
+    if (count > 0) {
+        LockThreads();
+        if (numThreads == 0 && count < MIN_JOBPOOLTHREADS && MIN_JOBPOOLTHREADS < maxNumThreads) {
+            //when we create first thread, assume we'll need extras real soon
+            count = MIN_JOBPOOLTHREADS;
+        }
+        for (int i = 0; i < count; i++) {
+            threads.push_back(new JobPoolWorker(this));
+            ++numThreads;
+        }
+        UnlockThreads();
+    }
+    if (jobs.size() > 1) {
+        signal.notify_all();
+    } else {
+        signal.notify_one();
+    }
 }
 
 void JobPool::Start(size_t poolSize, size_t minPoolSize)
