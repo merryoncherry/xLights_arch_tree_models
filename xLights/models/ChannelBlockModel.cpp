@@ -16,6 +16,8 @@
 #include "ModelScreenLocation.h"
 #include "../OutputModelManager.h"
 
+#define MAX_CB_CHANNELS 128
+
 std::vector<std::string> ChannelBlockModel::LINE_BUFFER_STYLES;
 
 ChannelBlockModel::ChannelBlockModel(wxXmlNode *node, const ModelManager &manager, bool zeroBased) : ModelWithScreenLocation(manager) 
@@ -45,7 +47,7 @@ void ChannelBlockModel::AddTypeProperties(wxPropertyGridInterface* grid, OutputM
 {
     wxPGProperty *p = grid->Append(new wxUIntProperty("# Channels", "ChannelBlockCount", parm1));
     p->SetAttribute("Min", 1);
-    p->SetAttribute("Max", 64);
+    p->SetAttribute("Max", MAX_CB_CHANNELS);
     p->SetEditor("SpinCtrl");
 
     p = grid->Append(new wxBoolProperty("Indiv Colors", "ChannelProperties", true));
@@ -128,13 +130,13 @@ void ChannelBlockModel::AdjustChannelProperties(wxPropertyGridInterface *grid, i
     }
 }
 
-void ChannelBlockModel::GetBufferSize(const std::string &type, const std::string &camera, const std::string &transform, int &BufferWi, int &BufferHi) const {
+void ChannelBlockModel::GetBufferSize(const std::string &type, const std::string &camera, const std::string &transform, int &BufferWi, int &BufferHi, int stagger) const {
     BufferHi = 1;
     BufferWi = GetNodeCount();
 }
 
 void ChannelBlockModel::InitRenderBufferNodes(const std::string &type, const std::string &camera, const std::string &transform,
-                                        std::vector<NodeBaseClassPtr> &newNodes, int &BufferWi, int &BufferHi, bool deep) const {
+                                        std::vector<NodeBaseClassPtr> &newNodes, int &BufferWi, int &BufferHi, int stagger, bool deep) const {
     BufferHi = 1;
     BufferWi = GetNodeCount();
         

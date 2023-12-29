@@ -12,6 +12,7 @@
 
 #include <deque>
 #include <vector>
+#include <list>
 #include <string>
 #include <mutex>
 #include <atomic>
@@ -22,12 +23,11 @@ public:
     Job() {}
     virtual ~Job() {};
     virtual void Process() = 0;
-    virtual std::string GetStatus() { return EMPTY_STRING; }
     virtual bool DeleteWhenComplete() { return false; }
     virtual bool SetThreadName() { return true; }
-    virtual const std::string GetName() const { return EMPTY_STRING; }
-    
-    const static std::string EMPTY_STRING;
+
+    virtual std::string GetStatus();
+    virtual const std::string GetName() const;
 };
 
 
@@ -53,7 +53,8 @@ public:
     JobPool(const std::string &threadNameBase);
     virtual ~JobPool();
     
-    virtual void PushJob(Job *job);
+    void PushJob(Job *job);
+    void PushJobs(std::list<Job *> jobs);
     int size() const { return (int)threads.size(); }
     int maxSize() const { return maxNumThreads; }
     virtual void Start(size_t poolSize = 1, size_t minPoolSize = 0);

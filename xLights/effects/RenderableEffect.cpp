@@ -856,7 +856,9 @@ void RenderableEffect::AdjustSettingsToBeFitToTime(int effectIdx, SettingsMap &s
             //these all have state/speed requirements
         case EffectManager::eff_PIANO:
             break;
-    }
+        case EffectManager::eff_GUITAR:
+            break;
+        }
     settings.erase("T_CHECKBOX_FitToTime");
     settings.erase("T_SLIDER_Speed");
 }
@@ -910,14 +912,12 @@ void RenderableEffect::SetRadioValue(wxRadioButton *r) {
     r->ProcessWindowEvent(evt);
 }
 
-static const std::string EMPTY_STRING("");
-
 double RenderableEffect::GetValueCurveDouble(const std::string &name, double def, const SettingsMap &SettingsMap, float offset, double min, double max, long startMS, long endMS, int divisor)
 {
     double res = def;
     const std::string vn = "VALUECURVE_" + name;
-    const std::string &vc = SettingsMap.Get(vn, EMPTY_STRING);
-    if (vc != EMPTY_STRING) {
+    const std::string &vc = SettingsMap.Get(vn, xlEMPTY_STRING);
+    if (vc != xlEMPTY_STRING) {
         ValueCurve valc(vc);
         if (valc.IsActive()) {
             valc.SetLimits(min, max);
@@ -936,12 +936,41 @@ double RenderableEffect::GetValueCurveDouble(const std::string &name, double def
     return res;
 }
 
+int RenderableEffect::GetValueCurveIntMax(const std::string& name, int def, const SettingsMap& SettingsMap, int min, int max, int divisor)
+{
+    int res = def;
+
+    const std::string vn = "E_VALUECURVE_" + name;
+    if (SettingsMap.Contains(vn)) {
+        const std::string& vc = SettingsMap.Get(vn, xlEMPTY_STRING);
+
+        ValueCurve valc;
+        valc.SetDivisor(divisor);
+        valc.SetLimits(min, max);
+        valc.Deserialise(vc);
+        if (valc.IsActive()) {
+            return valc.GetMaxValueDivided();
+        }
+    }
+
+    const std::string sn = "E_SLIDER_" + name;
+    const std::string tn = "E_TEXTCTRL_" + name;
+    // bool slider = false;
+    if (SettingsMap.Contains(sn)) {
+        res = SettingsMap.GetInt(sn, def);
+        // slider = true;
+    } else if (SettingsMap.Contains(tn)) {
+        res = SettingsMap.GetInt(tn, def);
+    }
+    return res;
+}
+
 int RenderableEffect::GetValueCurveInt(const std::string &name, int def, const SettingsMap &SettingsMap, float offset, int min, int max, long startMS, long endMS, int divisor)
 {
     int res = def;
     const std::string vn = "VALUECURVE_" + name;
     if (SettingsMap.Contains(vn)) {
-        const std::string &vc = SettingsMap.Get(vn, EMPTY_STRING);
+        const std::string &vc = SettingsMap.Get(vn, xlEMPTY_STRING);
 
         ValueCurve valc;
         valc.SetDivisor(divisor);
