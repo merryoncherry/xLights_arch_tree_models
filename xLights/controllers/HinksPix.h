@@ -19,23 +19,26 @@
 #include "ControllerUploadData.h"
 #include "../UtilClasses.h"
 
+#include <curl/curl.h>
+
 class HinksPix;
 class wxJSONValue;
 
 struct HinksPixOutput {
-    HinksPixOutput(int output_) :
+    HinksPixOutput(int output_ ,int defaultBrightness_) :
         output(output_),
         universe(1),
         startChannel(1),
-        pixels(50),
+        pixels(0),
         direction(0),
         protocol(0),
         nullPixel(0),
         colorOrder(0),
-        brightness(100),
+        brightness(defaultBrightness_),
         gamma(1),
         controllerStartChannel(1),
-        controllerEndChannel(150){};
+        controllerEndChannel(0),
+        used(false){};
     const int output;
     int universe;
     int startChannel;
@@ -46,6 +49,7 @@ struct HinksPixOutput {
     int colorOrder;
     int brightness;
     int gamma;
+    bool used;
 
     int getControllerStartChannel() const { return controllerStartChannel; }
     int getControllerEndChannel() const { return controllerEndChannel; }
@@ -141,7 +145,7 @@ class HinksPix : public BaseController
 #pragma region Member Variables
     EXPType _EXP_Outputs[EXP_PORTS];
     std::string _controllerType;
-    int _numberOfOutputs;
+    CURL* _curl { nullptr };
     int _numberOfUniverses;
     int _MCPU_Version;
 
@@ -160,9 +164,9 @@ class HinksPix : public BaseController
 #pragma endregion
 
 #pragma region Private Functions
-    bool InitControllerOutputData();
+    bool InitControllerOutputData(bool fullControl, int defaultBrightness);
     void InitExpansionBoardData(int expansion, int startport, int length);
-    std::unique_ptr<HinksPixSerial> InitSerialData();
+    std::unique_ptr<HinksPixSerial> InitSerialData(bool fullControl);
 
     bool UploadInputUniverses(Controller* controller, std::vector<HinksPixInputUniverse> const& inputUniverses) const;
     
@@ -185,14 +189,15 @@ class HinksPix : public BaseController
     std::string GetJSONControllerData(std::string const& url, std::string const& data) const;
     bool GetControllerDataJSON(const std::string& url, wxJSONValue& val, std::string const& data) const;
     void PostToControllerNoResponse(std::string const& url, std::string const& data) const;
+    bool CheckPixelOutputs(std::string & message);
+    bool CheckSmartReceivers(std::string & message);
+
     static const std::string GetJSONPostURL() { return "/Xlights_PostData.cgi"; };
     static const std::string GetJSONInfoURL() { return "/XLights_BoardInfo.cgi"; };
     static const std::string GetJSONPortURL() { return "/Xlights_Board_Port_Config.cgi"; };
     static const std::string GetJSONModeURL() { return "/Xlights_Data_Mode.cgi"; };
     static const std::string GetE131URL() { return"/GetE131Data.cgi"; };
     static const std::string GetInfoURL() { return"/GetInfo.cgi"; };
-    const int GetNumberOfOutputs() { return _numberOfOutputs; }
-    const int GetNumberOfSerial() { return 1; }
 
 #pragma endregion
 

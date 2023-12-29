@@ -36,6 +36,7 @@
 #include "TraceLog.h"
 #include "ExternalHooks.h"
 #include "BitmapCache.h"
+#include "utils/CurlManager.h"
 
 #ifndef __WXMSW__
 #include "automation/automation.h"
@@ -123,6 +124,9 @@
 #pragma comment(lib, "swscale.lib")
 #pragma comment(lib, "z.lib")
 #pragma comment(lib, "lua5.3.5-static.lib")
+#pragma comment(lib, "libwebp.lib")
+#pragma comment(lib, "libwebpdecoder.lib")
+#pragma comment(lib, "libwebpdemux.lib")
 #endif
 
 xLightsFrame* xLightsApp::__frame = nullptr;
@@ -678,6 +682,7 @@ bool xLightsApp::ProcessIdle() {
         _nextIdleTime = now + 100;
         return wxApp::ProcessIdle();
     }
+    CurlManager::INSTANCE.processCurls();
     return false;
 }
 
