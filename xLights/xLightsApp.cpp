@@ -36,6 +36,7 @@
 #include "TraceLog.h"
 #include "ExternalHooks.h"
 #include "BitmapCache.h"
+#include "utils/CurlManager.h"
 
 #ifndef __WXMSW__
 #include "automation/automation.h"
@@ -123,6 +124,9 @@
 #pragma comment(lib, "swscale.lib")
 #pragma comment(lib, "z.lib")
 #pragma comment(lib, "lua5.3.5-static.lib")
+#pragma comment(lib, "libwebp.lib")
+#pragma comment(lib, "libwebpdecoder.lib")
+#pragma comment(lib, "libwebpdemux.lib")
 #endif
 
 xLightsFrame* xLightsApp::__frame = nullptr;
@@ -180,7 +184,7 @@ void InitialiseLogging(bool fromMain)
 
                 wxDateTime now = wxDateTime::Now();
                 int millis = wxGetUTCTimeMillis().GetLo() % 1000;
-                wxString ts = wxString::Format("%04d-%02d-%02d_%02d-%02d-%02d-%03d", now.GetYear(), now.GetMonth(), now.GetDay(), now.GetHour(), now.GetMinute(), now.GetSecond(), millis);
+                wxString ts = wxString::Format("%04d-%02d-%02d_%02d-%02d-%02d-%03d", now.GetYear(), now.GetMonth() + 1, now.GetDay(), now.GetHour(), now.GetMinute(), now.GetSecond(), millis);
                 logger_base.info("Start Time: %s.", (const char*)ts.c_str());
 
                 logger_base.info("Log4CPP config read from %s.", (const char*)initFileName.c_str());
@@ -678,6 +682,7 @@ bool xLightsApp::ProcessIdle() {
         _nextIdleTime = now + 100;
         return wxApp::ProcessIdle();
     }
+    CurlManager::INSTANCE.processCurls();
     return false;
 }
 
