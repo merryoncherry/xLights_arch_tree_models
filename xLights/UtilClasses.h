@@ -15,8 +15,10 @@
 #include <algorithm>
 
 #include <wx/filepicker.h>
+#include "UtilFunctions.h"
 
 class EffectManager;
+
 
 class MapStringString: public std::map<std::string,std::string> {
 public:
@@ -25,14 +27,14 @@ public:
     virtual ~MapStringString() {}
 
     const std::string &operator[](const std::string &key) const {
-        return Get(key, EMPTY_STRING);
+        return Get(key, xlEMPTY_STRING);
     }
     std::string &operator[](const std::string &key) {
         return std::map<std::string, std::string>::operator[](key);
     }
     int GetInt(const std::string &key, const int def = 0) const {
         std::map<std::string,std::string>::const_iterator i(find(key));
-        if (i == end() || i->second.length() == 0) {
+        if (i == end() || i->second.length() == 0 || i->second.at(0) == ' ') {
             return def;
         }
         try {
@@ -44,7 +46,7 @@ public:
     float GetFloat(const std::string& key, const float def = 0.0) const
     {
         std::map<std::string, std::string>::const_iterator i(find(key));
-        if (i == end() || i->second.length() == 0) {
+        if (i == end() || i->second.length() == 0 || i->second.at(0) == ' ') {
             return def;
         }
         try {
@@ -57,7 +59,7 @@ public:
     double GetDouble(const std::string& key, const double def = 0.0) const
     {
         std::map<std::string, std::string>::const_iterator i(find(key));
-        if (i == end() || i->second.length() == 0) {
+        if (i == end() || i->second.length() == 0 || i->second.at(0) == ' ') {
             return def;
         }
         try {
@@ -104,7 +106,7 @@ public:
 
     const std::string& operator[](const char* key) const
     {
-        return Get(key, EMPTY_STRING);
+        return Get(key, xlEMPTY_STRING);
     }
     std::string& operator[](const char* ckey)
     {
@@ -205,8 +207,6 @@ private:
         s.erase(s.begin(), std::find_if_not(s.begin(), s.end(), [](char c) { return std::isspace(c); }));
         s.erase(std::find_if_not(s.rbegin(), s.rend(), [](char c) { return std::isspace(c); }).base(), s.end());
     }
-
-    static const std::string EMPTY_STRING;
 };
 
 class SettingsMap: public MapStringString {
@@ -246,7 +246,10 @@ class ImageFilePickerCtrl : public wxFilePickerCtrl
 {
 public:
     ImageFilePickerCtrl(wxWindow *parent, wxWindowID id, const wxString& path, const wxString& message, const wxString& wildcard, const wxPoint &pos, const wxSize &size, long style, const wxValidator &validator, const wxString &name) :
-        wxFilePickerCtrl(parent, id, path, message, "Image files|*.png;*.bmp;*.jpg;*.gif;*.jpeg|All files (*.*)|*.*", pos, size, style, validator, name)
+        wxFilePickerCtrl(parent, id, path, message, "Image files|*.png;*.bmp;*.jpg;*.gif;*.jpeg"
+                                                    ";*.webp"
+                                                    "|All files (*.*)|*.*",
+                         pos, size, style, validator, name)
     {
     }
 };

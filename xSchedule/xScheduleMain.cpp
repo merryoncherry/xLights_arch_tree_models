@@ -90,6 +90,8 @@
 #include "../include/xs_notrandom.xpm"
 #include "../include/xs_volume_down.xpm"
 #include "../include/xs_volume_up.xpm"
+#include "../include/xs_brightness_down.xpm"
+#include "../include/xs_brightness_up.xpm"
 #include "../include/xs_falcon.xpm"
 
 #include "../include/xLights.xpm"
@@ -139,7 +141,9 @@ const long xScheduleFrame::ID_BITMAPBUTTON2 = wxNewId();
 const long xScheduleFrame::ID_BITMAPBUTTON4 = wxNewId();
 const long xScheduleFrame::ID_BITMAPBUTTON5 = wxNewId();
 const long xScheduleFrame::ID_BITMAPBUTTON7 = wxNewId();
+const long xScheduleFrame::ID_BITMAPBUTTON10 = wxNewId();
 const long xScheduleFrame::ID_CUSTOM1 = wxNewId();
+const long xScheduleFrame::ID_BITMAPBUTTON11 = wxNewId();
 const long xScheduleFrame::ID_BITMAPBUTTON8 = wxNewId();
 const long xScheduleFrame::ID_CUSTOM2 = wxNewId();
 const long xScheduleFrame::ID_BITMAPBUTTON9 = wxNewId();
@@ -395,29 +399,33 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
     FlexGridSizer1->AddGrowableCol(0);
     FlexGridSizer1->AddGrowableRow(1);
     Panel2 = new wxPanel(this, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxBORDER_RAISED|wxTAB_TRAVERSAL, _T("ID_PANEL2"));
-    FlexGridSizer5 = new wxFlexGridSizer(0, 11, 0, 0);
-    BitmapButton_OutputToLights = new wxBitmapButton(Panel2, ID_BITMAPBUTTON1, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON1"));
+    FlexGridSizer5 = new wxFlexGridSizer(0, 13, 0, 0);
+    BitmapButton_OutputToLights = new wxBitmapButton(Panel2, ID_BITMAPBUTTON1, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON1"));
     FlexGridSizer5->Add(BitmapButton_OutputToLights, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    BitmapButton_Playing = new wxBitmapButton(Panel2, ID_BITMAPBUTTON3, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON3"));
+    BitmapButton_Playing = new wxBitmapButton(Panel2, ID_BITMAPBUTTON3, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON3"));
     FlexGridSizer5->Add(BitmapButton_Playing, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    BitmapButton_IsScheduled = new wxBitmapButton(Panel2, ID_BITMAPBUTTON6, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON6"));
+    BitmapButton_IsScheduled = new wxBitmapButton(Panel2, ID_BITMAPBUTTON6, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON6"));
     FlexGridSizer5->Add(BitmapButton_IsScheduled, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    BitmapButton_Random = new wxBitmapButton(Panel2, ID_BITMAPBUTTON2, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON2"));
+    BitmapButton_Random = new wxBitmapButton(Panel2, ID_BITMAPBUTTON2, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON2"));
     FlexGridSizer5->Add(BitmapButton_Random, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    BitmapButton_PLLoop = new wxBitmapButton(Panel2, ID_BITMAPBUTTON4, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON4"));
+    BitmapButton_PLLoop = new wxBitmapButton(Panel2, ID_BITMAPBUTTON4, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON4"));
     FlexGridSizer5->Add(BitmapButton_PLLoop, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    BitmapButton_StepLoop = new wxBitmapButton(Panel2, ID_BITMAPBUTTON5, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON5"));
+    BitmapButton_StepLoop = new wxBitmapButton(Panel2, ID_BITMAPBUTTON5, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON5"));
     FlexGridSizer5->Add(BitmapButton_StepLoop, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    BitmapButton_Unsaved = new wxBitmapButton(Panel2, ID_BITMAPBUTTON7, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON7"));
-    FlexGridSizer5->Add(BitmapButton_Unsaved, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    Brightness = new BrightnessControl(Panel2,ID_CUSTOM1,wxDefaultPosition,wxSize(32,32),ZERO,wxDefaultValidator,_T("ID_CUSTOM1"));
+    BitmapButton_Unsaved = new wxBitmapButton(Panel2, ID_BITMAPBUTTON7, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON7"));
+    FlexGridSizer5->Add(BitmapButton_Unsaved, 1, wxRIGHT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    BitmapButton_BrightnessDown = new wxBitmapButton(Panel2, ID_BITMAPBUTTON10, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON10"));
+    FlexGridSizer5->Add(BitmapButton_BrightnessDown, 1, wxTOP|wxBOTTOM|wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    Brightness = new BrightnessControl(Panel2,ID_CUSTOM1,wxDefaultPosition,wxDLG_UNIT(Panel2,wxSize(16,16)),ZERO,wxDefaultValidator,_T("ID_CUSTOM1"));
     FlexGridSizer5->Add(Brightness, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    BitmapButton_VolumeDown = new wxBitmapButton(Panel2, ID_BITMAPBUTTON8, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON8"));
-    FlexGridSizer5->Add(BitmapButton_VolumeDown, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    Custom_Volume = new VolumeDisplay(Panel2,ID_CUSTOM2,wxDefaultPosition,wxSize(32,32),ZERO,wxDefaultValidator,_T("ID_CUSTOM2"));
+    BitmapButton_BrightnessUp = new wxBitmapButton(Panel2, ID_BITMAPBUTTON11, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON11"));
+    FlexGridSizer5->Add(BitmapButton_BrightnessUp, 1, wxTOP|wxBOTTOM|wxRIGHT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    BitmapButton_VolumeDown = new wxBitmapButton(Panel2, ID_BITMAPBUTTON8, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON8"));
+    FlexGridSizer5->Add(BitmapButton_VolumeDown, 1, wxTOP|wxBOTTOM|wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    Custom_Volume = new VolumeDisplay(Panel2,ID_CUSTOM2,wxDefaultPosition,wxDLG_UNIT(Panel2,wxSize(16,16)),ZERO,wxDefaultValidator,_T("ID_CUSTOM2"));
     FlexGridSizer5->Add(Custom_Volume, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    BitmapButton_VolumeUp = new wxBitmapButton(Panel2, ID_BITMAPBUTTON9, wxNullBitmap, wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON9"));
-    FlexGridSizer5->Add(BitmapButton_VolumeUp, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    BitmapButton_VolumeUp = new wxBitmapButton(Panel2, ID_BITMAPBUTTON9, wxNullBitmap, wxDefaultPosition, wxDLG_UNIT(Panel2,wxSize(16,16)), wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_BITMAPBUTTON9"));
+    FlexGridSizer5->Add(BitmapButton_VolumeUp, 1, wxTOP|wxBOTTOM|wxRIGHT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Panel2->SetSizer(FlexGridSizer5);
     FlexGridSizer5->Fit(Panel2);
     FlexGridSizer5->SetSizeHints(Panel2);
@@ -617,8 +625,8 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
     _timerSchedule.SetOwner(this, ID_TIMER2);
     _timerSchedule.Start(50000, false);
     FileDialog1 = new wxFileDialog(this, _("Select file"), wxEmptyString, _("xlights_schedule.xml"), _("xlights_schedule.xml"), wxFD_DEFAULT_STYLE|wxFD_OPEN|wxFD_FILE_MUST_EXIST, wxDefaultPosition, wxDefaultSize, _T("wxFileDialog"));
-    FlexGridSizer1->Fit(this);
-    FlexGridSizer1->SetSizeHints(this);
+    SetSizer(FlexGridSizer1);
+    Layout();
 
     Connect(ID_BITMAPBUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_OutputToLightsClick);
     Connect(ID_BITMAPBUTTON3,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_PlayingClick);
@@ -627,6 +635,8 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
     Connect(ID_BITMAPBUTTON4,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_PLLoopClick);
     Connect(ID_BITMAPBUTTON5,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_StepLoopClick);
     Connect(ID_BITMAPBUTTON7,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_UnsavedClick);
+    Connect(ID_BITMAPBUTTON10,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_BrightnessDownClick);
+    Connect(ID_BITMAPBUTTON11,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_BrightnessUpClick);
     Connect(ID_BITMAPBUTTON8,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_VolumeDownClick);
     Custom_Volume->Connect(wxEVT_LEFT_DOWN,(wxObjectEventFunction)&xScheduleFrame::OnCustom_VolumeLeftDown,0,this);
     Connect(ID_BITMAPBUTTON9,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xScheduleFrame::OnBitmapButton_VolumeUpClick);
@@ -786,9 +796,16 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
     _notrandom = wxBitmap(xs_notrandom);
     _volumeup = wxBitmap(xs_volume_up);
     _volumedown = wxBitmap(xs_volume_down);
+    _brightnessup = wxBitmap(xs_brightness_up);
+    _brightnessdown = wxBitmap(xs_brightness_down);
     _falconremote = wxBitmap(xs_falcon);
 
+    BitmapButton_BrightnessUp->SetToolTip("Increase Brightness");
+    BitmapButton_BrightnessDown->SetToolTip("Decrease Brightness");
     Brightness->SetToolTip("Brightness");
+    BitmapButton_BrightnessDown->SetBitmap(_brightnessdown);
+    BitmapButton_BrightnessUp->SetBitmap(_brightnessup);
+
     BitmapButton_VolumeUp->SetToolTip("Increase Volume");
     BitmapButton_VolumeDown->SetToolTip("Decrease Volume");
     Custom_Volume->SetToolTip("Volume");
@@ -853,7 +870,11 @@ xScheduleFrame::xScheduleFrame(wxWindow* parent, const std::string& showdir, con
 #ifndef NDEBUG
     logger_base.debug("xSchedule Crash Menu item not removed.");
 #ifdef _MSC_VER
-    SetBackgroundColour(*wxGREEN);
+    if (IsDarkMode()) {
+        SetBackgroundColour(wxColour(0x006000));
+    } else {
+        SetBackgroundColour(*wxGREEN);
+    }
 #endif
 #else
     // only keep the crash option if the EnableCrash.txt file exists
@@ -959,7 +980,12 @@ void xScheduleFrame::LoadSchedule()
         StaticText_ShowDir->SetLabel(_showDir);
         if (__schedule->ShowDirectoriesMatch())
         {
-            StaticText_ShowDir->SetForegroundColour(*wxBLACK);
+            if (IsDarkMode()) {
+                StaticText_ShowDir->SetForegroundColour(*wxWHITE);
+            }
+            else {
+                StaticText_ShowDir->SetForegroundColour(*wxBLACK);
+            }
             StaticText_ShowDir->SetFont(wxFont(10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL,
                 wxFONTWEIGHT_NORMAL, false, wxEmptyString, wxFONTENCODING_DEFAULT));
             MenuItem_UsexLightsFolder->Enable(false);
@@ -2678,6 +2704,18 @@ void xScheduleFrame::OnBitmapButton_VolumeUpClick(wxCommandEvent& event)
 void xScheduleFrame::OnCustom_VolumeLeftDown(wxMouseEvent& event)
 {
     __schedule->ToggleMute();
+    UpdateUI();
+}
+
+void xScheduleFrame::OnBitmapButton_BrightnessDownClick(wxCommandEvent& event)
+{
+    __schedule->AdjustBrightness(-5);
+    UpdateUI();
+}
+
+void xScheduleFrame::OnBitmapButton_BrightnessUpClick(wxCommandEvent& event)
+{
+    __schedule->AdjustBrightness(5);
     UpdateUI();
 }
 
