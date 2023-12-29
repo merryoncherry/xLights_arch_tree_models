@@ -18,6 +18,7 @@
 #include <wx/display.h>
 #include <wx/protocol/http.h>
 #include <wx/sstream.h>
+#include <wx/stdpaths.h>
 
 #include <random>
 #include <time.h>
@@ -27,12 +28,13 @@
 #include "xLightsVersion.h"
 #include "ExternalHooks.h"
 
-//#include "string_utils.h"
 
 #include "../xSchedule/wxJSON/json_defs.h"
 #include "../xSchedule/wxJSON/jsonreader.h"
 #include "../xSchedule/wxJSON/jsonval.h"
+
 #include "utils/Curl.h"
+#include "utils/string_utils.h"
 
 #include <mutex>
 #include <string_view>
@@ -61,7 +63,6 @@
 #elif defined (__GCC__) // GCC
 #define thread_local __thread
 #endif
-
 
 
 void DisplayError(const std::string& err, wxWindow* win)
@@ -488,10 +489,21 @@ bool IsFileInShowDir(const wxString& showDir, const std::string filename)
 {
     wxString fixedFile = FixFile(showDir, filename);
 
-    if (fixedFile.StartsWith(showDir)) {
+#ifdef __WXMSW__
+    fixedFile = fixedFile.Lower();
+#endif
+
+    if (fixedFile.StartsWith(showDir
+#ifdef __WXMSW__
+        .Lower()
+#endif
+    )) {
         return true;
     }
     for (auto &d : SearchDirectories) {
+#ifdef __WXMSW__
+        transform(d.begin(), d.end(), d.begin(), ::tolower);
+#endif
         if (fixedFile.StartsWith(d)) {
             return true;
         }
@@ -510,26 +522,23 @@ wxString FixEffectFileParameter(const wxString& paramname, const wxString& param
     return rc;
 }
 
-std::string UnXmlSafe(const wxString &res)
+std::string UnXmlSafe(const std::string &res)
 {
-    if (res.Contains('&')) {
-        wxString r2(res);
-        for (int i = 0; i< 32; ++i)
-        {
-            wxString ss = wxString::Format("&#%d;", i);
-            r2.Replace(ss, wxString::Format("%c", i));
+    if (Contains(res, "&")) {
+        std::string r2(res);
+        for (int i = 0; i< 32; ++i) {
+            std::string ss = "&#" + std::to_string(i);
+            char buf[2] = {(char)i, 0};
+            Replace(r2, ss, buf);
         }
-        r2.Replace("&lt;", "<");
-        r2.Replace("&gt;", ">");
-        r2.Replace("&apos;", "'");
-        r2.Replace("&quot;", "\"");
-        r2.Replace("&amp;", "&");
-        return r2.ToStdString();
+        Replace(r2, "&lt;", "<");
+        Replace(r2, "&gt;", ">");
+        Replace(r2, "&apos;", "'");
+        Replace(r2, "&quot;", "\"");
+        Replace(r2, "&amp;", "&");
+        return r2;
     }
-    // MoC - ToStdString is not as const as it claims, and mutates a temp
-    //   structure in the string in a non-threadsafe way.  UnXmlSafe is
-    //   sometimes called by multiple threads against the same string, so copy it.
-    return res.Clone().ToStdString();
+    return res;
 }
 
 std::string XmlSafe(const std::string& s)
@@ -834,9 +843,9 @@ bool IsVersionOlder(const std::string &compare, const std::string &version)
     {
         if (version_parts.Count() > 2)
         {
-            return true;
+            return false; // remote version has 2 components but local has three so local must be newer
         }
-        return false;
+        return true;
     }
     else
     {
@@ -978,54 +987,6 @@ int NumberAwareStringCompare(const std::string &a, const std::string &b)
             return 1;
         }
     }
-}
-
-double GetSystemContentScaleFactor() {
-#ifdef __WXOSX__
-    return xlOSGetMainScreenContentScaleFactor();
-#else
-    return double(wxScreenDC().GetPPI().y) / 96.0;
-#endif
-}
-
-double ScaleWithSystemDPI(double val)
-{
-#ifdef __WXOSX__
-    //OSX handles all the scaling itself
-    return val;
-#else
-    return ScaleWithSystemDPI(GetSystemContentScaleFactor(), val);
-#endif
-}
-
-double UnScaleWithSystemDPI(double val)
-{
-#ifdef __WXOSX__
-    //OSX handles all the scaling itself
-    return val;
-#else
-    return UnScaleWithSystemDPI(GetSystemContentScaleFactor(), val);
-#endif
-}
-
-double ScaleWithSystemDPI(double scalingFactor, double val)
-{
-#ifdef __WXOSX__
-    //OSX handles all the scaling itself
-    return val;
-#else
-    return val * scalingFactor;
-#endif
-}
-
-double UnScaleWithSystemDPI(double scalingFactor, double val)
-{
-#ifdef __WXOSX__
-    //OSX handles all the scaling itself
-    return val;
-#else
-    return val / scalingFactor;
-#endif
 }
 
 bool IsExcessiveMemoryUsage(double physicalMultiplier)
@@ -1433,7 +1394,7 @@ void DumpBinary(uint8_t* buffer, size_t sz)
 
 wxColor CyanOrBlue()
 {
-    if (wxSystemSettings::GetAppearance().IsDark()) {
+    if (IsDarkMode()) {
         // In Dark Mode blue is hard to read
         return *wxCYAN;
     } else {
@@ -1442,7 +1403,7 @@ wxColor CyanOrBlue()
 }
 wxColor LightOrMediumGrey()
 {
-    if (wxSystemSettings::GetAppearance().IsDark()) {
+    if (IsDarkMode()) {
         static const wxColor medGray(128, 128, 128);
         return medGray;
     } else {
@@ -1484,7 +1445,7 @@ wxString CompressNodes(const wxString& nodes)
 
     for (const auto& i : as)
     {
-        if (i.empty()) {
+        if (i.empty() || i == "0") {
             // Flush out start/last if any
             if (start != -1) {
                 if (last != start) {
@@ -1494,7 +1455,7 @@ wxString CompressNodes(const wxString& nodes)
                 }
             }
             // Add empty and separator
-            res += ",";
+            res += i+",";
             start = last = -1;
             dir = 0;
             continue;
@@ -1687,4 +1648,30 @@ bool IsFloat(const std::string& number)
             return false;
     }
     return true;
+}
+
+#ifdef __WXMSW__
+bool IsSuppressDarkMode()
+{
+    wxConfigBase* config = wxConfigBase::Get();
+    return config->ReadBool("SuppressDarkMode", false);
+}
+
+void SetSuppressDarkMode(bool suppress)
+{
+    if (IsSuppressDarkMode() != suppress) {
+        wxConfigBase* config = wxConfigBase::Get();
+        config->Write("SuppressDarkMode", suppress);
+        wxMessageBox("Restart " + wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetName() + " to enable/disable dark mode properly.");
+    }
+}
+#endif
+
+bool IsDarkMode()
+{
+    return wxSystemSettings::GetAppearance().IsDark() 
+#ifdef __WXMSW__
+        && !IsSuppressDarkMode()
+#endif
+        ;
 }
