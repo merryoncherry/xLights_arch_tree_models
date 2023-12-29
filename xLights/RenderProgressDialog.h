@@ -27,6 +27,7 @@ class RenderProgressDialog: public wxDialog
 		//(*Declarations(RenderProgressDialog)
 		wxFlexGridSizer* scrolledWindowSizer;
 		wxScrolledWindow* scrolledWindow;
+		wxStdDialogButtonSizer* ButtonSizer;
 		//*)
 
 	protected:
