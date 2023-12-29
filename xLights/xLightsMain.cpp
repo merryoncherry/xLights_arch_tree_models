@@ -540,7 +540,8 @@ wxBEGIN_EVENT_TABLE(xlMacDockIcon, wxTaskBarIcon)
         wxEND_EVENT_TABLE()
 #endif
 
-            struct SplashScreenShow {
+struct SplashScreenShow
+{
     SplashScreenShow(bool suppress)
     {
         if (!suppress) {
