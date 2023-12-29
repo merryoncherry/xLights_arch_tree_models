@@ -18,6 +18,7 @@
 #include <wx/display.h>
 #include <wx/protocol/http.h>
 #include <wx/sstream.h>
+#include <wx/stdpaths.h>
 
 #include <random>
 #include <time.h>
@@ -488,10 +489,21 @@ bool IsFileInShowDir(const wxString& showDir, const std::string filename)
 {
     wxString fixedFile = FixFile(showDir, filename);
 
-    if (fixedFile.StartsWith(showDir)) {
+#ifdef __WXMSW__
+    fixedFile = fixedFile.Lower();
+#endif
+
+    if (fixedFile.StartsWith(showDir
+#ifdef __WXMSW__
+        .Lower()
+#endif
+    )) {
         return true;
     }
     for (auto &d : SearchDirectories) {
+#ifdef __WXMSW__
+        transform(d.begin(), d.end(), d.begin(), ::tolower);
+#endif
         if (fixedFile.StartsWith(d)) {
             return true;
         }
@@ -1643,7 +1655,7 @@ void SetSuppressDarkMode(bool suppress)
     if (IsSuppressDarkMode() != suppress) {
         wxConfigBase* config = wxConfigBase::Get();
         config->Write("SuppressDarkMode", suppress);
-        wxMessageBox("Restart xLights to enable/disable dark mode properly.");
+        wxMessageBox("Restart " + wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetName() + " to enable/disable dark mode properly.");
     }
 }
 #endif

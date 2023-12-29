@@ -1140,7 +1140,8 @@ void ShaderEffect::Render(Effect* eff, const SettingsMap& SettingsMap, RenderBuf
         logger_base.warn("Unable to bind to XL_ZOOM");
     }
     if (!si->SetUniform1f("XL_DURATION", (GLfloat)((buffer.GetEndTimeMS() - buffer.GetStartTimeMS()) / 1000.0))) {
-            logger_base.warn("Unable to bind to XL_DURATION");
+        // This may just have been optimized out of the shader program.  If it cannot be set, it is not worth logging.
+        //logger_base.warn("Unable to bind to XL_DURATION");
     }
     if (!si->SetUniform1f("TIME", (GLfloat)(_timeMS) / 1000.0)) {
         if (buffer.curPeriod == buffer.curEffStartPer && _shaderConfig->HasTime()) {
@@ -1160,6 +1161,7 @@ void ShaderEffect::Render(Effect* eff, const SettingsMap& SettingsMap, RenderBuf
             si->SetUniform4f("DATE", dt.GetYear(), dt.GetMonth() + 1, dt.GetDay(), dt.GetHour() * 3600 + dt.GetMinute() * 60 + dt.GetSecond() + (dt.GetMillisecond() / 1000.0));
         }
     }
+    si->SetUniformInt("NUMCOLORS", buffer.GetColorCount());
     si->SetUniformInt("PASSINDEX", 0);
     si->SetUniformInt("FRAMEINDEX", _timeMS / buffer.frameTimeInMs);
     si->SetUniform1f("clearBuffer", SettingsMap.GetBool("CHECKBOX_OverlayBkg", false) ? 1.0 : 0.0);
@@ -1605,6 +1607,7 @@ ShaderConfig::ShaderConfig(const wxString& filename, const wxString& code, const
     "uniform vec2 RENDERSIZE;\n"
     "uniform bool clearBuffer;\n"
     "uniform bool resetNow;\n"
+    "uniform int NUMCOLORS;\n"
     "uniform int PASSINDEX;\n"
     "uniform int FRAMEINDEX;\n"
     "uniform vec2 XL_OFFSET;\n"

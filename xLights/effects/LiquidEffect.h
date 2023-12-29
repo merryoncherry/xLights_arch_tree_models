@@ -130,8 +130,10 @@ protected:
                 bool enabled4, int direction4, int x4, int y4, int velocity4, int flow4, int sourceSize4, bool flowMusic4,
                 const std::string& particleType, int despeckle, float gravity, int gravityAngle);
     void CreateBarrier(b2World* world, float x, float y, float width, float height);
-    void Draw(RenderBuffer& buffer, b2ParticleSystem* ps, const xlColor& color, bool mixColors, int despeckle);
+    void Draw(RenderBuffer& buffer, b2ParticleSystem* ps, const xlColor& color, bool mixColors, int despeckle, float gravityX, float gravityY);
     void CreateParticles(EffectRenderStatePRNG* cache, b2ParticleSystem* ps, int x, int y, int direction, int velocity, int flow, bool flowMusic, int lifetime, int width, int height, const xlColor& c, const std::string& particleType, bool mixcolors, float audioLevel, int sourceSize);
+    void CreateParticles(b2ParticleSystem* ps, int x, int y, int direction, int velocity, int flow, bool flowMusic, int lifetime, int width, int height, const xlColor& c, const std::string& particleType, bool mixcolors, float audioLevel, int sourceSize);
+    bool LostForever(int x, int y, int w, int h, float gravityX, float gravityY);
     void CreateParticleSystem(b2World* world, int lifetime, int size);
     void Step(b2World* world, RenderBuffer& buffer, bool enabled[], int lifetime, const std::string& particleType, bool mixcolors,
               int x1, int y1, int direction1, int velocity1, int flow1, int sourceSize1, bool flowMusic1,
