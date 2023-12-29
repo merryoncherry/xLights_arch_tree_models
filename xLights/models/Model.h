@@ -90,6 +90,8 @@ public:
         PIXEL_STYLE_BLENDED_CIRCLE
     };
 
+    static wxArrayString CONTROLLER_COLORORDER;
+
     Model(const ModelManager& manager);
     virtual ~Model();
     static wxArrayString GetLayoutGroups(const ModelManager& mm);
@@ -169,13 +171,14 @@ public:
     void ImportShadowModels(wxXmlNode* n, xLightsFrame* xlights);
 
     wxString SerialiseSubmodel() const;
+    virtual wxString CreateBufferAsSubmodel() const;
 
     std::map<std::string, std::map<std::string, std::string>> GetDimmingInfo() const;
     virtual std::list<std::string> CheckModelSettings() override;
     virtual const std::vector<std::string>& GetBufferStyles() const { return DEFAULT_BUFFER_STYLES; };
-    virtual void GetBufferSize(const std::string& type, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi) const;
+    virtual void GetBufferSize(const std::string& type, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const;
     virtual void InitRenderBufferNodes(const std::string& type, const std::string& camera, const std::string& transform,
-        std::vector<NodeBaseClassPtr>& Nodes, int& BufferWi, int& BufferHi, bool deep = false) const;
+        std::vector<NodeBaseClassPtr>& Nodes, int& BufferWi, int& BufferHi, int stagger, bool deep = false) const;
     const ModelManager& GetModelManager() const { return modelManager; }
     virtual bool SupportsXlightsModel() { return false; }
     static Model* GetXlightsModel(Model* model, std::string& last_model, xLightsFrame* xlights, bool& cancelled, bool download, wxProgressDialog* prog, int low, int high, ModelPreview* modelPreview);
@@ -322,21 +325,35 @@ public:
     void SetControllerPort(int port);
     void SetControllerBrightness(int brightness);
     void ClearControllerBrightness();
-    bool IsControllerBrightnessSet() const;
-    bool IsShadowModel() const;
-    std::string GetShadowModelFor() const;
-    std::string GetControllerName() const;
-    std::string GetControllerProtocol() const;
-    int GetControllerBrightness() const;
-    int GetControllerDMXChannel() const;
-    int GetSmartRemote() const;
-    bool GetSRCascadeOnPort() const;
-    int GetSRMaxCascade() const;
-    std::vector<std::string> GetSmartRemoteTypes() const;
-    std::string GetSmartRemoteType() const;
-    int GetSmartRemoteTypeIndex(const std::string& srType) const;
-    std::string GetSmartRemoteTypeName(int idx) const;
-    int GetSmartRemoteCount() const;
+    [[nodiscard]] bool IsControllerBrightnessSet() const;
+    [[nodiscard]] bool IsShadowModel() const;
+    [[nodiscard]] std::string GetShadowModelFor() const;
+    [[nodiscard]] std::string GetControllerName() const;
+    [[nodiscard]] std::string GetControllerProtocol() const;
+    [[nodiscard]] int GetControllerBrightness() const;
+    [[nodiscard]] int GetControllerDMXChannel() const;
+    [[nodiscard]] int GetSmartRemote() const;
+    [[nodiscard]] bool GetSRCascadeOnPort() const;
+    [[nodiscard]] int GetSRMaxCascade() const;
+    [[nodiscard]] std::vector<std::string> GetSmartRemoteTypes() const;
+    [[nodiscard]] std::string GetSmartRemoteType() const;
+    [[nodiscard]] int GetSmartRemoteTypeIndex(const std::string& srType) const;
+    [[nodiscard]] std::string GetSmartRemoteTypeName(int idx) const;
+    [[nodiscard]] int GetSmartRemoteCount() const;
+    [[nodiscard]] int GetControllerStartNulls() const;
+    [[nodiscard]] int GetControllerEndNulls() const;
+    [[nodiscard]] wxString GetControllerColorOrder() const;
+    [[nodiscard]] int GetControllerGroupCount() const;
+    void SetControllerStartNulls(int nulls);
+    void SetControllerEndNulls(int nulls);
+    void SetControllerColorOrder(wxString const& color);
+    void SetControllerGroupCount(int grouping);
+
+    bool IsAlias(const std::string& alias, bool oldnameOnly = false) const;
+    void AddAlias(const std::string& alias);
+    void DeleteAlias(const std::string& alias);
+    std::list<std::string> GetAliases() const;
+    void SetAliases(std::list<std::string>& aliases);
 
     void GetPortSR(int string, int& outport, int& outsr) const;
     char GetSmartRemoteLetter() const;
@@ -416,6 +433,9 @@ public:
 
 
     virtual int NodeRenderOrder() { return 0; }
+    float GetPreviewDimScale(ModelPreview* preview, int& w, int& h);
+    void GetScreenLocation(float& sx, float& sy, const NodeBaseClass::CoordStruct& it2, int w, int h, float scale);
+    bool GetScreenLocations(ModelPreview *preview, std::map<int, std::pair<float, float>>& coords);
     wxString GetNodeNear(ModelPreview* preview, wxPoint pt, bool flip);
     std::vector<int> GetNodesInBoundingBox(ModelPreview* preview, wxPoint start, wxPoint end);
     bool IsMultiCoordsPerNode() const;
@@ -618,7 +638,7 @@ public:
         std::string res;
         for (const auto it : layerSizes) {
             if (res != "") res += ",";
-            res += wxString::Format("%d", it);
+            res += std::to_string(it);
         }
         return res;
     }
@@ -651,6 +671,8 @@ public:
         }
     }
     uint32_t GetChannelForNode(int strandIndex, int node) const;
+    
+    [[nodiscard]] std::string GetAttributesAsJSON() const;
 
 protected:
     std::vector<int> layerSizes; // inside to outside
@@ -672,7 +694,7 @@ protected:
         int renderHi = 0;
         int modelChangeCount = 0;
         bool isTransparent = false;
-        float boundingBox[6];
+        float boundingBox[6] = { 0 };
     };
     std::map<std::string, PreviewGraphicsCacheInfo*> uiCaches;
     virtual void deleteUIObjects();

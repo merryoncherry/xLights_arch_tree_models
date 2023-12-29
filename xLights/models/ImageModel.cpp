@@ -50,13 +50,13 @@ ImageModel::~ImageModel()
     }
 }
 
-void ImageModel::GetBufferSize(const std::string &type, const std::string &camera, const std::string &transform, int &BufferWi, int &BufferHi) const {
+void ImageModel::GetBufferSize(const std::string &type, const std::string &camera, const std::string &transform, int &BufferWi, int &BufferHi, int stagger) const {
 	BufferHi = 1;
 	BufferWi = 1;
 }
 
 void ImageModel::InitRenderBufferNodes(const std::string &type, const std::string &camera, const std::string &transform,
-    std::vector<NodeBaseClassPtr> &newNodes, int &BufferWi, int &BufferHi, bool deep) const {
+    std::vector<NodeBaseClassPtr> &newNodes, int &BufferWi, int &BufferHi, int stagger, bool deep) const {
     BufferHi = 1;
     BufferWi = 1;
 
@@ -86,7 +86,9 @@ void ImageModel::AddTypeProperties(wxPropertyGridInterface* grid, OutputManager*
 	wxPGProperty *p = grid->Append(new wxImageFileProperty("Image",
                                              "Image",
                                              _imageFile));
-    p->SetAttribute(wxPG_FILE_WILDCARD, "Image files|*.png;*.bmp;*.jpg;*.gif;*.jpeg|All files (*.*)|*.*");
+    p->SetAttribute(wxPG_FILE_WILDCARD, "Image files|*.png;*.bmp;*.jpg;*.gif;*.jpeg"
+                                        ";*.webp"
+        "|All files (*.*)|*.*");
 
     p = grid->Append(new wxUIntProperty("Off Brightness", "OffBrightness", _offBrightness));
     p->SetAttribute("Min", 0);
@@ -443,9 +445,9 @@ void ImageModel::DisplayModelOnWindow(ModelPreview* preview, xlGraphicsContext *
     
     if ((Selected || (Highlighted && is_3d)) && color != nullptr && allowSelected) {
         if (is_3d) {
-            GetModelScreenLocation().DrawHandles(transparentProgram, preview->GetCameraZoomForHandles(), preview->GetHandleScale(), Highlighted);
+            GetModelScreenLocation().DrawHandles(transparentProgram, preview->GetCameraZoomForHandles(), preview->GetHandleScale(), Highlighted, IsFromBase());
         } else {
-            GetModelScreenLocation().DrawHandles(transparentProgram, preview->GetCameraZoomForHandles(), preview->GetHandleScale());
+            GetModelScreenLocation().DrawHandles(transparentProgram, preview->GetCameraZoomForHandles(), preview->GetHandleScale(), IsFromBase());
         }
     }
 }

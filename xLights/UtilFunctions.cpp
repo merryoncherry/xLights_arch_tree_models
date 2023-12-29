@@ -18,6 +18,7 @@
 #include <wx/display.h>
 #include <wx/protocol/http.h>
 #include <wx/sstream.h>
+#include <wx/stdpaths.h>
 
 #include <random>
 #include <time.h>
@@ -488,10 +489,21 @@ bool IsFileInShowDir(const wxString& showDir, const std::string filename)
 {
     wxString fixedFile = FixFile(showDir, filename);
 
-    if (fixedFile.StartsWith(showDir)) {
+#ifdef __WXMSW__
+    fixedFile = fixedFile.Lower();
+#endif
+
+    if (fixedFile.StartsWith(showDir
+#ifdef __WXMSW__
+        .Lower()
+#endif
+    )) {
         return true;
     }
     for (auto &d : SearchDirectories) {
+#ifdef __WXMSW__
+        transform(d.begin(), d.end(), d.begin(), ::tolower);
+#endif
         if (fixedFile.StartsWith(d)) {
             return true;
         }
@@ -831,9 +843,9 @@ bool IsVersionOlder(const std::string &compare, const std::string &version)
     {
         if (version_parts.Count() > 2)
         {
-            return true;
+            return false; // remote version has 2 components but local has three so local must be newer
         }
-        return false;
+        return true;
     }
     else
     {
@@ -975,54 +987,6 @@ int NumberAwareStringCompare(const std::string &a, const std::string &b)
             return 1;
         }
     }
-}
-
-double GetSystemContentScaleFactor() {
-#ifdef __WXOSX__
-    return xlOSGetMainScreenContentScaleFactor();
-#else
-    return double(wxScreenDC().GetPPI().y) / 96.0;
-#endif
-}
-
-double ScaleWithSystemDPI(double val)
-{
-#ifdef __WXOSX__
-    //OSX handles all the scaling itself
-    return val;
-#else
-    return ScaleWithSystemDPI(GetSystemContentScaleFactor(), val);
-#endif
-}
-
-double UnScaleWithSystemDPI(double val)
-{
-#ifdef __WXOSX__
-    //OSX handles all the scaling itself
-    return val;
-#else
-    return UnScaleWithSystemDPI(GetSystemContentScaleFactor(), val);
-#endif
-}
-
-double ScaleWithSystemDPI(double scalingFactor, double val)
-{
-#ifdef __WXOSX__
-    //OSX handles all the scaling itself
-    return val;
-#else
-    return val * scalingFactor;
-#endif
-}
-
-double UnScaleWithSystemDPI(double scalingFactor, double val)
-{
-#ifdef __WXOSX__
-    //OSX handles all the scaling itself
-    return val;
-#else
-    return val / scalingFactor;
-#endif
 }
 
 bool IsExcessiveMemoryUsage(double physicalMultiplier)
@@ -1430,7 +1394,7 @@ void DumpBinary(uint8_t* buffer, size_t sz)
 
 wxColor CyanOrBlue()
 {
-    if (wxSystemSettings::GetAppearance().IsDark()) {
+    if (IsDarkMode()) {
         // In Dark Mode blue is hard to read
         return *wxCYAN;
     } else {
@@ -1439,7 +1403,7 @@ wxColor CyanOrBlue()
 }
 wxColor LightOrMediumGrey()
 {
-    if (wxSystemSettings::GetAppearance().IsDark()) {
+    if (IsDarkMode()) {
         static const wxColor medGray(128, 128, 128);
         return medGray;
     } else {
@@ -1481,7 +1445,7 @@ wxString CompressNodes(const wxString& nodes)
 
     for (const auto& i : as)
     {
-        if (i.empty()) {
+        if (i.empty() || i == "0") {
             // Flush out start/last if any
             if (start != -1) {
                 if (last != start) {
@@ -1491,7 +1455,7 @@ wxString CompressNodes(const wxString& nodes)
                 }
             }
             // Add empty and separator
-            res += ",";
+            res += i+",";
             start = last = -1;
             dir = 0;
             continue;
@@ -1684,4 +1648,30 @@ bool IsFloat(const std::string& number)
             return false;
     }
     return true;
+}
+
+#ifdef __WXMSW__
+bool IsSuppressDarkMode()
+{
+    wxConfigBase* config = wxConfigBase::Get();
+    return config->ReadBool("SuppressDarkMode", false);
+}
+
+void SetSuppressDarkMode(bool suppress)
+{
+    if (IsSuppressDarkMode() != suppress) {
+        wxConfigBase* config = wxConfigBase::Get();
+        config->Write("SuppressDarkMode", suppress);
+        wxMessageBox("Restart " + wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetName() + " to enable/disable dark mode properly.");
+    }
+}
+#endif
+
+bool IsDarkMode()
+{
+    return wxSystemSettings::GetAppearance().IsDark() 
+#ifdef __WXMSW__
+        && !IsSuppressDarkMode()
+#endif
+        ;
 }

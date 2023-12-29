@@ -579,6 +579,9 @@
     </ClCompile>
     <ClCompile Include="TimeMgt.cpp" />
     <ClCompile Include="StructuredLog.cpp" />
+    <ClCompile Include="..\xLights\utils\CurlManager.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\xlBaseApp.h" />
@@ -1151,6 +1154,9 @@
     </ClInclude>
     <ClInclude Include="TimeMgt.h" />
     <ClInclude Include="StructuredLog.h" />
+    <ClInclude Include="..\xLights\utils\CurlManager.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PlayList">
