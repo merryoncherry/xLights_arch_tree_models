@@ -586,7 +586,7 @@ public:
     //place for GPU Renderers to attach extra data/objects it needs
     void *gpuRenderData = nullptr;
 
-private:
+public:
     friend class PixelBufferClass;
     std::vector<NodeBaseClassPtr> Nodes;
     PathDrawingContext *_pathDrawingContext = nullptr;

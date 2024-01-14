@@ -16,6 +16,7 @@
 #include "../RenderBuffer.h"
 #include "../UtilClasses.h"
 #include "../UtilFunctions.h"
+#include "../models/Model.h"
 
 #include "../../include/shockwave-16.xpm"
 #include "../../include/shockwave-24.xpm"
@@ -115,6 +116,7 @@ void ShockwaveEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
 
     double radius1 = start_radius;
     double radius2 = end_radius;
+    /*
     if (scale) {//convert to percentage of buffer, i.e 100 is 100% of buffer size
         double bufferMax = std::max(buffer.BufferHt, buffer.BufferWi);
         radius1 = radius1 * (bufferMax / 200.0); //200 bc radius is half of the width
@@ -122,6 +124,7 @@ void ShockwaveEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
         start_width = start_width * (bufferMax / 100.0);
         end_width = end_width * (bufferMax / 100.0);
     }
+    */
     double radius_center = radius1 + (radius2 - radius1) * eff_pos_adj;
     double half_width = (start_width + (end_width - start_width) * eff_pos_adj) / 2.0;
     if (half_width < 0.25) {
@@ -131,6 +134,56 @@ void ShockwaveEffect::Render(Effect *effect, const SettingsMap &SettingsMap, Ren
     radius2 = radius_center + half_width;
     radius1 = std::max(0.0, radius1);
 
+    if (scale) {
+        if (start_width == 0 && end_width == 0) {
+            radius1 = 0;
+            radius2 = radius_center;
+        }
+        // Hard codes for now...
+        float xc = 426, yc = 85, zc = 77;
+        int nn = 0;
+        if (buffer.GetPermissiveModel())
+            buffer.GetPermissiveModel()->GetModelScreenLocation().PrepareToDraw(true, false);
+        for (const auto& n : buffer.Nodes) {
+            for (const auto& c : n->Coords) {
+                float x, y, z;
+                if (buffer.GetPermissiveModel() && nn < buffer.GetPermissiveModel()->GetNodeCount()) {
+                    std::vector<std::tuple<float, float, float>> pts;
+                    buffer.GetPermissiveModel()->GetNode3DScreenCoords(nn, pts);
+                    x = std::get<0>(pts[0]);
+                    y = std::get<1>(pts[0]);
+                    z = std::get<2>(pts[0]);
+                    buffer.GetPermissiveModel()->GetModelScreenLocation().TranslatePoint(x, y, z);
+                } else {
+                    x = c.screenX;
+                    y = c.screenY;
+                    z = c.screenZ;
+                }
+                float dx = x - xc, dy = y - yc, dz = z - zc;
+                float r = sqrtf(dx * dx + dy * dy + dz * dz);
+                if (r >= radius1 && r <= radius2) {
+                    if (blend_edges) {
+                        double color_pct = 1.0 - std::abs(r - radius_center) / half_width;
+                        xlColor ncolor(color);
+                        if (buffer.allowAlpha) {
+                            ncolor.alpha = 255.0 * color_pct;
+                        } else {
+                            hsv = color;
+                            hsv.value = hsv.value * color_pct;
+                            ncolor = hsv;
+                        }
+                        buffer.SetNodePixel(nn, ncolor);
+                    } else {
+                        buffer.SetNodePixel(nn, color);
+                    }
+                }
+
+                break;
+            }
+            ++nn;
+        }
+        return;
+    }
     for (int x = 0; x < buffer.BufferWi; x++)
     {
         int x1 = x - xc_adj;

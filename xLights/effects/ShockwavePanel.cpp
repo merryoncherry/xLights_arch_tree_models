@@ -127,7 +127,7 @@ ShockwavePanel::ShockwavePanel(wxWindow* parent) : xlEffectPanel(parent)
 	FlexGridSizer100->Add(BitmapButton_Shockwave_Center_Y, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	StaticText156 = new wxStaticText(Panel10, ID_STATICTEXT_Shockwave_Start_Radius, _("Radius1:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT_Shockwave_Start_Radius"));
 	FlexGridSizer100->Add(StaticText156, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
-	Slider_Shockwave_Start_Radius = new BulkEditSlider(Panel10, ID_SLIDER_Shockwave_Start_Radius, 1, 0, 750, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Shockwave_Start_Radius"));
+	Slider_Shockwave_Start_Radius = new BulkEditSlider(Panel10, ID_SLIDER_Shockwave_Start_Radius, 1, 0, 1250, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Shockwave_Start_Radius"));
 	FlexGridSizer100->Add(Slider_Shockwave_Start_Radius, 1, wxALL|wxEXPAND, 5);
 	BitmapButton_Shockwave_Start_Radius = new BulkEditValueCurveButton(Panel10, ID_VALUECURVE_Shockwave_Start_Radius, GetValueCurveNotSelectedBitmap(), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_VALUECURVE_Shockwave_Start_Radius"));
 	FlexGridSizer100->Add(BitmapButton_Shockwave_Start_Radius, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
@@ -139,7 +139,7 @@ ShockwavePanel::ShockwavePanel(wxWindow* parent) : xlEffectPanel(parent)
 	FlexGridSizer100->Add(BitmapButton_Shockwave_StartRadius, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	StaticText158 = new wxStaticText(Panel10, ID_STATICTEXT_Shockwave_End_Radius, _("Radius2:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT_Shockwave_End_Radius"));
 	FlexGridSizer100->Add(StaticText158, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
-	Slider_Shockwave_End_Radius = new BulkEditSlider(Panel10, ID_SLIDER_Shockwave_End_Radius, 10, 0, 750, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Shockwave_End_Radius"));
+	Slider_Shockwave_End_Radius = new BulkEditSlider(Panel10, ID_SLIDER_Shockwave_End_Radius, 10, 0, 1250, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Shockwave_End_Radius"));
 	FlexGridSizer100->Add(Slider_Shockwave_End_Radius, 1, wxALL|wxEXPAND, 5);
 	BitmapButton_Shockwave_End_Radius = new BulkEditValueCurveButton(Panel10, ID_VALUECURVE_Shockwave_End_Radius, GetValueCurveNotSelectedBitmap(), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_VALUECURVE_Shockwave_End_Radius"));
 	FlexGridSizer100->Add(BitmapButton_Shockwave_End_Radius, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
@@ -151,7 +151,7 @@ ShockwavePanel::ShockwavePanel(wxWindow* parent) : xlEffectPanel(parent)
 	FlexGridSizer100->Add(BitmapButton_Shockwave_EndRadius, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	StaticText157 = new wxStaticText(Panel10, ID_STATICTEXT_Shockwave_Start_Width, _("Width1:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT_Shockwave_Start_Width"));
 	FlexGridSizer100->Add(StaticText157, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
-	Slider_Shockwave_Start_Width = new BulkEditSlider(Panel10, ID_SLIDER_Shockwave_Start_Width, 5, 0, 255, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Shockwave_Start_Width"));
+	Slider_Shockwave_Start_Width = new BulkEditSlider(Panel10, ID_SLIDER_Shockwave_Start_Width, 5, 0, 500, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Shockwave_Start_Width"));
 	FlexGridSizer100->Add(Slider_Shockwave_Start_Width, 1, wxALL|wxEXPAND, 5);
 	BitmapButton_Shockwave_Start_Width = new BulkEditValueCurveButton(Panel10, ID_VALUECURVE_Shockwave_Start_Width, GetValueCurveNotSelectedBitmap(), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_VALUECURVE_Shockwave_Start_Width"));
 	FlexGridSizer100->Add(BitmapButton_Shockwave_Start_Width, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
@@ -163,7 +163,7 @@ ShockwavePanel::ShockwavePanel(wxWindow* parent) : xlEffectPanel(parent)
 	FlexGridSizer100->Add(BitmapButton_Shockwave_StartWidth, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	StaticText159 = new wxStaticText(Panel10, ID_STATICTEXT_Shockwave_End_Width, _("Width2:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT_Shockwave_End_Width"));
 	FlexGridSizer100->Add(StaticText159, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
-	Slider_Shockwave_End_Width = new BulkEditSlider(Panel10, ID_SLIDER_Shockwave_End_Width, 10, 0, 255, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Shockwave_End_Width"));
+	Slider_Shockwave_End_Width = new BulkEditSlider(Panel10, ID_SLIDER_Shockwave_End_Width, 10, 0, 500, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SLIDER_Shockwave_End_Width"));
 	FlexGridSizer100->Add(Slider_Shockwave_End_Width, 1, wxALL|wxEXPAND, 5);
 	BitmapButton_Shockwave_End_Width = new BulkEditValueCurveButton(Panel10, ID_VALUECURVE_Shockwave_End_Width, GetValueCurveNotSelectedBitmap(), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxBORDER_NONE, wxDefaultValidator, _T("ID_VALUECURVE_Shockwave_End_Width"));
 	FlexGridSizer100->Add(BitmapButton_Shockwave_End_Width, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
