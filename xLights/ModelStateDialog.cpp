@@ -330,7 +330,7 @@ void ModelStateDialog::SetStateInfo(Model* cls, std::map<std::string, std::map<s
             }
         }
 
-        std::string desc = info["Desc"]; // If not there, initialize it
+        std::string desc = info["Description"]; // If not there, initialize it
 
         stateData[name] = info;
     }
@@ -457,7 +457,7 @@ void ModelStateDialog::SelectStateModel(const std::string &name) {
         CustomColorNodeRanges->SetValue(SetGrid(NodeRangeGrid, info));
     }
     SelectRow(grid, -1);
-    wxString desc = stateData[name]["Desc"];
+    wxString desc = stateData[name]["Description"];
     if (desc != TextCtrl_ModelStateDescription->GetValue()) {
         TextCtrl_ModelStateDescription->SetValue(desc);
     }
@@ -1463,7 +1463,7 @@ void ModelStateDialog::OnTextCtrl_DescriptionText(wxCommandEvent& event)
 {
     std::string name = NameChoice->GetString(NameChoice->GetSelection()).ToStdString();
     if (name != "") {
-        stateData[name]["Desc"] = TextCtrl_ModelStateDescription->GetValue();
+        stateData[name]["Description"] = TextCtrl_ModelStateDescription->GetValue();
     }
 }
 

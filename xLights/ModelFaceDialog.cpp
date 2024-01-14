@@ -440,6 +440,8 @@ void ModelFaceDialog::SetFaceInfo(Model *cls, std::map< std::string, std::map<st
 			}
 		}
 
+        std::string desc = info["Description"]; // If not there, initialize it
+
         faceData[name] = info;
     }
 
@@ -557,7 +559,7 @@ void ModelFaceDialog::SelectFaceModel(const std::string &name) {
         }
         MatrixImagePlacementChoice->SetStringSelection(w);
     }
-    wxString desc = faceData[name]["Desc"];
+    wxString desc = faceData[name]["Description"];
     if (desc != TextCtrl_ModelFaceDescription->GetValue()) {
         TextCtrl_ModelFaceDescription->SetValue(desc);
     }
@@ -1146,7 +1148,7 @@ void ModelFaceDialog::OnTextCtrl_DescriptionText(wxCommandEvent& event)
 {
     std::string name = NameChoice->GetString(NameChoice->GetSelection()).ToStdString();
     if (name != "") {
-        faceData[name]["Desc"] = TextCtrl_ModelFaceDescription->GetValue();
+        faceData[name]["Description"] = TextCtrl_ModelFaceDescription->GetValue();
     }
 }
 
