@@ -27,6 +27,7 @@
 #include "CachedFileDownloader.h"
 #include "UtilFunctions.h"
 #include "ExternalHooks.h"
+#include "xLightsVersion.h"
 
 class MModel;
 
@@ -848,9 +849,9 @@ wxXmlDocument* VendorModelDialog::GetXMLFromURL(wxURI url, std::string& filename
 
 bool VendorModelDialog::LoadTree(wxProgressDialog* prog, int low, int high)
 {
-    const std::string vendorlink = "https://nutcracker123.com/xlights/vendors/xlights_vendors.xml";
-    const std::string vendorlinkbackup = "https://github.com/xLightsSequencer/xLights/raw/master/download/xlights_vendors.xml";
-    //const std::string vendorlink = "http://localhost/xlights_vendors.xml";
+    const std::string vendorlink = "https://github.com/" XLIGHTS_GH_BRANCH "/raw/master/download/xlights_vendors.xml";
+    const std::string vendorlinkbackup = "https://nutcracker123.com/xlights/vendors/xlights_vendors.xml";
+    // const std::string vendorlink = "http://localhost/xlights_vendors.xml";
 
     std::string filename;
     if (prog != nullptr)

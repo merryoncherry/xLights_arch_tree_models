@@ -31,6 +31,8 @@
 #include "ExternalHooks.h"
 #include <log4cpp/Category.hh>
 
+#include "xLightsVersion.h"
+
 #include "utils/Curl.h"
 #undef min
 #undef max
@@ -364,7 +366,7 @@ wxXmlDocument* ShaderDownloadDialog::GetXMLFromURL(wxURI url, std::string& filen
 
 bool ShaderDownloadDialog::LoadTree(wxProgressDialog* prog, int low, int high)
 {
-    const std::string shaderlink = "https://raw.githubusercontent.com/xLightsSequencer/xLights/master/download/shaders.xml";
+    const std::string shaderlink = "https://raw.githubusercontent.com/" XLIGHTS_GH_BRANCH "/master/download/shaders.xml";
 
     bool rc = true;
     std::string filename;

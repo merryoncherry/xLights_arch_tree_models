@@ -6642,13 +6642,13 @@ void xLightsFrame::OnMenuItem_File_NewXLightsInstance(wxCommandEvent& event)
 void xLightsFrame::OnMenuItem_Help_ReleaseNotesSelected(wxCommandEvent& event)
 {
 #ifdef __WXOSX__
-    std::string loc = "https://raw.githubusercontent.com/xLightsSequencer/xLights/" + xlights_version_string + "/README.txt";
+    std::string loc = "https://raw.githubusercontent.com/" XLIGHTS_GH_BRANCH "/" + xlights_version_string + "/README.txt";
     std::string file = CachedFileDownloader::GetDefaultCache().GetFile(wxURI(loc), CACHETIME_SESSION);
     if (file == "" || !FileExists(file)) {
         // a patch version may not have release notes so strip it off
         std::string vs = xlights_version_string;
         vs = vs.substr(0, vs.find_last_of("."));
-        loc = "https://raw.githubusercontent.com/xLightsSequencer/xLights/" + vs + "/README.txt";
+        loc = "https://raw.githubusercontent.com/" XLIGHTS_GH_BRANCH "/" + vs + "/README.txt";
     }
     ::wxLaunchDefaultBrowser(loc);
 #else
@@ -6663,7 +6663,7 @@ void xLightsFrame::OnMenuItem_Help_ReleaseNotesSelected(wxCommandEvent& event)
 
 void xLightsFrame::OnMenuItem_Help_Isue_TrackerSelected(wxCommandEvent& event)
 {
-    ::wxLaunchDefaultBrowser("https://github.com/xLightsSequencer/xLights/issues");
+    ::wxLaunchDefaultBrowser("https://github.com/" XLIGHTS_GH_BRANCH "/issues");
 }
 
 void xLightsFrame::OnMenuItem_Help_FacebookSelected(wxCommandEvent& event)
@@ -8601,7 +8601,7 @@ bool xLightsFrame::CheckForUpdate(int maxRetries, bool canSkipUpdates, bool show
 #ifdef LINUX
     wxString hostname = wxT("www.adebenham.com");
     wxString path = wxT("/wp-content/uploads/xlights/latest.php");
-    wxString downloadUrl = wxT("https://github.com/xLightsSequencer/xLights/releases/latest");
+    wxString downloadUrl = wxT("https://github.com/" XLIGHTS_GH_BRANCH "/releases/latest");
     MenuItem_Update->Enable(true);
 #else
 #ifdef __WXOSX__

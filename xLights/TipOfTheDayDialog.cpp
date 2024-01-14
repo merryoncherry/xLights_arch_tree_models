@@ -22,14 +22,15 @@
 #include "xLightsMain.h"
 #include "utils/Curl.h"
 #include "CachedFileDownloader.h"
+#include "xLightsVersion.h"
 
 #include <log4cpp/Category.hh>
 
 #ifdef USE_WEBVIEW_FOR_TOD
 #include <wx/webview.h>
-static const std::string TOD_BASE_URL = "https://raw.githack.com/xLightsSequencer/xLights/master/TipOfDay/";
+static const std::string TOD_BASE_URL = "https://raw.githack.com/" XLIGHTS_GH_BRANCH "/master/TipOfDay/";
 #else
-static const std::string TOD_BASE_URL = "https://raw.githubusercontent.com/xLightsSequencer/xLights/master/TipOfDay/";
+static const std::string TOD_BASE_URL = "https://raw.githubusercontent.com/" XLIGHTS_GH_BRANCH  "/master/TipOfDay/";
 #endif
 
 #define USE_GITHUB_HOSTED_TOD

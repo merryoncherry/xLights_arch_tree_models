@@ -27,4 +27,8 @@ static const wxString xlights_build_date      = __DATE__;
 const wxString &GetBitness();
 wxString GetDisplayVersionString();
 
+#ifndef XLIGHTS_GH_BRANCH
+#define XLIGHTS_GH_BRANCH "xLightsSequencer/xLights"
+#endif
+
 #define WXWIDGETS_VERSION "33"
