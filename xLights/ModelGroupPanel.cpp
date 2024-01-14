@@ -480,7 +480,7 @@ void ModelGroupPanel::UpdatePanel(const std::string& group)
             }
         }
 
-        auto desc = e->GetAttribute("desc", "");
+        auto desc = e->GetAttribute("Description", "");
         if (TextCtrl_ModelGroupDesc->GetValue() != desc) {
             TextCtrl_ModelGroupDesc->SetValue(desc);
         }
@@ -745,8 +745,8 @@ void ModelGroupPanel::SaveGroupChanges()
     }
     e->DeleteAttribute("DefaultCamera");
     e->AddAttribute("DefaultCamera", Choice_DefaultCamera->GetStringSelection());
-    e->DeleteAttribute("desc");
-    e->AddAttribute("desc", TextCtrl_ModelGroupDesc->GetValue());
+    e->DeleteAttribute("Description");
+    e->AddAttribute("Description", TextCtrl_ModelGroupDesc->GetValue());
     switch (ChoiceModelLayoutType->GetSelection()) {
     case 0:
         e->AddAttribute("layout", "grid");
@@ -1395,11 +1395,11 @@ void ModelGroupPanel::OnTextCtrl_DescriptionText(wxCommandEvent& event)
     if (g == nullptr) return;
     wxXmlNode* e = g->GetModelXml();
 
-    wxString curDesc = e->GetAttribute("desc", "");
+    wxString curDesc = e->GetAttribute("Description", "");
     wxString newDesc = TextCtrl_ModelGroupDesc->GetValue();
     if (curDesc != newDesc) {
-        e->DeleteAttribute("desc");
-        e->AddAttribute("desc", TextCtrl_ModelGroupDesc->GetValue());
+        e->DeleteAttribute("Description");
+        e->AddAttribute("Description", TextCtrl_ModelGroupDesc->GetValue());
         // This is a bit slow, but turns the button pink
         layoutPanel->ModelGroupUpdated(g, false);
     }

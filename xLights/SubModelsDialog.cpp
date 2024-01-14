@@ -639,7 +639,7 @@ void SubModelsDialog::SaveXML(Model *m)
     for (auto a = _subModels.begin(); a != _subModels.end(); ++a) {
         child = new wxXmlNode(wxXML_ELEMENT_NODE, "subModel");
         child->AddAttribute("name", (*a)->name);
-        child->AddAttribute("desc", (*a)->description);
+        child->AddAttribute("Description", (*a)->description);
         child->AddAttribute("layout", (*a)->vertical ? "vertical" : "horizontal");
         child->AddAttribute("type", (*a)->isRanges ? "ranges" : "subbuffer");
         child->AddAttribute("bufferstyle", (*a)->bufferStyle);
@@ -3242,7 +3242,7 @@ void SubModelsDialog::ReadSubModelXML(wxXmlNode* xmlData)
             SubModelInfo *sm = new SubModelInfo(name);
             sm->name = name;
             sm->oldName = name;
-            sm->description = child->GetAttribute("desc", "");
+            sm->description = child->GetAttribute("Description", "");
             sm->isRanges = child->GetAttribute("type", "ranges") == "ranges";
             sm->vertical = child->GetAttribute("layout") == "vertical";
             sm->subBuffer = child->GetAttribute("subBuffer");
@@ -3563,7 +3563,7 @@ void SubModelsDialog::ImportCustomModel(std::string filename)
                         {
                             auto smname = n->GetAttribute("name");
                             SubModelInfo* sm2 = new SubModelInfo(name + "-" + smname);
-                            sm2->description = n->GetAttribute("desc", "");
+                            sm2->description = n->GetAttribute("Description", "");
                             sm2->vertical = n->GetAttribute("layout", "horizontal") == "vertical";
                             sm2->strands.clear();
                             sm2->isRanges = n->GetAttribute("type", "") == "ranges";
