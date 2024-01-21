@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 // Author:    Matt Brown (dowdybrown@yahoo.com)
 // Created:   2012-11-03
@@ -103,6 +103,7 @@
 #include "effects/StateEffect.h"
 #include "graphics/opengl/xlGLCanvas.h"
 #include "models/ModelGroup.h"
+#include "models/RulerObject.h"
 #include "models/SubModel.h"
 #include "models/ViewObject.h"
 #include "outputs/ControllerEthernet.h"
@@ -127,6 +128,8 @@
 #include <xlsxwriter.h>
 
 #include "wxWEBPHandler/wx/imagwebp.h"
+
+#include <log4cpp/Category.hh>
 
 //(*InternalHeaders(xLightsFrame)
 #include <wx/bitmap.h>
@@ -2651,7 +2654,7 @@ bool xLightsFrame::ShowFolderIsInBackup(const std::string showdir)
     int i = showdir.length() - 1;
     wxString dir = "";
     while (i >= 0) {
-        if (showdir[i] == '\\' || showdir == '/') {
+        if (showdir[i] == '\\' || showdir == "/") {
             if (dir.Lower() == "backup") {
                 return true;
             }
@@ -2752,7 +2755,7 @@ void xLightsFrame::DoBackup(bool prompt, bool startup, bool forceallfiles)
         return;
     }
 
-    wxString newDirBackup = _backupDirectory + wxFileName::GetPathSeparator() + "Backup";
+    wxString newDirBackup = _backupDirectory + GetPathSeparator() + "Backup";
 
     if (!wxDirExists(newDirBackup) && !newDirH.Mkdir(newDirBackup)) {
         DisplayError(wxString::Format("Unable to create backup directory '%s'!", newDirBackup).ToStdString());
@@ -4436,7 +4439,15 @@ void xLightsFrame::ExportModels(wxString const& filename)
         col_widths[col] = std::max(text.size() + FACTOR, col_widths[col]);
     };
 
-    const std::vector<std::string> model_header_cols{ "Model Name", "Shadowing", "Description", "Display As", "Dimensions", "String Type", "String Count", "Node Count", "Light Count", "Est Current (Amps)", "Channels Per Node", "Channel Count", "Start Channel", "Start Channel No", "#Universe(or id):Start Channel", "End Channel No", "Default Buffer W x H", "Preview", "Controller Ports", "Connection Protocol", "Connection Attributes", "Controller Name", "Controller Type", "Protocol", "Controller Description", "IP", "Baud", "Universe/Id", "Universe Channel", "Controller Channel", "Active" };
+    RulerObject* ruler = RulerObject::GetRuler();
+
+    std::vector<std::string> model_header_cols{ "Model Name", "Shadowing", "Description", "Display As", "Dimensions", "String Type", "String Count", "Node Count", "Light Count", "Est Current (Amps)", "Channels Per Node", "Channel Count", "Start Channel", "Start Channel No", "#Universe(or id):Start Channel", "End Channel No", "Default Buffer W x H", "Preview", "Controller Ports", "Connection Protocol", "Connection Attributes", "Controller Name", "Controller Type", "Protocol", "Controller Description", "IP", "Baud", "Universe/Id", "Universe Channel", "Controller Channel", "Active"};
+    if (ruler != nullptr) {
+        std::string unitDescription = ruler->GetUnitDescription();
+        model_header_cols.push_back("Location X (" + unitDescription + ")");
+        model_header_cols.push_back("Location Y (" + unitDescription + ")");
+        model_header_cols.push_back("Location Z (" + unitDescription + ")");
+    }
 
     std::map<int, double> _model_col_widths;
     for (int i = 0; i < model_header_cols.size(); i++) {
@@ -4516,6 +4527,14 @@ void xLightsFrame::ExportModels(wxString const& filename)
             worksheet_write_number(modelsheet, row, 28, stuc, format);
             worksheet_write_number(modelsheet, row, 29, channeloffset, format);
             write_worksheet_string(modelsheet, row, 30, inactive, format, _model_col_widths);
+
+            glm::vec3 position = model->GetBaseObjectScreenLocation().GetWorldPosition();
+            if (ruler != nullptr) {
+                worksheet_write_number(modelsheet, row, 31, ruler->Measure(position.x), format);
+                worksheet_write_number(modelsheet, row, 32, ruler->Measure(position.y), format);
+                worksheet_write_number(modelsheet, row, 33, ruler->Measure(position.z), format);
+            }
+
             ++row;
 
             if (ch < minchannel) {
@@ -6629,13 +6648,13 @@ void xLightsFrame::OnMenuItem_File_NewXLightsInstance(wxCommandEvent& event)
 void xLightsFrame::OnMenuItem_Help_ReleaseNotesSelected(wxCommandEvent& event)
 {
 #ifdef __WXOSX__
-    std::string loc = "https://raw.githubusercontent.com/smeighan/xLights/" + xlights_version_string + "/README.txt";
+    std::string loc = "https://raw.githubusercontent.com/xLightsSequencer/xLights/" + xlights_version_string + "/README.txt";
     std::string file = CachedFileDownloader::GetDefaultCache().GetFile(wxURI(loc), CACHETIME_SESSION);
     if (file == "" || !FileExists(file)) {
         // a patch version may not have release notes so strip it off
         std::string vs = xlights_version_string;
         vs = vs.substr(0, vs.find_last_of("."));
-        loc = "https://raw.githubusercontent.com/smeighan/xLights/" + vs + "/README.txt";
+        loc = "https://raw.githubusercontent.com/xLightsSequencer/xLights/" + vs + "/README.txt";
     }
     ::wxLaunchDefaultBrowser(loc);
 #else
@@ -6650,7 +6669,7 @@ void xLightsFrame::OnMenuItem_Help_ReleaseNotesSelected(wxCommandEvent& event)
 
 void xLightsFrame::OnMenuItem_Help_Isue_TrackerSelected(wxCommandEvent& event)
 {
-    ::wxLaunchDefaultBrowser("https://github.com/smeighan/xLights/issues");
+    ::wxLaunchDefaultBrowser("https://github.com/xLightsSequencer/xLights/issues");
 }
 
 void xLightsFrame::OnMenuItem_Help_FacebookSelected(wxCommandEvent& event)
@@ -8549,7 +8568,7 @@ void xLightsFrame::OnMenuItemBatchRenderSelected(wxCommandEvent& event)
         wxArrayString files = dlg.GetFileList();
         wxArrayString filesToRender;
         for (auto f : files) {
-            wxFileName fname(this->GetShowDirectory() + wxFileName::GetPathSeparator() + f);
+            wxFileName fname(this->GetShowDirectory() + GetPathSeparator() + f);
             if (FileExists(fname))
                 filesToRender.push_back(fname.GetFullPath());
             else
@@ -8588,7 +8607,7 @@ bool xLightsFrame::CheckForUpdate(int maxRetries, bool canSkipUpdates, bool show
 #ifdef LINUX
     wxString hostname = wxT("www.adebenham.com");
     wxString path = wxT("/wp-content/uploads/xlights/latest.php");
-    wxString downloadUrl = wxT("https://github.com/smeighan/xLights/releases/latest");
+    wxString downloadUrl = wxT("https://github.com/xLightsSequencer/xLights/releases/latest");
     MenuItem_Update->Enable(true);
 #else
 #ifdef __WXOSX__
@@ -8917,7 +8936,7 @@ void xLightsFrame::DoBackupPurge()
 
     logger_base.debug("    Keep backups on or after %s.", (const char*)purgeDate.FormatISODate().c_str());
 
-    wxString backupDir = _backupDirectory + wxFileName::GetPathSeparator() + "Backup";
+    wxString backupDir = _backupDirectory + GetPathSeparator() + "Backup";
 
     int count = 0;
     int purged = 0;
@@ -10082,8 +10101,8 @@ void xLightsFrame::OnMenuItemRestoreBackupSelected(wxCommandEvent& event)
         std::string errors;
         for (auto const& file : restoreFiles) {
             prgs.Pulse("Restoring '" + file + "'...");
-            bool success = wxCopyFile(restoreFolder + wxFileName::GetPathSeparator() + file,
-                                      showDirectory + wxFileName::GetPathSeparator() + file);
+            bool success = wxCopyFile(restoreFolder + GetPathSeparator() + file,
+                                      showDirectory + GetPathSeparator() + file);
             if (!success) {
                 errors += "Unable to copy file \"" + file + "\"\n";
             }

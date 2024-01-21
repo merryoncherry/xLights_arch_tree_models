@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/config.h>
@@ -444,7 +444,7 @@ void xLightsFrame::OpenSequence(const wxString& passed_filename, ConvertLogDialo
                 while (fcont) {
                     if (audFile != "Backup") {
                         // search directory
-                        detect_audio.SetPath(GetShowDirectory() + wxFileName::GetPathSeparator() + audFile);
+                        detect_audio.SetPath(GetShowDirectory() + GetPathSeparator() + audFile);
                         if (FileExists(detect_audio)) {
                             media_file = detect_audio;
                             ObtainAccessToURL(media_file.GetFullPath().ToStdString());
@@ -2561,7 +2561,7 @@ void MapOnEffects(EffectManager& effectManager, EffectLayer* layer, wxXmlNode* c
     std::string palette = "C_BUTTON_Palette1=#FFFFFF,C_CHECKBOX_Palette1=1";
     if (chancountpernode > 1) {
         xlColor color1(color);
-        palette = "C_BUTTON_Palette1=" + color1 + ",C_CHECKBOX_Palette1=1";
+        palette = "C_BUTTON_Palette1=" + (std::string)color1 + ",C_CHECKBOX_Palette1=1";
     }
 
     for (wxXmlNode* ch = channel->GetChildren(); ch != nullptr; ch = ch->GetNext()) {
