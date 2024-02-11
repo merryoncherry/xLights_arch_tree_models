@@ -642,7 +642,7 @@ bool xLightsApp::OnInit()
     BitmapCache::SetupArtProvider();
     if (wxsOK)
     {
-    	xLightsFrame* Frame = new xLightsFrame(nullptr, ab, -1, renderOnlyMode, startDim);
+        xLightsFrame* Frame = new xLightsFrame(nullptr, ab, -1, renderOnlyMode, startDim);
         if (Frame->CurrentDir == "") {
             logger_base.info("Show directory not set");
         }
