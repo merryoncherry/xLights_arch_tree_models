@@ -3897,6 +3897,10 @@ void LayoutPanel::OnPreviewMouseWheel(wxMouseEvent& event)
                 float centery = modelPreview->getHeight() / 2.0f;
                 float deltax = mouse_x - centerx;
                 float deltay = mouse_y - centery;
+                if( !xlights->ZoomMethodToCursor() ) {
+                    deltax = 0;
+                    deltay = 0;
+                }
                 float zoom_delta = event.GetWheelRotation() > 0 ? -0.1f : 0.1f;
                 if (fromTrackPad) {
                     float f = event.GetWheelRotation();
