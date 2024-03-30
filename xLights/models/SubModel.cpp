@@ -411,7 +411,6 @@ void SubModel::GetBufferSize(const std::string &type, const std::string &camera,
         } else {
             Model::GetBufferSize(type, camera, transform, BufferWi, BufferHi, stagger);
         }
-<<<<<<< HEAD
     } else if (isRanges && type == SINGLE_LINE) {
         int nNodes = 0;
         int d1, d2;
