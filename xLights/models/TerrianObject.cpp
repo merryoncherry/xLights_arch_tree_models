@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/xml/xml.h>
@@ -138,7 +138,7 @@ void TerrianObject::AddTypeProperties(wxPropertyGridInterface* grid, OutputManag
         p = grid->Append(new wxStringProperty("Terrian Spacing", "RealSpacing",
             RulerObject::PrescaledMeasureDescription(RulerObject::Measure(spacing))
         ));
-        p->ChangeFlag(wxPG_PROP_READONLY, true);
+        p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
         p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
     }
 }

@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/xml/xml.h>
@@ -169,6 +169,7 @@ private:
         bool effectMixVaries;
         bool canvas = false;
         bool persistent = false;
+        bool renderingDisabled = false;
         int fadeInSteps;
         int fadeOutSteps;
         std::string inTransitionType;
@@ -286,7 +287,8 @@ public:
 
     void Clear(int which);
 
-    void SetLayerSettings(int layer, const SettingsMap &settings);
+    void SetLayerSettings(int layer, const SettingsMap &settings, bool layerEnabled);
+    bool IsRenderingDisabled(int layer) const;
     bool IsPersistent(int layer);
     int GetFreezeFrame(int layer);
     int GetSuppressUntil(int layer);

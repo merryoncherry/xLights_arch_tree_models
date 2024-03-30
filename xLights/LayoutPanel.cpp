@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
  //(*InternalHeaders(LayoutPanel)
@@ -191,6 +191,7 @@ const long LayoutPanel::ID_MNU_DELETE_MODEL_GROUP = wxNewId();
 const long LayoutPanel::ID_MNU_DELETE_EMPTY_MODEL_GROUPS = wxNewId();
 const long LayoutPanel::ID_MNU_RENAME_MODEL_GROUP = wxNewId();
 const long LayoutPanel::ID_MNU_CLONE_MODEL_GROUP = wxNewId();
+const long LayoutPanel::ID_MNU_BULKEDIT_GROUP_TAGCOLOR = wxNewId();
 const long LayoutPanel::ID_MNU_MAKESCVALID = wxNewId();
 const long LayoutPanel::ID_MNU_MAKEALLSCVALID = wxNewId();
 const long LayoutPanel::ID_MNU_MAKEALLSCNOTOVERLAPPING = wxNewId();
@@ -230,6 +231,7 @@ const long LayoutPanel::ID_PREVIEW_MODEL_CAD_EXPORT = wxNewId();
 const long LayoutPanel::ID_PREVIEW_LAYOUT_DXF_EXPORT = wxNewId();
 const long LayoutPanel::ID_PREVIEW_FLIP_HORIZONTAL = wxNewId();
 const long LayoutPanel::ID_PREVIEW_FLIP_VERTICAL = wxNewId();
+const long LayoutPanel::ID_SET_CENTER_OFFSET = wxNewId();
 
 #define CHNUMWIDTH "10000000000000"
 
@@ -334,14 +336,14 @@ LayoutPanel::LayoutPanel(wxWindow* parent, xLightsFrame *xl, wxPanel* sequencer)
 	FlexGridSizerPreview = new wxFlexGridSizer(1, 1, 0, 0);
 	FlexGridSizerPreview->AddGrowableCol(0);
 	FlexGridSizerPreview->AddGrowableRow(0);
-	SplitterWindow2 = new wxSplitterWindow(this, ID_SPLITTERWINDOW2, wxDefaultPosition, wxDefaultSize, wxSP_3D, _T("ID_SPLITTERWINDOW2"));
+	SplitterWindow2 = new wxSplitterWindow(this, ID_SPLITTERWINDOW2, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE, _T("ID_SPLITTERWINDOW2"));
 	SplitterWindow2->SetMinimumPaneSize(10);
 	SplitterWindow2->SetSashGravity(0.5);
 	LeftPanel = new wxPanel(SplitterWindow2, ID_PANEL5, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL5"));
 	LeftPanelSizer = new wxFlexGridSizer(0, 1, 0, 0);
 	LeftPanelSizer->AddGrowableCol(0);
 	LeftPanelSizer->AddGrowableRow(0);
-	ModelSplitter = new wxSplitterWindow(LeftPanel, ID_SPLITTERWINDOW1, wxDefaultPosition, wxDefaultSize, wxSP_3D, _T("ID_SPLITTERWINDOW1"));
+	ModelSplitter = new wxSplitterWindow(LeftPanel, ID_SPLITTERWINDOW1, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE, _T("ID_SPLITTERWINDOW1"));
 	ModelSplitter->SetMinimumPaneSize(100);
 	ModelSplitter->SetSashGravity(0.5);
 	FirstPanel = new wxPanel(ModelSplitter, ID_PANEL3, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL3"));
@@ -404,13 +406,13 @@ LayoutPanel::LayoutPanel(wxWindow* parent, xLightsFrame *xl, wxPanel* sequencer)
 	FlexGridSizerPreview->Add(SplitterWindow2, 1, wxALL|wxEXPAND, 1);
 	SetSizer(FlexGridSizerPreview);
 
-	Connect(ID_NOTEBOOK_OBJECTS,wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED,(wxObjectEventFunction)&LayoutPanel::OnNotebook_ObjectsPageChanged);
-	Connect(ID_SPLITTERWINDOW1,wxEVT_COMMAND_SPLITTER_SASH_POS_CHANGED,(wxObjectEventFunction)&LayoutPanel::OnModelSplitterSashPosChanged);
-	Connect(ID_CHECKBOX_3D,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&LayoutPanel::OnCheckBox_3DClick);
-	Connect(ID_CHECKBOXOVERLAP,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&LayoutPanel::OnCheckBoxOverlapClick);
-	Connect(ID_BUTTON_SAVE_PREVIEW,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&LayoutPanel::OnButtonSavePreviewClick);
-	Connect(ID_CHOICE_PREVIEWS,wxEVT_COMMAND_CHOICE_SELECTED,(wxObjectEventFunction)&LayoutPanel::OnChoiceLayoutGroupsSelect);
-	Connect(ID_SPLITTERWINDOW2,wxEVT_COMMAND_SPLITTER_SASH_POS_CHANGED,(wxObjectEventFunction)&LayoutPanel::OnSplitterWindowSashPosChanged);
+	Connect(ID_NOTEBOOK_OBJECTS, wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, (wxObjectEventFunction)&LayoutPanel::OnNotebook_ObjectsPageChanged);
+	Connect(ID_SPLITTERWINDOW1, wxEVT_COMMAND_SPLITTER_SASH_POS_CHANGED, (wxObjectEventFunction)&LayoutPanel::OnModelSplitterSashPosChanged);
+	Connect(ID_CHECKBOX_3D, wxEVT_COMMAND_CHECKBOX_CLICKED, (wxObjectEventFunction)&LayoutPanel::OnCheckBox_3DClick);
+	Connect(ID_CHECKBOXOVERLAP, wxEVT_COMMAND_CHECKBOX_CLICKED, (wxObjectEventFunction)&LayoutPanel::OnCheckBoxOverlapClick);
+	Connect(ID_BUTTON_SAVE_PREVIEW, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&LayoutPanel::OnButtonSavePreviewClick);
+	Connect(ID_CHOICE_PREVIEWS, wxEVT_COMMAND_CHOICE_SELECTED, (wxObjectEventFunction)&LayoutPanel::OnChoiceLayoutGroupsSelect);
+	Connect(ID_SPLITTERWINDOW2, wxEVT_COMMAND_SPLITTER_SASH_POS_CHANGED, (wxObjectEventFunction)&LayoutPanel::OnSplitterWindowSashPosChanged);
 	//*)
 
     ScrollBarLayoutHorz->Hide();
@@ -499,7 +501,7 @@ LayoutPanel::LayoutPanel(wxWindow* parent, xLightsFrame *xl, wxPanel* sequencer)
     propertyEditor->Connect(wxEVT_PG_ITEM_COLLAPSED, (wxObjectEventFunction)&LayoutPanel::OnPropertyGridItemCollapsed,0,this);
     propertyEditor->Connect(wxEVT_PG_ITEM_EXPANDED, (wxObjectEventFunction)&LayoutPanel::OnPropertyGridItemExpanded,0,this);
     propertyEditor->Connect(wxEVT_PG_RIGHT_CLICK, (wxObjectEventFunction)&LayoutPanel::OnPropertyGridRightClick, 0, this);
-    propertyEditor->SetValidationFailureBehavior(wxPG_VFB_MARK_CELL | wxPG_VFB_BEEP);
+    propertyEditor->SetValidationFailureBehavior(wxPGVFBFlags::MarkCell | wxPGVFBFlags::Beep);
 
     logger_base.debug("LayoutPanel property grid created");
 
@@ -2065,6 +2067,20 @@ void LayoutPanel::BulkEditTagColour()
     }
 }
 
+void LayoutPanel::BulkEditGroupTagColor()
+{
+    wxColour c = *wxBLACK;
+    auto const& [res, color] = xlColourData::INSTANCE.ShowColorDialog(this, c);
+    if (res == wxID_OK) {
+        c = color;
+
+        for (const auto& item : selectedTreeGroups) {
+            Model* model = GetModelFromTreeItem(item);
+            model->SetTagColour(c);
+        }
+    }
+}
+
 void LayoutPanel::BulkEditControllerPreview()
 {
     std::vector<Model*> modelsToEdit = GetSelectedModelsForEdit();
@@ -2502,7 +2518,7 @@ void LayoutPanel::SetupPropGrid(BaseObject *base_object) {
     if( editing_models ) {
         auto p = propertyEditor->Append(new wxStringProperty("Name", "ModelName", base_object->name));
         if (dynamic_cast<SubModel*>(base_object) != nullptr) {
-            p->ChangeFlag(wxPG_PROP_READONLY, true);
+            p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
             p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
             p->SetHelpString("SubModel names cannot be changed here.");
         }
@@ -3889,6 +3905,10 @@ void LayoutPanel::OnPreviewMouseWheel(wxMouseEvent& event)
                 float centery = modelPreview->getHeight() / 2.0f;
                 float deltax = mouse_x - centerx;
                 float deltay = mouse_y - centery;
+                if( !xlights->ZoomMethodToCursor() ) {
+                    deltax = 0;
+                    deltay = 0;
+                }
                 float zoom_delta = event.GetWheelRotation() > 0 ? -0.1f : 0.1f;
                 if (fromTrackPad) {
                     float f = event.GetWheelRotation();
@@ -4636,8 +4656,17 @@ void LayoutPanel::OnPreviewRightDown(wxMouseEvent& event)
         mnu.Append(ID_PREVIEW_ALIGN, "Align", mnuAlign, "");
         mnu.Append(ID_PREVIEW_DISTRIBUTE, "Distribute", mnuDistribute, "");
         mnu.Append(ID_PREVIEW_RESIZE, "Resize", mnuResize, "");
-
         mnu.AppendSeparator();
+        
+        if (!is_3d) {
+            auto mg = GetSelectedModelGroup();
+            if (xlights->AllModels.IsModelValid(mg)) {
+                mnu.Append(ID_SET_CENTER_OFFSET, _("Set Center Offset Here"));
+                mnu.AppendSeparator();
+                m_previous_mouse_x = event.GetX();
+                m_previous_mouse_y = event.GetY();
+            }
+        }
     }
 
     if (selectedObjectCnt > 0) {
@@ -4855,6 +4884,16 @@ void LayoutPanel::OnPreviewModelPopup(wxCommandEvent& event)
         } else {
             objects_panel->PreviewObjectResize(true, true);
         }
+    } else if (event.GetId() == ID_SET_CENTER_OFFSET) {
+        glm::vec3 ray_origin;
+        glm::vec3 ray_direction;
+        GetMouseLocation(m_previous_mouse_x, m_previous_mouse_y, ray_origin, ray_direction);
+        auto mg = GetSelectedModelGroup();
+        modelPreview->SetCenterOffset(mg, ray_origin.x, ray_origin.y);
+        mg->Reset();
+        xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RGBEFFECTS_CHANGE, "LayoutPanel::OnModelsPopup::ID_SET_CENTER_OFFSET");
+        xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RELOAD_ALLMODELS, "LayoutPanel::OnModelsPopup::ID_SET_CENTER_OFFSET", nullptr, nullptr, GetSelectedModelName());
+        xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_REDRAW_LAYOUTPREVIEW, "LayoutPanel::OnPreviewModelPopup::ID_SET_CENTER_OFFSET");
     } else if (event.GetId() == ID_PREVIEW_MODEL_NODELAYOUT) {
         ShowNodeLayout();
     } else if (event.GetId() == ID_PREVIEW_MODEL_LOCK) {
@@ -6673,6 +6712,8 @@ void LayoutPanel::DeleteSelectedModels()
         for (const auto& item : selectedTreeModels) {
             if (item.IsOk()) {
                 wxString modelName = TreeListViewModels->GetItemText(item);
+                modelName.Replace("<", "");
+                modelName.Replace(">", "");
                 modelsToDelete.Add(modelName);
                 modelsToConfirm = modelsToConfirm + wxString::Format("%s- %s\n", "    ", modelName);
             }
@@ -7742,6 +7783,8 @@ void LayoutPanel::OnModelsPopup(wxCommandEvent& event) {
         //model_grp_panel->UpdatePanel(name);
         xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RELOAD_PROPERTYGRID, "LayoutPanel::OnModelsPopup::ID_MNU_CLONE_MODEL_GROUP");
         xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RELOAD_MODELLIST, "LayoutPanel::OnModelsPopup::ID_MNU_CLONE_MODEL_GROUP");
+    } else if (event.GetId() == ID_MNU_BULKEDIT_GROUP_TAGCOLOR) {
+        BulkEditGroupTagColor();
     }
     else if (event.GetId() == ID_PREVIEW_FLIP_HORIZONTAL) {
         if (editing_models) {
@@ -8418,6 +8461,11 @@ void LayoutPanel::OnItemContextMenu(wxTreeListEvent& event)
     }
 
     mnuContext.Append(ID_MNU_DELETE_EMPTY_MODEL_GROUPS, "Delete Empty Groups");
+
+    if (selectedTreeGroups.size() > 1) {
+        mnuContext.AppendSeparator();
+        mnuContext.Append(ID_MNU_BULKEDIT_GROUP_TAGCOLOR, "Bulk Edit Tag Color");
+    }
 
     bool foundInvalid = false;
     bool foundOverlapping = false;

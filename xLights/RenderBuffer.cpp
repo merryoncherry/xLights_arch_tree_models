@@ -2,11 +2,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <cmath>
@@ -1449,7 +1449,8 @@ void RenderBuffer::GetPixel(int x, int y, xlColor &color) const
     if (x >= 0 && x < BufferWi && y >= 0 && y < BufferHt && pidx < pixelVector.size()) {
         color = pixels[pidx];
     } else {
-        color = xlBLACK;
+        color = this->allowAlpha ? xlCLEAR : xlBLACK;
+        
     }
 }
 
@@ -1458,7 +1459,7 @@ const xlColor& RenderBuffer::GetPixel(int x, int y) const {
     if (x >= 0 && x < BufferWi && y >= 0 && y < BufferHt && pidx < pixelVector.size()) {
         return pixels[pidx];
     }
-    return xlBLACK;
+    return this->allowAlpha ? xlCLEAR : xlBLACK;
 }
 
 // 0,0 is lower left
@@ -1487,7 +1488,7 @@ const xlColor& RenderBuffer::GetTempPixel(int x, int y) {
     if (x >= 0 && x < BufferWi && y >= 0 && y < BufferHt && y * BufferWi + x < tempbufVector.size()) {
         return tempbuf[y * BufferWi + x];
     }
-    return xlBLACK;
+    return this->allowAlpha ? xlCLEAR : xlBLACK;
 }
 
 const xlColor& RenderBuffer::GetTempPixelRGB(int x, int y)
@@ -1495,7 +1496,7 @@ const xlColor& RenderBuffer::GetTempPixelRGB(int x, int y)
     if (x >= 0 && x < BufferWi && y >= 0 && y < BufferHt && y * BufferWi + x < tempbufVector.size()) {
         return tempbuf[y * BufferWi + x];
     }
-    return xlBLACK;
+    return this->allowAlpha ? xlCLEAR : xlBLACK;
 }
 
 void RenderBuffer::SetState(int period, bool ResetState, const std::string& model_name)
@@ -1504,14 +1505,16 @@ void RenderBuffer::SetState(int period, bool ResetState, const std::string& mode
         needToInit = true;
     }
     curPeriod = period;
-    cur_model = model_name;
     curPeriod = period;
     palette.UpdateForProgress(GetEffectTimeIntervalPosition());
-    dmx_buffer = false;
-    Model* m = GetModel();
-    if (m != nullptr) {
-        if (m->GetDisplayAs().rfind("Dmx", 0) == 0) {
-            dmx_buffer = true;
+    if (cur_model != model_name) {
+        cur_model = model_name;
+        dmx_buffer = false;
+        Model* m = GetModel();
+        if (m != nullptr) {
+            if (m->GetDisplayAs().rfind("Dmx", 0) == 0) {
+                dmx_buffer = true;
+            }
         }
     }
 }

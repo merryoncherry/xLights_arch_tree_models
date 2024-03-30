@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <mutex>
@@ -83,7 +83,7 @@ public:
     SettingsMap *settingsMap;
     PixelBufferClass *buffer;
     bool *ResetEffectState;
-    bool returnVal{ true };
+    int returnVal{ -1 };
     bool suppress{ false };
 };
 
@@ -548,7 +548,6 @@ public:
     }
 
     bool ProcessFrame(int frame, Element *el, EffectLayerInfo &info, PixelBufferClass *buffer, int strand = -1, bool blend = false) {
-        wxStopWatch sw;
         bool effectsToUpdate = false;
         Effect* tempEffect = nullptr;
         int numLayers = el->GetEffectLayerCount();
@@ -700,7 +699,7 @@ public:
 
                 if (suppress) {
                     info.validLayers[layer] = false;
-                } else {
+                } else if (info.validLayers[layer]) {
                     buffer->HandleLayerBlurZoom(frame, layer);
                 }
             } else {
@@ -719,11 +718,6 @@ public:
             }
             buffer->CalcOutput(frame, info.validLayers);
             buffer->GetColors(&((*seqData)[frame][0]), rangeRestriction);
-        }
-
-        if (sw.Time() > 500) {
-            RenderBuffer& b = buffer->BufferForLayer(0, -1);
-            renderLog.info("*** Frame #%d at %dms render on model %s (%dx%d) took more than 1/2s => %dms.", frame, frame * b.frameTimeInMs, (const char *)el->GetName().c_str(), b.BufferWi, b.BufferHt, sw.Time());
         }
 
         if (tempEffect != nullptr)
@@ -930,14 +924,19 @@ public:
 private:
 
     void initialize(int layer, int frame, Effect *el, SettingsMap &settingsMap, PixelBufferClass *buffer) {
+        bool layerEnabled = true;
         if (el == nullptr || el->GetEffectIndex() == -1) {
             settingsMap.clear();
         } else {
+            auto e = el->GetParentEffectLayer()->GetParentElement();
+            if (e != nullptr) {
+                layerEnabled = !e->IsRenderDisabled();
+            }
             loadSettingsMap(el->GetEffectName(),
                             el,
                             settingsMap);
         }
-        buffer->SetLayerSettings(layer, settingsMap);
+        buffer->SetLayerSettings(layer, settingsMap, layerEnabled);
         if (el != nullptr) {
             xlColorVector newcolors;
             xlColorCurveVector newcc;
@@ -1069,16 +1068,13 @@ void xLightsFrame::RenderEffectOnMainThread(RenderEvent *ev) {
     std::unique_lock<std::mutex> lock(ev->mutex);
 
     // validate that the effect still exists as this could be being processed after the effect was deleted
-    if (_sequenceElements.IsValidEffect(ev->effect))
-    {
+    if (_sequenceElements.IsValidEffect(ev->effect)) {
         ev->returnVal = RenderEffectFromMap(ev->suppress, ev->effect,
             ev->layer,
             ev->period,
             *ev->settingsMap,
-            *ev->buffer, *ev->ResetEffectState, false, ev);
-    }
-    else
-    {
+            *ev->buffer, *ev->ResetEffectState, false, ev) ? 1 : 0;
+    } else {
         wxASSERT(false);
     }
     ev->signal.notify_all();
@@ -1694,6 +1690,10 @@ bool xLightsFrame::AbortRender(int maxTimeMS, int* numThreadsAborted)
 {
     static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     static bool inAbort = false;
+    if (renderProgressInfo.empty()) {
+        //nothing to abort, return quickly
+        return true;
+    }
     if (inAbort) {
         return false;
     }
@@ -1710,7 +1710,6 @@ bool xLightsFrame::AbortRender(int maxTimeMS, int* numThreadsAborted)
             }
         }
     }
-
     int maxLoops = maxTimeMS;
     maxLoops /= 10;   //doing a 10ms sleep
     //must wait for the rendering to complete
@@ -1972,26 +1971,22 @@ bool xLightsFrame::DoExportModel(unsigned int startFrame, unsigned int endFrame,
     int cpn = job->getBuffer()->GetChanCountPerNode();
 
     if (doRender) {
-        // always render the whole model
-        job->setRenderRange(0, _seqData.NumFrames());
-        job->setPreviousFrameDone(END_OF_RENDER_FRAME);
-        job->addNext(&wait);
-        jobPool.PushJob(job);
-        //wait to complete
-        while (!wait.checkIfDone(_seqData.NumFrames())) {
+        RenderAll();
+        // Render all to capture any effects at the group levels
+        // wait to complete
+        while (mRendering) {
             wxYield();
         }
-    } else {
-        Model* m2 = GetModel(model);
-        for (size_t frame = 0; frame < _seqData.NumFrames(); ++frame) {
-            for (size_t x = 0; x < job->getBuffer()->GetNodeCount(); ++x) {
-                //chan in main buffer
-                int ostart = m2->NodeStartChannel(x);
-                int nstart = job->getBuffer()->NodeStartChannel(x);
-                //copy to render buffer for export
-                job->getBuffer()->SetNodeChannelValues(x, &_seqData[frame][ostart]);
-                job->getBuffer()->GetNodeChannelValues(x, &((*data)[frame][nstart]));
-            }
+    }
+    Model* m2 = GetModel(model);
+    for (size_t frame = 0; frame < _seqData.NumFrames(); ++frame) {
+        for (size_t x = 0; x < job->getBuffer()->GetNodeCount(); ++x) {
+            //chan in main buffer
+            int ostart = m2->NodeStartChannel(x);
+            int nstart = job->getBuffer()->NodeStartChannel(x);
+            //copy to render buffer for export
+            job->getBuffer()->SetNodeChannelValues(x, &_seqData[frame][ostart]);
+            job->getBuffer()->GetNodeChannelValues(x, &((*data)[frame][nstart]));
         }
     }
     delete job;
@@ -2100,8 +2095,7 @@ bool xLightsFrame::RenderEffectFromMap(bool suppress, Effect* effectObj, int lay
 
     // dont render disabled effects
     if (effectObj == nullptr) return false;
-    if (effectObj->IsRenderDisabled()) return false;
-
+    
     if (layer >= buffer.GetLayerCount()) {
         logger_base.error("Model %s Effect %s at frame %d tried to render on a layer %d that does not exist (Only %d found).",
             (const char*)buffer.GetModel()->GetName().c_str(), (const char*)effectObj->GetEffectName().c_str(), period, layer + 1, buffer.GetLayerCount());
@@ -2109,6 +2103,10 @@ bool xLightsFrame::RenderEffectFromMap(bool suppress, Effect* effectObj, int lay
         return false;
     }
 
+    if (buffer.IsRenderingDisabled(layer)) {
+        return false;
+    }
+    
     if (buffer.BufferForLayer(layer, -1).BufferHt == 0 || buffer.BufferForLayer(layer, -1).BufferWi == 0) {
         return false;
     }
@@ -2180,7 +2178,7 @@ bool xLightsFrame::RenderEffectFromMap(bool suppress, Effect* effectObj, int lay
 
                     CallAfter(&xLightsFrame::RenderMainThreadEffects);
                     if (event->signal.wait_for(lock, std::chrono::seconds(10)) == std::cv_status::no_timeout) {
-                        retval = event->returnVal;
+                        retval = event->returnVal == 1;
                     }
                     else {
                         logger_base.warn("HELP!!!!   Frame #%d render on model %s (%dx%d) layer %d effect %s from %dms (#%d) to %dms (#%d) timed out 10 secs.", b->curPeriod, (const char*)buffer.GetModelName().c_str(), b->BufferWi, b->BufferHt, layer, (const char*)reff->Name().c_str(), effectObj->GetStartTimeMS(), b->curEffStartPer, effectObj->GetEndTimeMS(), b->curEffEndPer);
@@ -2188,7 +2186,7 @@ bool xLightsFrame::RenderEffectFromMap(bool suppress, Effect* effectObj, int lay
 
                         // Give it one more chance
                         if (event->signal.wait_for(lock, std::chrono::seconds(60)) == std::cv_status::no_timeout) {
-                            retval = event->returnVal;
+                            retval = event->returnVal == 1;
                         }
                         else {
                             logger_base.warn("DOUBLE HELP!!!!   Frame #%d render on model %s (%dx%d) layer %d effect %s from %dms (#%d) to %dms (#%d) timed out 70 secs.", b->curPeriod, (const char*)buffer.GetModelName().c_str(), b->BufferWi, b->BufferHt, layer, (const char*)reff->Name().c_str(), effectObj->GetStartTimeMS(), b->curEffStartPer, effectObj->GetEndTimeMS(), b->curEffEndPer);
@@ -2227,7 +2225,7 @@ bool xLightsFrame::RenderEffectFromMap(bool suppress, Effect* effectObj, int lay
                             }
 
                             wxStopWatch sw;
-                            if (effectObj != nullptr && reff->SupportsRenderCache(SettingsMap)) {
+                            if (effectObj != nullptr && reff->SupportsRenderCache(SettingsMap) && _renderCache.IsEnabled()) {
                                 if (!effectObj->GetFrame(*rb, _renderCache)) {
                                     reff->Render(effectObj, SettingsMap, *rb);
                                     GPURenderUtils::waitForRenderCompletion(rb);

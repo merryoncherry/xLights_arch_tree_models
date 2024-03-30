@@ -7,10 +7,110 @@ Vixen2, Vixen 3, LSP, and HLS.
 Latest releases are found at www.xlights.org
 Videos tutorials are found at videos.xlights.org
 Forums are located at nutcracker123.com/forum
-Issue Tracker is found here: www.github.com/smeighan/xLights/issues
+Issue Tracker is found here: www.github.com/xLightsSequencer/xLights/issues
 
 XLIGHTS/NUTCRACKER RELEASE NOTES
 ---------------------------------
+2024.06 Mar 25, 2024
+   - enh (dkulp)        Update wxWidgets to latest patches to fix various Dark Mode issues and Mac docking issues
+   - enh (dkulp)        Add Horizontal/Vertical By Strand buffer styles to SubModels
+   - enh (dkulp)        Rename "Group all arches" to "Group all strands"
+   - enh (dkulp)        Map old SingleStrand/SingleLine effects on SubModels to proper setup
+   - enh (dkulp)        Update to c++20, requires update to Ubuntu Jammy
+   - enh (derwin12)     Add Select/Deselect Highlighted to Tools Test dialog
+   - enh (derwin12)     Add delete submodels to sequencer model right click menu
+   - enh (derwin12)     Add color palette to Picture Assistant
+   - enh (scott)        Test dialog - add some controller based tests
+   - bug (cybercop23)   Allow state effect on SubModels
+   - bug (dkulp)        Fix PolyLine single node style rendering
+   - bug (dkulp)        BufferStyle panel not showing buffer styles for SubModels
+   - bug (cybercop23)   Fix auto-map alias at SubModel level with spaces in names
+   - bug (derwin12)     Clear the red status of the shader after downloading shader
+   - bug (derwin12)     Fixes/Improvement to the sort model by location on Group within a Group   
+2024.05 Mar 14, 2024
+   - enh (scott)        Add some additional columns to controller list
+   - enh (cybercop23)   Increase default size of Display Elements window,
+   - enh (cybercop23)   Remove duplicate prompts for Save Alias
+   - enh (derwin12)     Add "Color by word" option for Text effect
+   - enh (derwin12)     Add sort by location to model groups
+   - enh (cybercop23)   Allow inactive models to be deleted
+   - enh (derwin12)     Add X/Y positioning to Circle effect when using radial options
+   - enh (derwin12)     Face Dialog - sort and compress entered nodes
+   - enh (derwin12)     Lua Scripting - expose the "Force High Definition" option
+   - bug (derwin12)     Fix chapter bookmark display issues on Linux
+   - bug (scott)        HinksPix - Fix overlap check and empy playlist name issues
+   - bug (scott)        Fix crash in import dialog
+   - bug (dkulp)        Fix several crashes due to effects with rendering disabled   
+2024.04 Feb 29, 2024
+   -- enh (gjones)      Allow model group centers (red cross) to be defined with right-click (Set Center Offset Here)
+   -- enh (gjones)      Prevent model group centers (red cross) from moving when models are added/removed/moved
+   -- enh (gjones)      Modified center offset (red cross) spin controls so enter key will latch values
+   -- enh (gjones)      Expand range from +/- 1000 to +/- 5000 for red cross offsets
+   -- enh (derwin12)    Add Select Effects dialog to UI toolbar
+   -- enh (derwin12)    Add expand and collapse to import mapping dialog
+   -- enh (derwin12)    Allow editin dimensions for Image type props
+   -- enh (derwin12)    Include creator in the search for Sequence Downloads
+   -- enh (derwin12)    Add preference to hide color update warning
+   -- enh (derwin12)    Scale the sphere ot get a better 3d export
+   -- enh (derwin12)    Resize/relayout several dialogs
+   -- enh (derwin12)    DMX effect put 16 channels on one page
+   -- bug (derwin12)    Remapping of missing submodels skips over some
+   -- bug (dkulp)       Fix crash when sorting by effect count in Import dialog
+   -- bug (dkulp)       Fix crash in Single Strand Chase effect if value curves are used for chase size
+   -- bug (scott)       Experience controllers support ArtNet
+   -- bug (scott)       Fix Minleon upload
+2024.03 Feb 14, 2024
+   -- UPDATE (dkulp)    New PayPal donation URL
+   -- end (gjones)      Add preference whether layout view zooms to center or mouse cursor
+   -- enh (gjones)      Expand size of Default View for New Sequences preference box. Fixes #4255
+   -- enh (MartinMueller) Several additional ESP variants
+   -- enh (keith)       Autosize the face dialog columns
+   -- enh (merryoncherry) Options for arches to not zig/zag
+   -- enh (dkulp)       Allow SubModels to have duplicate nodes for "Ranges" default and stacked styles
+   -- enh (derwin12)    Add comments to failed backup notice
+   -- enh (derwin12)    Added right click sort along with buttons to move presets up/down/top and botton within the list
+   -- enh (derwin12)    Dont initially expand the vendors on the load of the download models
+   -- enh (derwin12)    Faster text movement and longer twinkly settings
+   -- enh (derwin12)    Add background effect image for the Single strand chase
+   -- enh (derwin12)    Add select all and deselect all on FPP Connect controller dialog
+   -- enh (derwin12)    Add bulk edit tag color for groups
+   -- enh (derwin12)    Render and Export Model now renders all
+   -- enh (derwin12)    Remove the default sorting of Import View
+   -- enh (derwin12)    Add select highlighted to import previews right click menu
+   -- bug (derwin12)    Shape Effect - Flip the Y value for Emoji
+   -- bug (scott)       Exported timing tracks to include subType
+   -- bug (gjones)      Fix dragging Preset group so it stays a group.  Fixes #4304
+   -- bug (scott)       Fix crash in ESPixelStick upload to non-PixelStick
+   -- bug (derwin12)    Remap Custom Model ignores placeholders
+   -- bug (tygunn)      Fix some bugs/issues with Polyline import/export
+   -- bug (derwin12)    Honor the dont send data to unused ports when opening the tools test dialog
+   -- bug (derwin12)    Render after performing an effect convert to 'per model'
+2024.02 Jan 26, 2024
+   -- enh (derwin12)    Allow bulk edit of sketch effect bg filename
+   -- enh (derwin12)    Add preference to skip loading of preset gif images
+   -- enh (derwin12)    Handling pasting of network drive files
+   -- enh (scott)       Force "Don't keep start channels" for ESPixelStick discovery
+   -- enh (derwin12)    Store imported shaders the same was as imported images/videos
+   -- enh (scott)       Try to detect FPP controller types during discovery
+   -- bug (dkulp)       Some fixes for locks/hangs when moving/editing "main thread effects" (Shader on Windows)
+   -- bug (derwin12)    Dont use render cache if using words from the lyric track
+   -- bug (derwin12)    VU Meter missing the last bar
+   -- bug (derwin12)    Fix faces download with faces in subdirectories
+   -- bug (scott)       Fix Falcon v4 discovery through FPP
+   -- bug (merryoncherry) Fix video stuttering with some video framerates
+   -- bug (derwin12)    Fix some data entry issues with Waveform Filter
+   -- bug (derwin12)    Fix "number of effects" displayed for models on import dialog (it included submodels which display separately)
+2024.01 Jan 17, 2024
+   -- change(dkulp) Move repo to xLightsSequencer org, update headers and url locations
+   -- enh (dkulp) Auto-Build in xCode cloud, initial setup for TestFlights builds
+   -- enh (keith) Limited support for RGBWW pixels
+   -- enh (derwin12) Use rest for missing face phoneme
+   -- enh (tygunn) When a ruler is defined, show the X/Y/Z coordinates of models in the models export
+   -- bug (Scott) Clear test presets when switching show folders
+   -- bug (dkulp) Hopefully fix crash on macOS when changing audio devices
+   -- bug (dkulp) Use BitmapBundles for icons in Import Dialog (HiDPI updates)
+   -- bug (scott) Fix upload to WLED if different pixel types are used
+   -- bug (cpinkham) Fix compile with gcc 13
 2023.23 Dec 28, 2023
    -- enh (dkulp)     Convert "New Style" Pinwheel effect to use Meta GPU rendering on MacOS
    -- enh (scott)     Added Scheduling to HinksPix Export Dialog.

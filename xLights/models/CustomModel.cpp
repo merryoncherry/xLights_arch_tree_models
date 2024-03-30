@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/wx.h>
@@ -1165,6 +1165,7 @@ void CustomModel::ImportXlightsModel(wxXmlNode* root, xLightsFrame* xlights, flo
 
         GetModelScreenLocation().SetMWidth(max_x - min_x);
         GetModelScreenLocation().SetMHeight(max_y - min_y);
+        GetModelScreenLocation().SetMDepth(1.0);
 
         ImportModelChildren(root, xlights, newname, min_x, max_x, min_y, max_y);
 

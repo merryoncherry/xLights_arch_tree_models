@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 //(*Headers(LayoutPanel)
@@ -230,6 +230,7 @@ class LayoutPanel: public wxPanel
         static const long ID_PREVIEW_LAYOUT_DXF_EXPORT;
         static const long ID_PREVIEW_FLIP_HORIZONTAL;
         static const long ID_PREVIEW_FLIP_VERTICAL;
+        static const long ID_SET_CENTER_OFFSET;
 
 	public:
 
@@ -342,6 +343,7 @@ class LayoutPanel: public wxPanel
         void BulkEditControllerName();
         void BulkEditActive(bool active);
         void BulkEditTagColour();
+        void BulkEditGroupTagColor();
         void BulkEditPixelSize();
         void BulkEditPixelStyle();
         void BulkEditTransparency();
@@ -532,6 +534,7 @@ class LayoutPanel: public wxPanel
         static const long ID_MNU_MAKEALLSCNOTOVERLAPPING;
         static const long ID_MNU_ADD_MODEL_GROUP;
         static const long ID_MNU_ADD_TO_EXISTING_GROUPS;
+        static const long ID_MNU_BULKEDIT_GROUP_TAGCOLOR;
         void OnModelsPopup(wxCommandEvent& event);
         LayoutGroup* GetLayoutGroup(const std::string& name);
 		const wxString& GetBackgroundImageForSelectedPreview();

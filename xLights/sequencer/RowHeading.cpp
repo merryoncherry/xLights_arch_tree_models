@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/wx.h>
@@ -77,6 +77,7 @@ const long RowHeading::ID_ROW_MNU_RENDERENABLE_MODEL = wxNewId();
 const long RowHeading::ID_ROW_MNU_RENDERDISABLE_MODEL = wxNewId();
 const long RowHeading::ID_ROW_MNU_DELETE_ROW_EFFECTS = wxNewId();
 const long RowHeading::ID_ROW_MNU_DELETE_MODEL_EFFECTS = wxNewId();
+const long RowHeading::ID_ROW_MNU_DELETE_MODEL_SUBMODEL_EFFECTS = wxNewId();
 const long RowHeading::ID_ROW_MNU_DELETE_MODEL_STRAND_EFFECTS = wxNewId();
 const long RowHeading::ID_ROW_MNU_DELETE_MODEL_NODE_EFFECTS = wxNewId();
 const long RowHeading::ID_ROW_MNU_SELECT_ROW_EFFECTS = wxNewId();
@@ -420,6 +421,7 @@ void RowHeading::rightClick( wxMouseEvent& event)
                 rowMenu->Append(ID_ROW_MNU_DELETE_ROW_EFFECTS, "Delete Effects");
                 rowMenu->Append(ID_ROW_MNU_CREATE_TIMING_FROM_EFFECTS, "Create Timing From Effects");
                 modelMenu->Append(ID_ROW_MNU_DELETE_MODEL_EFFECTS, "Delete Effects");
+                modelMenu->Append(ID_ROW_MNU_DELETE_MODEL_SUBMODEL_EFFECTS, "Delete SubModel Effects");
                 modelMenu->Append(ID_ROW_MNU_DELETE_MODEL_STRAND_EFFECTS, "Delete Strand Effects");
                 modelMenu->Append(ID_ROW_MNU_DELETE_MODEL_NODE_EFFECTS, "Delete Node Effects");
 
@@ -834,6 +836,7 @@ void RowHeading::OnLayerPopup(wxCommandEvent& event)
                             wxString td = wxString(tee->GetExport().c_str());
                             f.Write("<timing ");
                             f.Write(wxString::Format("name=\"%s\" ", XmlSafe(tee->GetName())));
+                            f.Write(wxString::Format("subType=\"%s\" ", tee->GetSubType()));
                             f.Write(wxString::Format("SourceVersion=\"%s\">\n", v));
                             f.Write(td);
                             f.Write("</timing>\n");
@@ -1023,6 +1026,7 @@ void RowHeading::OnLayerPopup(wxCommandEvent& event)
         }
         wxCommandEvent eventForceRefresh(EVT_FORCE_SEQUENCER_REFRESH);
         wxPostEvent(GetParent(), eventForceRefresh);
+        mSequenceElements->GetXLightsFrame()->RenderEffectForModel(element->GetModelName(), 0, 99999999);
     } else if (id == ID_ROW_MNU_MODEL_CONVERTTOPERMODEL) {
         mSequenceElements->get_undo_mgr().CreateUndoStep();
         for (int i = 0; i < element->GetEffectLayerCount(); i++) {
@@ -1031,6 +1035,7 @@ void RowHeading::OnLayerPopup(wxCommandEvent& event)
 
         wxCommandEvent eventForceRefresh(EVT_FORCE_SEQUENCER_REFRESH);
         wxPostEvent(GetParent(), eventForceRefresh);
+        mSequenceElements->GetXLightsFrame()->RenderEffectForModel(element->GetModelName(), 0, 99999999);
     } else if (id == ID_ROW_MNU_SELECT_MODEL_EFFECTS) {
         for (int i = 0; i < element->GetEffectLayerCount(); i++) {
             element->GetEffectLayer(i)->SelectAllEffects();
@@ -1046,6 +1051,27 @@ void RowHeading::OnLayerPopup(wxCommandEvent& event)
         for (int i = 0; i < element->GetEffectLayerCount(); ++i) {
             if (element->GetEffectLayer(i)->GetEffectCount() > 0) {
                 element->GetEffectLayer(i)->RemoveAllEffects(&mSequenceElements->get_undo_mgr());
+            }
+        }
+    } else if (id == ID_ROW_MNU_DELETE_MODEL_SUBMODEL_EFFECTS) {
+        wxCommandEvent eventUnSelected(EVT_UNSELECTED_EFFECT);
+        m_parent->ProcessWindowEvent(eventUnSelected);
+        mSequenceElements->get_undo_mgr().CreateUndoStep();
+        ModelElement* me = dynamic_cast<ModelElement*>(element);
+        if (me == nullptr) {
+            SubModelElement* se = dynamic_cast<SubModelElement*>(element);
+            me = se->GetModelElement();
+        }
+        if (me != nullptr) {
+            for (size_t s = 0; s < me->GetSubModelCount(); ++s) {
+                auto se = me->GetSubModel(s);
+                if (se != nullptr) {
+                    for (int i = 0; i < se->GetEffectLayerCount(); ++i) {
+                        if (se->GetEffectLayer(i)->GetEffectCount() > 0) {
+                            se->GetEffectLayer(i)->RemoveAllEffects(&mSequenceElements->get_undo_mgr());
+                        }
+                    }
+                }
             }
         }
     } else if (id == ID_ROW_MNU_DELETE_MODEL_STRAND_EFFECTS) {

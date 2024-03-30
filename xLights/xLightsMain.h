@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #ifdef _MSC_VER
@@ -179,6 +179,7 @@ wxDECLARE_EVENT(EVT_SEQUENCE_FFORWARD10, wxCommandEvent);
 wxDECLARE_EVENT(EVT_SEQUENCE_SEEKTO, wxCommandEvent);
 wxDECLARE_EVENT(EVT_SEQUENCE_REPLAY_SECTION, wxCommandEvent);
 wxDECLARE_EVENT(EVT_SHOW_DISPLAY_ELEMENTS, wxCommandEvent);
+wxDECLARE_EVENT(EVT_SHOW_SELECT_EFFECTS, wxCommandEvent);
 wxDECLARE_EVENT(EVT_IMPORT_TIMING, wxCommandEvent);
 wxDECLARE_EVENT(EVT_IMPORT_NOTES, wxCommandEvent);
 wxDECLARE_EVENT(EVT_CONVERT_DATA_TO_EFFECTS, wxCommandEvent);
@@ -622,6 +623,7 @@ public:
     void OnButton_ClearBaseShowDirClick(wxCommandEvent& event);
     void OnCheckBox_AutoUpdateBaseClick(wxCommandEvent& event);
     void OnButton_UpdateBaseClick(wxCommandEvent& event);
+    void ShowHideSelectEffectsWindow(wxCommandEvent& event);
     //*)
     void OnCharHook(wxKeyEvent& event);
     void OnHelp(wxHelpEvent& event);
@@ -664,6 +666,7 @@ public:
     static const long ID_AUITOOLBARITEM6;
     static const long ID_AUITOOLBARITEM8;
     static const long ID_AUITOOLBARITEM9;
+    static const long ID_AUITOOLBARITEM10;
     static const long ID_AUIWINDOWTOOLBAR;
     static const long ID_PASTE_BY_TIME;
     static const long ID_PASTE_BY_CELL;
@@ -839,7 +842,7 @@ public:
     static const long ID_PANEL_EFFECTS1;
     static const long ID_PANEL_EFFECTS;
     static const long ID_NOTEBOOK_EFFECTS;
-
+    static const long ID_MENUITEM_REVERTTO;
     static const long ID_XFADESOCKET;
     static const long ID_XFADESERVER;
 
@@ -1050,6 +1053,8 @@ public:
     wxMenuItem* mrud_MenuItem[MRUD_LENGTH];
     wxArrayString mruFiles;  // most recently used directories
     wxMenuItem* mruf_MenuItem[MRUF_LENGTH];
+    wxMenu *revertToMenu = nullptr;
+    wxMenuItem* revertToMenuItem = nullptr;
 
     OutputManager _outputManager;
     OutputModelManager _outputModelManager;
@@ -1076,6 +1081,8 @@ public:
     bool _playControlsOnPreview = true;
     bool _showBaseShowFolder = false;
     bool _autoShowHousePreview = false;
+    bool _zoomMethodToCursor = true;
+    bool _hidePresetPreview = false;
     bool _smallWaveform = false;
     bool _modelBlendDefaultOff = true;
     bool _lowDefinitionRender = false;
@@ -1254,8 +1261,15 @@ public:
     bool SuppressFadeHints() const { return mSuppressFadeHints; }
     void SetSuppressFadeHints(bool b);
 
+    bool IsSuppressColorWarn() const { return mSuppressColorWarn; }
+    bool SuppressColorWarn() const { return mSuppressColorWarn; }
+    void SetSuppressColorWarn(bool b);
+
     bool PlayControlsOnPreview() const { return _playControlsOnPreview;}
     void SetPlayControlsOnPreview(bool b);
+
+    bool HidePresetPreview() const { return _hidePresetPreview;}
+    void SetHidePresetPreview(bool b);
 
     bool IsShowBaseShowFolder() const
     {
@@ -1265,6 +1279,9 @@ public:
 
     bool AutoShowHousePreview() const { return _autoShowHousePreview;}
     void SetAutoShowHousePreview(bool b);
+
+    bool ZoomMethodToCursor() const { return _zoomMethodToCursor;}
+    void SetZoomMethodToCursor(bool b);
 
     int EffectAssistMode() const { return mEffectAssistMode;}
     void SetEffectAssistMode(int i);
@@ -1535,7 +1552,7 @@ public:
     wxXmlNode* LayoutGroupsNode = nullptr;
     wxXmlNode* ViewObjectsNode = nullptr;
     SequenceViewManager* GetViewsManager() { return &_sequenceViewManager; }
-    void OpenSequence(const wxString &passed_filename, ConvertLogDialog* plog);
+    void OpenSequence(const wxString &passed_filename, ConvertLogDialog* plog, const wxString &realPath = "");
     void SaveSequence();
     void SetSequenceTiming(int timingMS);
     bool CloseSequence();
@@ -1564,6 +1581,7 @@ private:
     bool mBackupOnLaunch = true;
     bool me131Sync = false;
     bool mSuppressFadeHints = false;
+    bool mSuppressColorWarn = false;
     wxString mAltBackupDir;
     int mIconSize;
     int mGridSpacing;

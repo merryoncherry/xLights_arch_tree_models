@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include "Model.h"
@@ -53,4 +53,5 @@ class ArchesModel : public ModelWithScreenLocation<ThreePointScreenLocation>
         int arc;
         int _gap = 0;
         int _hollow = 70;
+        bool zigzag = true;
 };

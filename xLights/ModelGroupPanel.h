@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/dnd.h>
@@ -136,6 +136,7 @@ protected:
 	static const long ID_MNU_CLEARALL;
 	static const long ID_MNU_COPY;
 	static const long ID_MNU_SORTBYNAME;
+    static const long ID_MNU_SORTBYLOCATION;
 
 private:
 	LayoutPanel* layoutPanel = nullptr;
@@ -182,7 +183,7 @@ private:
 	int GetSelectedModelCount();
 	void OnPopup(wxCommandEvent& event);
 
-	void SaveGroupChanges();
+	void SaveGroupChanges(bool updateCentre = false);
 	void AddSelectedModels(int index);
 	void RemoveSelectedModels();
 	void MoveSelectedModelsTo(int indexTo);
@@ -190,6 +191,8 @@ private:
 	int GetFirstSelectedModel(wxListCtrl* list);
 	void ResizeColumns();
 	void SortModelsByName();
+    void SortModelsByLocation();
 	void CopyModelList();
 	wxArrayString getGroupList();
+    void OnSpinCtrlTextEnter(wxCommandEvent& evt);
 };

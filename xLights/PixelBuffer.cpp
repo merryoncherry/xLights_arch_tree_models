@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include "PixelBuffer.h"
@@ -931,6 +931,7 @@ void PixelBufferClass::reset(int nlayers, int timing, bool isNode)
             layers[x]->bufferType = "Default";
         }
         layers[x]->camera = "2D";
+        layers[x]->renderingDisabled = false;
         layers[x]->bufferTransform = "None";
         layers[x]->outTransitionType = "Fade";
         layers[x]->inTransitionType = "Fade";
@@ -1426,21 +1427,51 @@ void PixelBufferClass::GetMixedColor(int node, const std::vector<bool> & validLa
             if (node >= thelayer->buffer.Nodes.size()) {
                 //logger_base.crit("PixelBufferClass::GetMixedColor thelayer->buffer.Nodes does not contain node %d as it is only %d in size ... this was going to crash.", node, thelayer->buffer.Nodes.size());
             } else {
-                auto &coord = thelayer->buffer.Nodes[node]->Coords[0];
-                int x = coord.bufX;
-                int y = coord.bufY;
-
-                if (thelayer->isMasked(x, y)
-                    || x < 0
-                    || y < 0
-                    || x >= thelayer->BufferWi
-                    || y >= thelayer->BufferHt
-                    ) {
+                int x = 0;
+                int y = 0;
+                if (thelayer->buffer.Nodes[node]->Coords.size() > 1) {
                     color.Set(0, 0, 0, 0);
+                    xlColor c2;
+                    bool found = false;
+                    for (auto it = thelayer->buffer.Nodes[node]->Coords.begin(); it != thelayer->buffer.Nodes[node]->Coords.end(); ++it) {
+                        //find the last coordinate with a color, compatibility with older xLights that only allowed a
+                        //node to exist once in the submodel and would use the coord of the last appearance
+                        auto coord = *it;
+                        int x1 = coord.bufX;
+                        int y1 = coord.bufY;
+                        
+                        if (!thelayer->isMasked(x1, y1)) {
+                            thelayer->buffer.GetPixel(x1, y1, c2);
+                            if (c2.alpha != 0) {
+                                found = true;
+                                color = c2;
+                                x = x1;
+                                y = y1;
+                                break;
+                            }
+                        }
+                    }
+                    if (!found) {
+                        auto &coord = thelayer->buffer.Nodes[node]->Coords[0];
+                        x = coord.bufX;
+                        y = coord.bufY;
+                    }
                 } else {
-                    thelayer->buffer.GetPixel(x, y, color);
+                    auto &coord = thelayer->buffer.Nodes[node]->Coords[0];
+                    x = coord.bufX;
+                    y = coord.bufY;
+                    
+                    if (thelayer->isMasked(x, y)
+                        || x < 0
+                        || y < 0
+                        || x >= thelayer->BufferWi
+                        || y >= thelayer->BufferHt
+                        ) {
+                        color.Set(0, 0, 0, 0);
+                    } else {
+                        thelayer->buffer.GetPixel(x, y, color);
+                    }
                 }
-
                 // adjust for HSV adjustments
                 if (thelayer->needsHSVAdjust) {
                     HSVValue hsv = color.asHSV();
@@ -2063,6 +2094,7 @@ static const std::string SLIDER_PivotPointX("SLIDER_PivotPointX");
 static const std::string SLIDER_PivotPointY("SLIDER_PivotPointY");
 static const std::string SLIDER_XPivot("SLIDER_XPivot");
 static const std::string SLIDER_YPivot("SLIDER_YPivot");
+static const std::string X_Effect_RenderDisabled("Effect_RenderDisabled");
 
 static const std::string CHECKBOX_OverlayBkg("CHECKBOX_OverlayBkg");
 static const std::string CHOICE_BufferStyle("CHOICE_BufferStyle");
@@ -2267,11 +2299,12 @@ namespace
    }
 }
 
-void PixelBufferClass::SetLayerSettings(int layer, const SettingsMap &settingsMap) {
+void PixelBufferClass::SetLayerSettings(int layer, const SettingsMap &settingsMap, bool layerEnabled) {
     LayerInfo *inf = layers[layer];
     inf->persistent = settingsMap.GetBool(CHECKBOX_OverlayBkg);
     inf->mask.clear();
 
+    inf->renderingDisabled = !layerEnabled || settingsMap.Contains(X_Effect_RenderDisabled);
     inf->fadeInSteps = (int)(settingsMap.GetDouble(TEXTCTRL_Fadein, 0.0)*1000)/frameTimeInMs;
     inf->fadeOutSteps = (int)(settingsMap.GetDouble(TEXTCTRL_Fadeout, 0.0)*1000)/frameTimeInMs;
 
@@ -2501,7 +2534,9 @@ void PixelBufferClass::SetLayerSettings(int layer, const SettingsMap &settingsMa
 bool PixelBufferClass::IsPersistent(int layer) {
     return layers[layer]->persistent;
 }
-
+bool PixelBufferClass::IsRenderingDisabled(int layer) const {
+    return layers[layer]->renderingDisabled;
+}
 int PixelBufferClass::GetFreezeFrame(int layer)
 {
     return layers[layer]->freezeAfterFrame;
@@ -2995,6 +3030,9 @@ void PixelBufferClass::PrepareVariableSubBuffer(int EffectPeriod, int layer)
 }
 
 void PixelBufferClass::HandleLayerBlurZoom(int EffectPeriod, int layer) {
+    if (IsRenderingDisabled(layer)) {
+        return;
+    }
     int effStartPer, effEndPer;
     layers[layer]->buffer.GetEffectPeriods(effStartPer, effEndPer);
     float offset = 0.0f;
@@ -3135,40 +3173,23 @@ void PixelBufferClass::CalcOutput(int EffectPeriod, const std::vector<bool> & va
 
 static int DecodeType(const std::string &type)
 {
-    if (type == "Wipe")
-    {
+    if (type == "Wipe") {
         return 1;
-    }
-    else if (type == "Clock")
-    {
+    } else if (type == "Clock") {
         return 2;
-    }
-    else if (type == "From Middle")
-    {
+    } else if (type == "From Middle") {
         return 3;
-    }
-    else if (type == "Square Explode")
-    {
+    } else if (type == "Square Explode") {
         return 4;
-    }
-    else if (type == "Circle Explode")
-    {
+    } else if (type == "Circle Explode") {
         return 5;
-    }
-    else if (type == "Blinds")
-    {
+    } else if (type == "Blinds") {
         return 6;
-    }
-    else if (type == "Blend")
-    {
+    } else if (type == "Blend") {
         return 7;
-    }
-    else if (type == "Slide Checks")
-    {
+    } else if (type == "Slide Checks") {
         return 8;
-    }
-    else if (type == "Slide Bars")
-    {
+    } else if (type == "Slide Bars") {
         return 9;
     }
 
@@ -3403,8 +3424,7 @@ void PixelBufferClass::LayerInfo::createClockMask(bool out)
             startradians += 2.0f * (float)M_PI;
             currentradians += 2.0f * (float)M_PI;
         }
-    }
-    else {
+    } else {
         currentradians = startradians + currentradians;
     }
 
@@ -3413,8 +3433,7 @@ void PixelBufferClass::LayerInfo::createClockMask(bool out)
             float radianspixel;
             if (x - BufferWi / 2 == 0 && y - BufferHt / 2 == 0) {
                 radianspixel = 0.0;
-            }
-            else {
+            } else {
                 radianspixel = atan2(x - BufferWi / 2,
                     y - BufferHt / 2);
             }
@@ -3522,8 +3541,7 @@ void PixelBufferClass::LayerInfo::createBlendMask(bool out) {
         }
     }
 
-    for (int i = 0; i < step; i++)
-    {
+    for (int i = 0; i < step; i++) {
         int jy = rng() % actualpixels;
         int jx = rng() % actualpixels;
 
@@ -3533,23 +3551,17 @@ void PixelBufferClass::LayerInfo::createBlendMask(bool out) {
 
             // check if there is anything left to mask
             bool undone = false;
-            for (int tx = 0; tx < std::min(xpixels, actualpixels) && undone == false; ++tx)
-            {
-                for (int ty = 0; ty < std::min(ypixels, actualpixels) && undone == false; ++ty)
-                {
-                    if (mask[tx * adjust * BufferHt + ty * adjust] == m1)
-                    {
+            for (int tx = 0; tx < std::min(xpixels, actualpixels) && undone == false; ++tx) {
+                for (int ty = 0; ty < std::min(ypixels, actualpixels) && undone == false; ++ty) {
+                    if (mask[tx * adjust * BufferHt + ty * adjust] == m1) {
                         undone = true;
                     }
                 }
             }
 
-            if (undone)
-            {
+            if (undone) {
                 i--;
-            }
-            else
-            {
+            } else {
                 break;
             }
         } else {

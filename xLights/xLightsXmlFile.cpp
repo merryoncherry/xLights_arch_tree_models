@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/tokenzr.h>
@@ -832,7 +832,7 @@ void xLightsXmlFile::CreateNew()
     version_string = xlights_version_string;
 }
 
-bool xLightsXmlFile::Open(const wxString& ShowDir, bool ignore_audio)
+bool xLightsXmlFile::Open(const wxString& ShowDir, bool ignore_audio, const wxFileName &realFilename)
 {
     if (!FileExists())
         return false;
@@ -843,7 +843,7 @@ bool xLightsXmlFile::Open(const wxString& ShowDir, bool ignore_audio)
         return LoadV3Sequence();
     }
     else if (IsXmlSequence(*this)) {
-        return LoadSequence(ShowDir, ignore_audio);
+        return LoadSequence(ShowDir, ignore_audio, realFilename);
     }
     return false;
 }
@@ -1048,12 +1048,16 @@ void xLightsXmlFile::ConvertToFixedPointTiming()
     }
 }
 
-bool xLightsXmlFile::LoadSequence(const wxString& ShowDir, bool ignore_audio)
+bool xLightsXmlFile::LoadSequence(const wxString& ShowDir, bool ignore_audio, const wxFileName &realFilename)
 {
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
-    logger_base.info("LoadSequence: Loading sequence " + GetFullPath());
+    if (realFilename.GetFullPath() != GetFullPath()) {
+        logger_base.info("LoadSequence: Loading sequence " + GetFullPath() + " from " + realFilename.GetFullPath());
+    } else {
+        logger_base.info("LoadSequence: Loading sequence " + GetFullPath());
+    }
 
-    if (!seqDocument.Load(GetFullPath())) {
+    if (!seqDocument.Load(realFilename.GetFullPath())) {
         logger_base.error("LoadSequence: XML file load failed.");
         return false;
     }
@@ -1708,6 +1712,7 @@ void xLightsXmlFile::ProcessXTiming(wxXmlNode* node, xLightsFrame* xLightsParent
 {
     wxString name = UnXmlSafe(node->GetAttribute("name"));
     wxString v = node->GetAttribute("SourceVersion");
+    wxString st = node->GetAttribute("subType");
 
     name = UniqueTimingName(xLightsParent, name);
 
@@ -1717,7 +1722,7 @@ void xLightsXmlFile::ProcessXTiming(wxXmlNode* node, xLightsFrame* xLightsParent
     wxXmlNode* timing = nullptr;
     if (sequence_loaded)
     {
-        element = xLightsParent->AddTimingElement(std::string(name.c_str()));
+        element = xLightsParent->AddTimingElement(std::string(name.c_str()), std::string(st.c_str()));
     }
     else
     {
@@ -2407,7 +2412,7 @@ void xLightsXmlFile::ProcessXLightsTiming(const wxString& dir, const wxArrayStri
 
         logger_base.info("Loading sequence file " + std::string(next_file.GetFullPath().c_str()));
         xLightsXmlFile file(next_file);
-        file.LoadSequence(dir, true);
+        file.LoadSequence(dir, true, next_file);
 
         SequenceElements se(xLightsParent);
         se.SetFrequency(file.GetFrequency());
@@ -2860,6 +2865,7 @@ void xLightsXmlFile::Save(SequenceElements& seq_elements)
 #endif
 
     seqDocument.Save(GetFullPath());
+    MarkNewFileRevision(GetFullPath());
 }
 
 bool xLightsXmlFile::TimingAlreadyExists(const std::string & section, xLightsFrame* xLightsParent)
@@ -3161,8 +3167,8 @@ std::string xLightsXmlFile::GetMediaForXSQ(const std::string& xsq, const std::st
     if (mediaName != "") {
         if (!FileExists(mediaName)) {
             wxFileName fn(mediaName);
-            for (auto& md : mediaFolders) {
-                std::string tmn = md + wxFileName::GetPathSeparator() + fn.GetFullName();
+            for (const std::string& md : mediaFolders) {
+                std::string tmn = md + ::GetPathSeparator() + fn.GetFullName().ToStdString();
                 if (FileExists(tmn)) {
                     mediaName = tmn;
                     break;

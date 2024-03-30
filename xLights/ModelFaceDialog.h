@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/filename.h>
@@ -149,6 +149,9 @@ private:
     void OnButtonImportClick(wxCommandEvent& event);
     void OnMatrixModelsGridLabelLeftDClick(wxGridEvent& event);
     void OnCheckBox_OutputToLightsClick(wxCommandEvent& event);
+    void OnMatrixModelsGridResize(wxSizeEvent& event);
+    void OnSingleNodeGridResize(wxSizeEvent& event);
+    void OnNodeRangeGridResize(wxSizeEvent& event);
     //*)
 
     void OnAddBtnPopup(wxCommandEvent& event);

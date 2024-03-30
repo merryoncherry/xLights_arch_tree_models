@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/propgrid/advprops.h>
@@ -73,9 +73,9 @@ static const char* NODE_TYPE_VLUES[] = {
     "4 Channel RGBW", "4 Channel WRGB", "Strobes", "Single Color",
     "Single Color Intensity", "Superstring", "WRGB Nodes", "WRBG Nodes",
     "WGBR Nodes", "WGRB Nodes", "WBRG Nodes", "WBGR Nodes", "RGBW Nodes",
-    "RBGW Nodes", "GBRW Nodes", "GRBW Nodes", "BRGW Nodes", "BGRW Nodes"
+    "RBGW Nodes", "GBRW Nodes", "GRBW Nodes", "BRGW Nodes", "BGRW Nodes", "RGBWW Nodes"
 };
-static wxArrayString NODE_TYPES(26, NODE_TYPE_VLUES);
+static wxArrayString NODE_TYPES(27, NODE_TYPE_VLUES);
 
 static const char* RGBW_HANDLING_VALUES[] = { "R=G=B -> W", "RGB Only", "White Only", "Advanced", "White On All" };
 static wxArrayString RGBW_HANDLING(5, RGBW_HANDLING_VALUES);
@@ -548,7 +548,7 @@ void Model::Rename(std::string const& newName)
     ModelXml->DeleteAttribute("name");
     ModelXml->AddAttribute("name", name);
 
-    if (oldname != "") {
+    if (oldname != "" && newName != "Iamgoingtodeletethismodel") {
         if (wxMessageBox("Would you like to save the old name as an alias for this prop. This could be useful if you have sequences already sequenced against this prop using the old name.", "Save old name as alias", wxYES_NO | wxICON_QUESTION, GetModelManager().GetXLightsFrame()) == wxYES) {
             AddAlias("oldname:" + oldname);
         }
@@ -954,7 +954,7 @@ void Model::AddProperties(wxPropertyGridInterface* grid, OutputManager* outputMa
         p = grid->Append(new wxStringProperty("In Model Groups", "MGS", mgs));
         p->SetHelpString(mgscr);
         p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-        p->ChangeFlag(wxPG_PROP_READONLY, true);
+        p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
     }
 
     AddControllerProperties(grid);
@@ -1002,28 +1002,34 @@ void Model::AddProperties(wxPropertyGridInterface* grid, OutputManager* outputMa
         sp->Enable(false);
     }
     sp = grid->AppendIn(p, new wxEnumProperty("RGBW Color Handling", "ModelRGBWHandling", RGBW_HANDLING, wxArrayInt(), rgbwHandlingType));
-    if (HasSingleChannel(StringType) || GetNodeChannelCount(StringType) != 4) {
+    if (HasSingleChannel(StringType) || GetNodeChannelCount(StringType) < 4) {
         sp->Enable(false);
     }
 
     p = grid->Append(new wxPropertyCategory("Appearance", "ModelAppearance"));
     sp = grid->AppendIn(p, new wxBoolProperty("Active", "Active", IsActive()));
+    sp->SetHelpString("If unchecked the model will not be shown in the layout screen.");
     sp->SetAttribute("UseCheckbox", true);
     sp = grid->AppendIn(p, new wxUIntProperty("Pixel Size", "ModelPixelSize", pixelSize));
     sp->SetAttribute("Min", 1);
     sp->SetAttribute("Max", 300);
     sp->SetEditor("SpinCtrl");
+    sp->SetHelpString("By increasing the pixel size, the appearance of the element can be made to display a bigger size.");
 
-    grid->AppendIn(p, new wxEnumProperty("Pixel Style", "ModelPixelStyle", PIXEL_STYLES, wxArrayInt(), (int)_pixelStyle));
+    sp = grid->AppendIn(p, new wxEnumProperty("Pixel Style", "ModelPixelStyle", PIXEL_STYLES, wxArrayInt(), (int)_pixelStyle));
+    sp->SetHelpString("A visual representation of a pixel.");
     sp = grid->AppendIn(p, new wxUIntProperty("Transparency", "ModelPixelTransparency", transparency));
+    sp->SetHelpString("Adjust how opaque the element is on the display.");
     sp->SetAttribute("Min", 0);
     sp->SetAttribute("Max", 100);
     sp->SetEditor("SpinCtrl");
     sp = grid->AppendIn(p, new wxUIntProperty("Black Transparency", "ModelPixelBlackTransparency", blackTransparency));
+    sp->SetHelpString("Adjust how transparent the element is on the display.");
     sp->SetAttribute("Min", 0);
     sp->SetAttribute("Max", 100);
     sp->SetEditor("SpinCtrl");
-    grid->AppendIn(p, new wxColourProperty("Tag Color", "ModelTagColour", modelTagColour));
+    sp = grid->AppendIn(p, new wxColourProperty("Tag Color", "ModelTagColour", modelTagColour));
+    sp->SetHelpString("A visual color assigned to the model in the model list.");
     UpdateControllerProperties(grid);
     DisableUnusedProperties(grid);
 
@@ -1170,7 +1176,7 @@ void Model::AddControllerProperties(wxPropertyGridInterface* grid)
                     } else {
                         std::string type = GetSmartRemoteType();
                         auto smt = grid->AppendIn(p, new wxStringProperty("Smart Remote Type", "SmartRemoteType", type));
-                        smt->ChangeFlag(wxPG_PROP_READONLY, true);
+                        smt->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
                         smt->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
                     }
                 }
@@ -2101,7 +2107,7 @@ int Model::OnPropertyGridChange(wxPropertyGridInterface* grid, wxPropertyGridEve
             ModelXml->AddAttribute("StringType", NODE_TYPES[i]);
             AddASAPWork(OutputModelManager::WORK_RELOAD_PROPERTYGRID, "Model::OnPropertyGridChange::ModelStringType");
         }
-        if (GetNodeChannelCount(ModelXml->GetAttribute("StringType")) == 4) {
+        if (GetNodeChannelCount(ModelXml->GetAttribute("StringType")) > 3) {
             p2 = grid->GetPropertyByName("ModelRGBWHandling");
             ModelXml->AddAttribute("RGBWHandling", RGBW_HANDLING[p2->GetValue().GetLong()]);
         }
@@ -2960,7 +2966,7 @@ void Model::SetFromXml(wxXmlNode* ModelNode, bool zb)
     } else {
         rgbOrder = StringType.substr(0, 3);
     }
-    if (ncc == 4) {
+    if (ncc > 3) {
         std::string s = ModelNode->GetAttribute("RGBWHandling").ToStdString();
         for (int x = 0; x < RGBW_HANDLING.size(); ++x) {
             if (RGBW_HANDLING[x] == s) {
@@ -3799,6 +3805,19 @@ void Model::ApplyTransform(const std::string& type,
     }
 }
 
+const std::string Model::AdjustBufferStyle(const std::string &style) const {
+    auto styles = GetBufferStyles();
+    if (std::find(styles.begin(), styles.end(), style) == styles.end()) {
+        if (style.substr(0, 9) == "Per Model") {
+            return style.substr(10);
+        } else {
+            return "Default";
+        }
+    }
+    return style;
+}
+
+
 void Model::InitRenderBufferNodes(const std::string& type, const std::string& camera,
                                   const std::string& transform,
                                   std::vector<NodeBaseClassPtr>& newNodes, int& bufferWi, int& bufferHt, int stagger, bool deep) const
@@ -4151,6 +4170,11 @@ std::string Model::GetNextName()
     return "";
 }
 
+bool Model::FiveChannelNodes() const
+{
+    return Contains(StringType, "RGBWW");
+}
+
 bool Model::FourChannelNodes() const
 {
     // true if string contains WRGB or any variant thereof
@@ -4241,7 +4265,12 @@ void Model::SetNodeCount(size_t NumStrings, size_t NodesPerString, const std::st
     } else if (NodesPerString == 0) {
         if (StringType == "Node Single Color") {
             Nodes.push_back(NodeBaseClassPtr(new NodeClassCustom(0, 0, customColor, GetNextName())));
-        } else if (FourChannelNodes()) {
+        } 
+        else if (FiveChannelNodes()) {
+            Nodes.push_back(NodeBaseClassPtr(new NodeClassRGBWW(0, 0, rgbOrder, rgbwHandlingType, GetNextName())));
+            Nodes.back()->model = this;
+        }
+        else if (FourChannelNodes()) {
             bool wLast = StringType[3] == 'W';
             Nodes.push_back(NodeBaseClassPtr(new NodeClassRGBW(0, 0, rgbOrder, wLast, rgbwHandlingType, GetNextName())));
         } else {
@@ -4258,6 +4287,12 @@ void Model::SetNodeCount(size_t NumStrings, size_t NodesPerString, const std::st
         size_t numnodes = NumStrings * NodesPerString;
         for (n = 0; n < numnodes; ++n) {
             Nodes.push_back(NodeBaseClassPtr(new NodeClassCustom(n / NodesPerString, 1, customColor, GetNextName())));
+            Nodes.back()->model = this;
+        }
+    } else if (StringType == "RGBWW Nodes") {
+        size_t numnodes = NumStrings * NodesPerString;
+        for (n = 0; n < numnodes; ++n) {
+            Nodes.push_back(NodeBaseClassPtr(new NodeClassRGBWW(n / NodesPerString, 1, rgbOrder, rgbwHandlingType, GetNextName())));
             Nodes.back()->model = this;
         }
     } else {
@@ -4282,6 +4317,8 @@ size_t Model::GetNodeChannelCount(const std::string& nodeType) const
         return 4;
     } else if (nodeType == "4 Channel WRGB") {
         return 4;
+    } else if (nodeType == "RGBWW Nodes") {
+        return 5;
     } else if (nodeType[0] == 'W' || nodeType[3] == 'W') {
         // various WRGB and RGBW types
         return 4;
@@ -5909,7 +5946,7 @@ Model* Model::GetXlightsModel(Model* model, std::string& last_model, xLightsFram
                     // the user has decided they dont want it then treat them like an adult
                     if (!xlights->GetIgnoreVendorModelRecommendations()) {
 #endif
-                        wxURI mappingJson("https://raw.githubusercontent.com/smeighan/xLights/master/download/model_vendor_mapping.json");
+                        wxURI mappingJson("https://raw.githubusercontent.com/xLightsSequencer/xLights/master/download/model_vendor_mapping.json");
                         std::string json = CachedFileDownloader::GetDefaultCache().GetFile(mappingJson, CACHETIME_DAY);
                         if (json == "") {
                             json = wxStandardPaths::Get().GetResourcesDir() + "/model_vendor_mapping.json";

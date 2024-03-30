@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/msgdlg.h>
@@ -57,7 +57,7 @@ EffectsPanel::EffectsPanel(wxWindow *parent, EffectManager *manager, wxTimer *ti
     FlexGridSizer1->Add(EffectChoicebook, 1, wxRIGHT|wxEXPAND, 2);
     SetSizer(FlexGridSizer1);
 
-    Connect(ID_CHOICEBOOK1,wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGED,(wxObjectEventFunction)&EffectsPanel::EffectSelected);
+    Connect(ID_CHOICEBOOK1, wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGED, (wxObjectEventFunction)&EffectsPanel::EffectSelected);
     //*)
 
     Connect(EffectChoicebook->GetChoiceCtrl()->GetId(), wxEVT_CONTEXT_MENU, (wxObjectEventFunction)&EffectsPanel::OnRightDownChoice, nullptr, this);
@@ -66,7 +66,7 @@ EffectsPanel::EffectsPanel(wxWindow *parent, EffectManager *manager, wxTimer *ti
 
     for (const auto& it : *effectManager) {
         RenderableEffect *p = it;
-        wxScrolledWindow* sw = new wxScrolledWindow(EffectChoicebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL, _T("ID_PANEL" + p->Name()));
+        wxScrolledWindow* sw = new wxScrolledWindow(EffectChoicebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL, "ID_PANEL" + p->Name());
         xlEffectPanel *panel = p->GetPanel(sw);
         panel->AddChangeListeners(timer);
         wxFlexGridSizer *fgs = new wxFlexGridSizer(1, 1, 0, 0);

@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <string>
@@ -176,6 +176,7 @@ public:
     std::map<std::string, std::map<std::string, std::string>> GetDimmingInfo() const;
     virtual std::list<std::string> CheckModelSettings() override;
     virtual const std::vector<std::string>& GetBufferStyles() const { return DEFAULT_BUFFER_STYLES; };
+    virtual const std::string AdjustBufferStyle(const std::string &style) const;
     virtual void GetBufferSize(const std::string& type, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const;
     virtual void InitRenderBufferNodes(const std::string& type, const std::string& camera, const std::string& transform,
         std::vector<NodeBaseClassPtr>& Nodes, int& BufferWi, int& BufferHi, int stagger, bool deep = false) const;
@@ -187,6 +188,7 @@ public:
     virtual void ExportXlightsModel() {}
     virtual void ImportModelChildren(wxXmlNode* root, xLightsFrame* xlights, wxString const& newname, float& min_x, float& max_x, float& min_y, float& max_y);
     bool FourChannelNodes() const;
+    bool FiveChannelNodes() const;
     std::list<std::string> GetShadowedBy() const;
 
     void SetStartChannel(std::string const& startChannel);
@@ -198,7 +200,6 @@ public:
 
     static const std::vector<std::string> DEFAULT_BUFFER_STYLES;
 
-    virtual bool StrandsZigZagOnString() const { return false; };
     int GetDefaultBufferWi() const { return BufferWi; }
     int GetDefaultBufferHt() const { return BufferHt; }
     virtual bool IsDMXModel() const { return false; }

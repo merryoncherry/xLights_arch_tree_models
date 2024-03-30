@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #define ZERO 0
@@ -1157,8 +1157,10 @@ void ColorPanel::OnUpdateColorClick(wxCommandEvent& event)
 {
     int alleffects = xLightsApp::GetFrame()->GetMainSequencer()->GetSelectedEffectCount("");
     if (alleffects > 1) {
-        if (wxMessageBox("Are you sure you want to change the colours on all selected effects?", "Update all", wxYES_NO | wxCENTRE, this) == wxNO)
-            return;
+        if (!xLightsApp::GetFrame()->IsSuppressColorWarn()) {
+            if (wxMessageBox("Are you sure you want to change the colours on all selected effects?", "Update all", wxYES_NO | wxCENTRE, this) == wxNO)
+                return;
+        }
     }
 
     wxCommandEvent eventEffectUpdated(EVT_EFFECT_PALETTE_UPDATED);

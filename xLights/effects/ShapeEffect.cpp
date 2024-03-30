@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include "ShapeEffect.h"
@@ -46,7 +46,7 @@ ShapeEffect::~ShapeEffect()
 
 std::list<std::string> ShapeEffect::CheckEffectSettings(const SettingsMap& settings, AudioManager* media, Model* model, Effect* eff, bool renderCache)
 {
-    std::list<std::string> res;
+    std::list<std::string> res = RenderableEffect::CheckEffectSettings(settings, media, model, eff, renderCache);
 
     if (media == nullptr && settings.GetBool("E_CHECKBOX_Shape_UseMusic", false))
     {
@@ -1212,6 +1212,30 @@ void ShapeEffect::Drawpresent(RenderBuffer& buffer, int xc, int yc, double radiu
     }
 }
 
+bool ShapeEffect::needToAdjustSettings(const std::string& version)
+{
+    // give the base class a chance to adjust any settings
+    return IsVersionOlder("2024.02", version);
+}
+
+void ShapeEffect::adjustSettings(const std::string& version, Effect* effect, bool removeDefaults)
+{
+    // give the base class a chance to adjust any settings
+    if (RenderableEffect::needToAdjustSettings(version)) {
+        RenderableEffect::adjustSettings(version, effect, removeDefaults);
+    }
+    SettingsMap& settings = effect->GetSettings();
+    if (settings.Contains("E_CHOICE_Shape_ObjectToDraw")) {
+        if (settings["E_CHOICE_Shape_ObjectToDraw"] == "Emoji") {
+            std::string val = settings.Get("E_SLIDER_Shape_CentreY", "");
+            // int val = effect->GetSettings().GetInt("E_SLIDER_Shape_CentreY", 0);
+            if (val != "") {
+                settings["E_SLIDER_Shape_CentreY"] = wxString::Format(wxT("%d"), 100 - wxAtoi(val));
+            }
+        }
+    }
+}
+
 void ShapeEffect::Drawemoji(RenderBuffer& buffer, int xc, int yc, double radius, xlColor color, int emoji, int emojiTone, wxFontInfo& font) const
 {
     if (radius < 1)
@@ -1239,7 +1263,7 @@ void ShapeEffect::Drawemoji(RenderBuffer& buffer, int xc, int yc, double radius,
     context->GetTextExtent(text, &width, &height);
 
     context->SetOverlayMode(true);
-    context->DrawText(text, std::round((float)xc - width / 2.0), std::round((float)yc - height / 2.0));
+    context->DrawText(text, std::round((float)xc - width / 2.0), std::round((float)(50.0 - yc) - height / 2.0));
     context->SetOverlayMode(false);
 }
 

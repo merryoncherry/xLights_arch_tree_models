@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <map>
@@ -159,10 +159,10 @@ void xLightsFrame::CreateSequencer()
                    .Float().MaximizeButton(true));
     // Hide the panel on start.
     wxAuiPaneInfo & info = m_mgr->GetPane("DisplayElements");
-    info.BestSize(wxSize(600, 400));
+    info.BestSize(wxSize(750, 1050));
     int w, h;
     displayElementsPanel->GetSize(&w, &h);
-    info.FloatingSize(std::max(600, w), std::max(400, h));
+    info.FloatingSize(std::max(750, w), std::max(1050, h));
     info.Hide();
 
     m_mgr->AddPane(perspectivePanel,wxAuiPaneInfo().Name(wxT("Perspectives")).Caption(wxT("Perspectives")).Left().Layer(1).Hide());
@@ -512,10 +512,18 @@ void xLightsFrame::CheckForValidModels()
             if (element && ElementType::ELEMENT_TYPE_MODEL == element->GetType()) {
                 std::string name = element->GetModelName();
                 
-                if (AllModels[name] == nullptr) {
-                    int numfx = element->GetEffectCount(); //useful info for user
-                    std::string desc = name + "(" + std::to_string(numfx) + ")";
-                    missingModels.push_back(desc); //show which ones have effects (tells user how important)
+                if (AllModels[name] == nullptr && element->GetEffectCount()>0) {
+                    //check to see if we have an alias
+                    for (const auto& it : AllModels) {
+                        if (it.second->IsAlias(name, true)) {
+                            //this will map to an alias later, skip it
+                        } else if (it.second->IsAlias(name, false)) {
+                            int numfx = element->GetEffectCount(); // useful info for user
+                            std::string desc = name + "(" + std::to_string(numfx) + ")";
+                            missingModels.push_back(desc); // show which ones have effects (tells user how important)
+                        }
+                    }
+                    
                 }
                 //remove the current models from the list so we don't end up with the same model represented twice
                 Remove(AllNames, name);
@@ -752,10 +760,15 @@ void xLightsFrame::CheckForValidModels()
                                     ModelSMNames.push_back(m->GetSubModel(z)->GetName());
                                 }
                                 if ((!_renderMode && !_checkSequenceMode) || _promptBatchRenderIssues) {
+                                    int priorCnt = el->GetSubModelAndStrandCount();
                                     HandleChoices(this, AllSMNames, ModelSMNames, sme,
                                         "SubModel " + sme->GetName() + " of Model " + m->GetName() + " does not exist.\n"
                                         + "How should we handle this?",
                                         toMap, ignore, mapall);
+                                    // if count after is less than the count before then the submodel list is shorter, so rewind the index
+                                    if (priorCnt != el->GetSubModelAndStrandCount()) {
+                                        --x1;
+                                    }
                                 }
                             }
                         }
@@ -781,7 +794,7 @@ void xLightsFrame::LoadAudioData(xLightsXmlFile& xml_file)
         if (xml_file.GetMedia() == nullptr) {
             mediaFilename = xml_file.GetMediaFile();
             ObtainAccessToURL(mediaFilename);
-            if ((mediaFilename == wxEmptyString) || !FileExists(mediaFilename) || !wxIsReadable(mediaFilename)) {
+            if (mediaFilename.empty() || !FileExists(mediaFilename) || !wxIsReadable(mediaFilename)) {
                 SeqSettingsDialog setting_dlg(this, &xml_file, mediaDirectories, wxT(""), wxEmptyString);
                 setting_dlg.Fit();
                 int ret_val = setting_dlg.ShowModal();
@@ -807,7 +820,7 @@ void xLightsFrame::LoadAudioData(xLightsXmlFile& xml_file)
             ObtainAccessToURL(mediaFilename);
         }
 
-        if (mediaFilename != wxEmptyString) {
+        if (!mediaFilename.empty()) {
             wxString error;
             musicLength = mainSequencer->PanelWaveForm->OpenfileMedia(xml_file.GetMedia(), error);
             if (musicLength <= 0) {
@@ -1093,7 +1106,7 @@ void xLightsFrame::UnselectEffect(){
 void xLightsFrame::EffectChanged(wxCommandEvent& event)
 {
     Effect* effect = (Effect*)event.GetClientData();
-    SetEffectControls(effect->GetParentEffectLayer()->GetParentElement()->GetModelName(),
+    SetEffectControls(effect->GetParentEffectLayer()->GetParentElement()->GetFullName(),
                       effect->GetEffectName(), effect->GetSettings(), effect->GetPaletteMap(),
                       true);
     selectedEffectString = "";  // force update to effect rendering
@@ -1208,7 +1221,7 @@ void xLightsFrame::SelectedEffectChanged(SelectedEffectChangedEvent& event)
                     effect->SetEffectIndex(effectManager.GetEffectIndex(effectName));
                     resetStrings = true;
                 }
-                SetEffectControls(effect->GetParentEffectLayer()->GetParentElement()->GetModelName(),
+                SetEffectControls(effect->GetParentEffectLayer()->GetParentElement()->GetFullName(),
                     effect->GetEffectName(), effect->GetSettings(), effect->GetPaletteMap(),
                     !event.isNew);
                 selectedEffectString = GetEffectTextFromWindows(selectedEffectPalette);
@@ -1287,13 +1300,13 @@ void xLightsFrame::EffectDroppedOnGrid(wxCommandEvent& event)
 
         last_effect_created = effect;
 
-        _sequenceElements.get_undo_mgr().CaptureAddedEffect( el->GetParentElement()->GetModelName(), el->GetIndex(), effect->GetID() );
+        _sequenceElements.get_undo_mgr().CaptureAddedEffect( el->GetParentElement()->GetFullName(), el->GetIndex(), effect->GetID() );
 
         mainSequencer->PanelEffectGrid->ProcessDroppedEffect(effect);
 
         // need to do this otherwise they dont update when we drop the model
-        bufferPanel->UpdateBufferStyles(AllModels[el->GetParentElement()->GetModelName()]);
-        bufferPanel->UpdateCamera(AllModels[el->GetParentElement()->GetModelName()]);
+        bufferPanel->UpdateBufferStyles(AllModels[el->GetParentElement()->GetFullName()]);
+        bufferPanel->UpdateCamera(AllModels[el->GetParentElement()->GetModelName()]); //need the full model, not submodel, for the camera
 
         if (playType == PLAY_TYPE_MODEL_PAUSED) {
             DoStopSequence();
@@ -1318,7 +1331,7 @@ void xLightsFrame::EffectDroppedOnGrid(wxCommandEvent& event)
 
     if (playType != PLAY_TYPE_MODEL && last_effect_created != nullptr)
     {
-        SetEffectControls(last_effect_created->GetParentEffectLayer()->GetParentElement()->GetModelName(),
+        SetEffectControls(last_effect_created->GetParentEffectLayer()->GetParentElement()->GetFullName(),
                           last_effect_created->GetEffectName(), last_effect_created->GetSettings(),
                           last_effect_created->GetPaletteMap(), false);
         selectedEffectString = GetEffectTextFromWindows(selectedEffectPalette);
@@ -1426,7 +1439,7 @@ void xLightsFrame::EffectFileDroppedOnGrid(wxCommandEvent& event)
 
     if (playType != PLAY_TYPE_MODEL && last_effect_created != nullptr)
     {
-        SetEffectControls(last_effect_created->GetParentEffectLayer()->GetParentElement()->GetModelName(),
+        SetEffectControls(last_effect_created->GetParentEffectLayer()->GetParentElement()->GetFullName(),
             last_effect_created->GetEffectName(), last_effect_created->GetSettings(),
             last_effect_created->GetPaletteMap(), false);
         selectedEffectString = GetEffectTextFromWindows(selectedEffectPalette);
@@ -2122,7 +2135,7 @@ void xLightsFrame::RandomizeEffect(wxCommandEvent& event)
                 el->GetEffect(j)->SetEffectName(effectName);
                 el->GetEffect(j)->SetPalette(palette);
 
-                SetEffectControls(el->GetEffect(j)->GetParentEffectLayer()->GetParentElement()->GetModelName(),
+                SetEffectControls(el->GetEffect(j)->GetParentEffectLayer()->GetParentElement()->GetFullName(),
                                   el->GetEffect(j)->GetEffectName(),
                                   el->GetEffect(j)->GetSettings(),
                                   el->GetEffect(j)->GetPaletteMap(),
@@ -2490,11 +2503,7 @@ void xLightsFrame::SetEffectControls(const std::string &modelName, const std::st
     //p->Freeze();
     Model *model = GetModel(modelName);
     if (setDefaults) {
-        if (modelName == "") {
-            ResetPanelDefaultSettings(effectName, nullptr, false);
-        } else {
-            ResetPanelDefaultSettings(effectName, model, false);
-        }
+        ResetPanelDefaultSettings(effectName, model, false);
     }
 
     EffectsPanel1->SetEffectPanelStatus(model, effectName);
@@ -2611,7 +2620,10 @@ bool xLightsFrame::ApplySetting(wxString name, const wxString &value, int count)
 			}
 
 			wxChoice* ctrl = (wxChoice*)CtrlWin;
-			ctrl->SetStringSelection(value);
+            if (!ctrl->SetStringSelection(value) && value.StartsWith("**")) {
+                ctrl->Append(value);
+                ctrl->SetStringSelection(value);
+            }
             if (ctrl->GetStringSelection() != value && count < 10) {
                 // if did not take ... possibly because it has not loaded the values yet
                 // If it doesn't take after 10 attempts, the "value" is not in the list of possible values
@@ -3021,11 +3033,24 @@ void xLightsFrame::ShowDisplayElements(wxCommandEvent& event)
 {
     displayElementsPanel->Initialize();
     wxAuiPaneInfo & info = m_mgr->GetPane("DisplayElements");
-    info.BestSize(wxSize(600, 400));
+    info.BestSize(wxSize(750, 1050));
     int w, h;
     displayElementsPanel->GetSize(&w, &h);
-    info.FloatingSize(std::max(600, w), std::max(400, h));
+    info.FloatingSize(std::max(750, w), std::max(1050, h));
     info.Show();
+    m_mgr->Update();
+    UpdateViewMenu();
+}
+
+void xLightsFrame::ShowHideSelectEffectsWindow(wxCommandEvent& event)
+{
+    InitSequencer();
+    bool visible = m_mgr->GetPane("SelectEffect").IsShown();
+    if (visible) {
+        m_mgr->GetPane("SelectEffect").Hide();
+    } else {
+        m_mgr->GetPane("SelectEffect").Show();
+    }
     m_mgr->Update();
     UpdateViewMenu();
 }
@@ -3061,10 +3086,10 @@ void xLightsFrame::ShowHideDisplayElementsWindow(wxCommandEvent& event)
     if (visible) {
         info.Hide();
     } else {
-        info.BestSize(wxSize(600, 400));
+        info.BestSize(wxSize(750, 1050));
         int w, h;
         displayElementsPanel->GetSize(&w, &h);
-        info.FloatingSize(std::max(600, w), std::max(400, h));
+        info.FloatingSize(std::max(750, w), std::max(1050, h));
         info.Show();
     }
     m_mgr->Update();
