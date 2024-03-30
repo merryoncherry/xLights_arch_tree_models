@@ -345,19 +345,19 @@ void SubModel::AddProperties(wxPropertyGridInterface* grid, OutputManager* outpu
 {
     wxPGProperty* p = grid->Append(new wxStringProperty("SubModel Type", "SMT", _type));
     p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-    p->ChangeFlag(wxPG_PROP_READONLY, true);
+    p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
 
     p = grid->Append(new wxStringProperty("SubModel Layout", "SML", _layout));
     p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-    p->ChangeFlag(wxPG_PROP_READONLY, true);
+    p->ChangeFlag(wxPGPropertyFlags::ReadOnly , true);
 
     p = grid->Append(new wxStringProperty("SubModel Buffer Style", "SMBS", _bufferStyle));
     p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-    p->ChangeFlag(wxPG_PROP_READONLY, true);
+    p->ChangeFlag(wxPGPropertyFlags::ReadOnly , true);
 
     p = grid->Append(new wxStringProperty("SubModel", "SMN", _properyGridDisplay));
     p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-    p->ChangeFlag(wxPG_PROP_READONLY, true);
+    p->ChangeFlag(wxPGPropertyFlags::ReadOnly , true);
 
     auto modelGroups = parent->GetModelManager().GetGroupsContainingModel(this);
     if (modelGroups.size() > 0) {
@@ -381,7 +381,7 @@ void SubModel::AddProperties(wxPropertyGridInterface* grid, OutputManager* outpu
 static const std::string VERT_PER_STRAND("Vertical Per Strand");
 static const std::string HORIZ_PER_STRAND("Horizontal Per Strand");
 static const std::string SINGLE_LINE("Single Line");
-    std::vector<std::string> SubModel::SUBMODEL_BUFFER_STYLES;
+std::vector<std::string> SubModel::SUBMODEL_BUFFER_STYLES;
 const std::vector<std::string>& SubModel::GetBufferStyles() const {
     struct Initializer {
         Initializer() {
@@ -392,6 +392,9 @@ const std::vector<std::string>& SubModel::GetBufferStyles() const {
     };
     static Initializer ListInitializationGuard;
     return SUBMODEL_BUFFER_STYLES;
+}
+const std::string SubModel::AdjustBufferStyle(const std::string &style) const {
+    return Model::AdjustBufferStyle(style);
 }
 
 void SubModel::GetBufferSize(const std::string &type, const std::string &camera, const std::string &transform, int &BufferWi, int &BufferHi, int stagger) const {
@@ -408,6 +411,7 @@ void SubModel::GetBufferSize(const std::string &type, const std::string &camera,
         } else {
             Model::GetBufferSize(type, camera, transform, BufferWi, BufferHi, stagger);
         }
+<<<<<<< HEAD
     } else if (isRanges && type == SINGLE_LINE) {
         int nNodes = 0;
         int d1, d2;
