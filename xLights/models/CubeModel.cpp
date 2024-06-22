@@ -552,8 +552,9 @@ const std::vector<std::string> &CubeModel::GetBufferStyles() const {
     return CUBE_BUFFERSTYLES;
 }
 
-void CubeModel::GetBufferSize(const std::string& type, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const
+void CubeModel::GetBufferSize(const std::string& tp, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const
 {
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
     int width = parm1;
     int height = parm2;
     int depth = parm3;
@@ -567,13 +568,13 @@ void CubeModel::GetBufferSize(const std::string& type, const std::string& camera
     {
         Model::GetBufferSize(type, camera, transform, BufferWi, BufferHi, stagger);
     }
-    else if (type == "Horizontal Per Strand")
+    else if (type == "Horizontal Per Strand" || type == "Per Model Horizontal Per Strand" || type == "Horizontal Per Model/Strand" )
     {
         // FIXME Pretty sure this isnt right
         BufferHi = GetStrandLength(0);
         BufferWi = GetNumStrands();
     }
-    else if (type == "Vertical Per Strand")
+    else if (type == "Vertical Per Strand" || type == "Per Model Vertical Per Strand" || type == "Vertical Per Model/Strand")
     {
         // FIXME Pretty sure this isnt right
         BufferWi = GetStrandLength(0);
@@ -675,8 +676,10 @@ int CubeModel::GetNumPhysicalStrings() const
     }
 }
 
-void CubeModel::InitRenderBufferNodes(const std::string& type, const std::string& camera, const std::string& transform, std::vector<NodeBaseClassPtr>& Nodes, int& BufferWi, int& BufferHi, int stagger, bool deep) const
+void CubeModel::InitRenderBufferNodes(const std::string& tp, const std::string& camera, const std::string& transform, std::vector<NodeBaseClassPtr>& Nodes, int& BufferWi, int& BufferHi, int stagger, bool deep) const
 {
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
+
     int width = parm1;
     int height = parm2;
     int depth = parm3;
@@ -728,7 +731,7 @@ void CubeModel::InitRenderBufferNodes(const std::string& type, const std::string
     {
         // dont need to do anything
     }
-    else if (type == "Horizontal Per Strand")
+    else if (type == "Horizontal Per Strand" || type == "Per Model Horizontal Per Strand" || type == "Horizontal Per Model/Strand")
     {
         int sl = BufferHi;
         for (auto n = oldNodes; n < Nodes.size(); n++)
@@ -737,7 +740,7 @@ void CubeModel::InitRenderBufferNodes(const std::string& type, const std::string
             Nodes[n]->Coords[0].bufY = (n - oldNodes) % sl;
         }
     }
-    else if (type == "Vertical Per Strand")
+    else if (type == "Vertical Per Strand" || type == "Per Model Vertical Per Strand" || type == "Vertical Per Model/Strand")
     {
         int sl = BufferWi;
         for (auto n = oldNodes; n < Nodes.size(); n++)
@@ -1032,6 +1035,10 @@ void CubeModel::ExportXlightsModel()
     f.Write(wxString::Format("StrandsPerLayer=\"%s\" ", s4));
     f.Write(ExportSuperStringColors());
     f.Write(" >\n");
+    wxString aliases = SerialiseAliases();
+    if (aliases != "") {
+        f.Write(aliases);
+    }
     wxString groups = SerialiseGroups();
     if (groups != "") {
         f.Write(groups);

@@ -238,7 +238,8 @@ int ArchesModel::OnPropertyGridChange(wxPropertyGridInterface* grid, wxPropertyG
     return Model::OnPropertyGridChange(grid, event);
 }
 
-void ArchesModel::GetBufferSize(const std::string &type, const std::string &camera, const std::string &transform, int &BufferWi, int &BufferHi, int stagger) const {
+void ArchesModel::GetBufferSize(const std::string &tp, const std::string &camera, const std::string &transform, int &BufferWi, int &BufferHi, int stagger) const {
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
     if (type == "Single Line") {
         BufferHi = 1;
         BufferWi = this->BufferWi * this->BufferHt;
@@ -247,9 +248,10 @@ void ArchesModel::GetBufferSize(const std::string &type, const std::string &came
         Model::GetBufferSize(type, camera, transform, BufferWi, BufferHi, stagger);
     }
 }
-void ArchesModel::InitRenderBufferNodes(const std::string& type, const std::string& camera, const std::string& transform,
+void ArchesModel::InitRenderBufferNodes(const std::string& tp, const std::string& camera, const std::string& transform,
     std::vector<NodeBaseClassPtr>& newNodes, int& BufferWi, int& BufferHi, int stagger, bool deep) const
 {
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
     if (type == "Single Line") {
         BufferHi = 1;
         BufferWi = GetNodeCount();
@@ -274,8 +276,7 @@ bool ArchesModel::IsNodeFirst(int n) const
 {
     if (GetLayerSizeCount() == 0) {
         return (GetIsLtoR() && n == 0) || (!GetIsLtoR() && n == Nodes.size() - 1);
-    }
-    else {
+    } else {
         return n == 0;
     }
 }
@@ -486,7 +487,7 @@ void ArchesModel::SetLayerdArchCoord(int arches, int maxLen)
             x = midpt * sin(angle2) * 2.0 * adj + maxLen * parm3;
             double y = (maxLen * parm3) * cos(angle2);
             Nodes[n]->Coords[c].screenX = x;
-            Nodes[n]->Coords[c].screenY = y * screenLocation.GetHeight() * adj;
+            Nodes[n]->Coords[c].screenY = y * screenLocation.GetMHeight() * adj;
             rotate_point(x, 0, skew_angle,
                 Nodes[n]->Coords[c].screenX,
                 Nodes[n]->Coords[c].screenY);
@@ -530,7 +531,7 @@ void ArchesModel::SetArchCoord()
             x = xoffset + midpt * sin(angle2) * 2.0 + parm2 * parm3 + gaps * _gap;
             double y = (parm2 * parm3) * cos(angle2);
             Nodes[n]->Coords[c].screenX = x;
-            Nodes[n]->Coords[c].screenY = y * screenLocation.GetHeight();
+            Nodes[n]->Coords[c].screenY = y * screenLocation.GetMHeight();
             rotate_point(x, 0, skew_angle,
                 Nodes[n]->Coords[c].screenX,
                 Nodes[n]->Coords[c].screenY);
@@ -544,8 +545,8 @@ void ArchesModel::SetArchCoord()
     if (minY > 1) {
         renderHt -= minY;
         for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-            for (auto coord = (*it)->Coords.begin(); coord != (*it)->Coords.end(); ++coord) {
-                coord->screenY -= minY;
+            for (auto &coord : (*it)->Coords) {
+                coord.screenY -= minY;
             }
         }
     }
@@ -602,7 +603,10 @@ void ArchesModel::ExportXlightsModel()
     f.Write(wxString::Format("ZigZag=\"%s\" ", zz));
     f.Write(ExportSuperStringColors());
     f.Write(" >\n");
-
+    wxString aliases = SerialiseAliases();
+    if (aliases != "") {
+        f.Write(aliases);
+    }
     wxString groups = SerialiseGroups();
     if (groups != "") {
         f.Write(groups);

@@ -76,10 +76,12 @@ bool PolyLineModel::IsNodeFirst(int n) const
     return (GetIsLtoR() && n == 0) || (!GetIsLtoR() && n == Nodes.size() - 1);
 }
 
-void PolyLineModel::InitRenderBufferNodes(const std::string& type, const std::string& camera,
+void PolyLineModel::InitRenderBufferNodes(const std::string& tp, const std::string& camera,
     const std::string& transform,
     std::vector<NodeBaseClassPtr>& newNodes, int& BufferWi, int& BufferHi, int stagger, bool deep) const
 {
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
+
     if (type == "Line Segments" && hasIndivSeg) {
         BufferHi = num_segments;
         BufferWi = 0;
@@ -105,7 +107,6 @@ void PolyLineModel::InitRenderBufferNodes(const std::string& type, const std::st
                 for (size_t c = 0; c < CoordCount; c++) {
                     newNodes[idx]->Coords[c].bufX = location;
                     newNodes[idx]->Coords[c].bufY = m;
-                    newNodes[idx]->Coords[c].bufZ = 0;
                 }
                 idx++;
                 seg_idx++;
@@ -578,7 +579,7 @@ void PolyLineModel::InitModel()
             }
         }
         Nodes[curNode]->ActChan = chan;
-        Nodes[curNode]->Coords[curCoord].bufX = width;
+        Nodes[curNode]->Coords[curCoord].bufX = SingleNode ? 0 : width;
         if (_alternateNodes) {
             if (y + 1 <= (nodesInDrop + 1) / 2) {
                 if (up) {
@@ -1000,10 +1001,9 @@ void PolyLineModel::AddTypeProperties(wxPropertyGridInterface* grid, OutputManag
             wxString nm = wxString::Format("Segment %d", x + 1);
             grid->AppendIn(p, new wxUIntProperty(nm, SegAttrName(x), wxAtoi(ModelXml->GetAttribute(SegAttrName(x), ""))));
         }
-        if (segs_collapsed) {
-            grid->Collapse(p);
-        }
-        
+
+        if (segs_collapsed) { grid->Collapse(p); }
+
         p = grid->Append(new wxStringProperty("Corner Settings", "PolyCornerProperties", ""));
         for (int x = 0; x < num_segments + 1; x++) {
             std::string val = ModelXml->GetAttribute(CornerAttrName(x)).ToStdString();
@@ -1015,6 +1015,8 @@ void PolyLineModel::AddTypeProperties(wxPropertyGridInterface* grid, OutputManag
             wxString nm = wxString::Format("Corner %d", x + 1);
             grid->AppendIn(p, new wxEnumProperty(nm, CornerAttrName(x), POLY_CORNERS, val == "Leading Segment" ? 0 : val == "Trailing Segment" ? 1 : 2 ));
        }
+
+        if (segs_collapsed) { grid->Collapse(p); }
     }
     else {
         for (int x = 0; x < 100; x++) {
@@ -1539,6 +1541,10 @@ void PolyLineModel::ExportXlightsModel()
     f.Write(wxString::Format("SourceVersion=\"%s\" ", v));
     f.Write(ExportSuperStringColors());
     f.Write(" >\n");
+    wxString aliases = SerialiseAliases();
+    if (aliases != "") {
+        f.Write(aliases);
+    }
     wxString state = SerialiseState();
     if (state != "") {
         f.Write(state);

@@ -136,8 +136,7 @@ ModelFaceDialog::ModelFaceDialog(wxWindow* parent, OutputManager* outputManager,
 	FlexGridSizer1 = new wxFlexGridSizer(1, 1, 0, 0);
 	FlexGridSizer1->AddGrowableCol(0);
 	FlexGridSizer1->AddGrowableRow(0);
-	SplitterWindow1 = new wxSplitterWindow(this, ID_SPLITTERWINDOW1, wxDefaultPosition, wxDefaultSize, wxSP_3D, _T("ID_SPLITTERWINDOW1"));
-	SplitterWindow1->SetMinimumPaneSize(100);
+	SplitterWindow1 = new wxSplitterWindow(this, ID_SPLITTERWINDOW1, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE, _T("ID_SPLITTERWINDOW1"));
 	SplitterWindow1->SetSashGravity(0.5);
 	Panel3 = new wxPanel(SplitterWindow1, ID_PANEL5, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL5"));
 	FlexGridSizer4 = new wxFlexGridSizer(0, 1, 0, 0);
@@ -219,7 +218,7 @@ ModelFaceDialog::ModelFaceDialog(wxWindow* parent, OutputManager* outputManager,
 	FlexGridSizer11->Add(CheckBox_OutputToLights, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	FlexGridSizer9->Add(FlexGridSizer11, 1, wxALL|wxEXPAND, 5);
 	NodeRangeGrid = new wxGrid(NodeRangePanel, ID_GRID3, wxDefaultPosition, wxDefaultSize, 0, _T("ID_GRID3"));
-	NodeRangeGrid->CreateGrid(18,2);
+	NodeRangeGrid->CreateGrid(28,2);
 	NodeRangeGrid->SetMinSize(wxDLG_UNIT(NodeRangePanel,wxSize(-1,200)));
 	NodeRangeGrid->EnableEditing(true);
 	NodeRangeGrid->EnableGridLines(true);
@@ -246,6 +245,16 @@ ModelFaceDialog::ModelFaceDialog(wxWindow* parent, OutputManager* outputManager,
 	NodeRangeGrid->SetRowLabelValue(15, _("Eyes - Closed"));
 	NodeRangeGrid->SetRowLabelValue(16, _("Eyes - Closed 2"));
 	NodeRangeGrid->SetRowLabelValue(17, _("Eyes - Closed 3"));
+	NodeRangeGrid->SetRowLabelValue(18, _("Mouth - AI 2"));
+	NodeRangeGrid->SetRowLabelValue(19, _("Mouth - E 2"));
+	NodeRangeGrid->SetRowLabelValue(20, _("Mouth - etc 2"));
+	NodeRangeGrid->SetRowLabelValue(21, _("Mouth - FV 2"));
+	NodeRangeGrid->SetRowLabelValue(22, _("Mouth - L 2"));
+	NodeRangeGrid->SetRowLabelValue(23, _("Mouth - MBP 2"));
+	NodeRangeGrid->SetRowLabelValue(24, _("Mouth - O 2"));
+	NodeRangeGrid->SetRowLabelValue(25, _("Mouth - rest 2"));
+	NodeRangeGrid->SetRowLabelValue(26, _("Mouth - U 2"));
+	NodeRangeGrid->SetRowLabelValue(27, _("Mouth - WQ 2"));
 	NodeRangeGrid->SetDefaultCellFont( NodeRangeGrid->GetFont() );
 	NodeRangeGrid->SetDefaultCellTextColour( NodeRangeGrid->GetForegroundColour() );
 	FlexGridSizer9->Add(NodeRangeGrid, 1, wxALL|wxEXPAND, 0);
@@ -398,7 +407,7 @@ ModelFaceDialog::~ModelFaceDialog()
     }
 }
 
-void ModelFaceDialog::SetFaceInfo(Model *cls, std::map< std::string, std::map<std::string, std::string> > &finfo) {
+void ModelFaceDialog::SetFaceInfo(Model *cls, std::map< std::string, std::map<std::string, std::string> > const&finfo) {
     NodeRangeGrid->SetColSize(1, 50);
     NodeRangeGrid->SetColSize(0, NodeRangeGrid->GetSize().x - 50 - NodeRangeGrid->GetRowLabelSize());
     SingleNodeGrid->SetColSize(1, 50);
@@ -409,11 +418,7 @@ void ModelFaceDialog::SetFaceInfo(Model *cls, std::map< std::string, std::map<st
     model = cls;
     modelPreview->SetModel(cls);
 
-    for (std::map< std::string, std::map<std::string, std::string> >::iterator it = finfo.begin();
-         it != finfo.end(); ++it) {
-
-        std::string name = it->first;
-        std::map<std::string, std::string> &info = it->second;
+    for (auto [name, info] : finfo) {
 
         NameChoice->Append(name);
 
@@ -475,9 +480,15 @@ void ModelFaceDialog::SetFaceInfo(Model *cls, std::map< std::string, std::map<st
     }
 
     UpdatePreview("", *wxWHITE);
+    std::list<std::string> warnings = cls->CheckModelSettings();
+    if (!warnings.empty()) {
+        std::string warningsStr = Join(warnings, "\n");
+        // Show the concatenated warnings in a wxMessageBox
+        wxMessageBox(wxString(warningsStr), "Warnings", wxOK | wxICON_WARNING);
+    }
 }
 
-void ModelFaceDialog::GetFaceInfo(std::map< std::string, std::map<std::string, std::string> > &finfo) {
+std::map<std::string, std::map<std::string, std::string>> ModelFaceDialog::GetFaceInfo() const {
     if (SingleNodeGrid->IsCellEditControlShown()) {
         SingleNodeGrid->SaveEditControlValue();
         SingleNodeGrid->HideCellEditControl();
@@ -486,14 +497,15 @@ void ModelFaceDialog::GetFaceInfo(std::map< std::string, std::map<std::string, s
         NodeRangeGrid->SaveEditControlValue();
         NodeRangeGrid->HideCellEditControl();
     }
-    finfo.clear();
+    std::map<std::string, std::map<std::string, std::string>> finfo;
 
-    for (std::map<std::string, std::map<std::string, std::string> >::iterator it = faceData.begin();
+    for (auto it = faceData.begin();
          it != faceData.end(); ++it) {
         if (!it->second.empty()) {
             finfo[it->first] = it->second;
         }
     }
+    return finfo;
 }
 
 static bool SetGrid(wxGrid *grid, std::map<std::string, std::string> &info) {
@@ -517,6 +529,10 @@ static bool SetGrid(wxGrid *grid, std::map<std::string, std::string> &info) {
         }
         xlColor color(c);
         grid->SetCellBackgroundColour(x, 1, color.asWxColor());
+        wxString pname1 = grid->GetRowLabelValue(x);
+        if (pname1.Contains("Mouth") && pname1.EndsWith("2")) {
+            customColor ? grid->ShowRow(x) : grid->HideRow(x);
+        }
     }
     return customColor;
 }
@@ -937,6 +953,12 @@ void ModelFaceDialog::OnCustomColorCheckboxClick(wxCommandEvent& event)
             NodeRangeGrid->ShowCol(1);
             NodeRangeGrid->SetColSize(0, NodeRangeGrid->GetSize().x - NodeRangeGrid->GetColSize(1) - NodeRangeGrid->GetRowLabelSize());
             faceData[name]["CustomColors"] = "1";
+            for (int r = 0; r < NodeRangeGrid->GetNumberRows(); r++) {
+                wxString pname1 = NodeRangeGrid->GetRowLabelValue(r);
+                if (pname1.Contains("Mouth") && pname1.EndsWith("2")) {
+                    NodeRangeGrid->ShowRow(r);
+                }
+            }
         } else {
             NodeRangeGrid->HideCol(1);
             NodeRangeGrid->SetColSize(0, NodeRangeGrid->GetSize().x - NodeRangeGrid->GetRowLabelSize());
@@ -948,6 +970,10 @@ void ModelFaceDialog::OnCustomColorCheckboxClick(wxCommandEvent& event)
             }
             for (int r = 0; r < NodeRangeGrid->GetNumberRows(); r++) {
                 NodeRangeGrid->SetCellBackgroundColour(r, COLOR_COL, *wxWHITE);
+                wxString pname1 = NodeRangeGrid->GetRowLabelValue(r);
+                if (pname1.Contains("Mouth") && pname1.EndsWith("2")) {
+                    NodeRangeGrid->HideRow(r);
+                }
             }
         }
     }
@@ -962,6 +988,12 @@ void ModelFaceDialog::GetValue(wxGrid *grid, const int row, const int col, std::
         info[key.ToStdString()] = color;
     } else {
         info[key.ToStdString()] = grid->GetCellValue(row, col);
+        auto nodeArray = wxSplit(grid->GetCellValue(row, col), ',');
+        std::sort(nodeArray.begin(), nodeArray.end(),
+                  [](const wxString& a, const wxString& b) {
+                      return wxAtoi(a) < wxAtoi(b);
+                  });
+        grid->SetCellValue(row, col, CompressNodes(wxJoin(nodeArray, ',')));
     }
     UpdatePreview(grid->GetCellValue(row, CHANNEL_COL).ToStdString(), grid->GetCellBackgroundColour(row, COLOR_COL));
 }
@@ -1509,13 +1541,13 @@ void ModelFaceDialog::ImportFacesFromModel()
     if (dlg.ShowModal() == wxID_OK)
     {
         Model* m = xlights->GetModel(dlg.GetStringSelection());
-        if (m->faceInfo.size() == 0)
+        if (m->GetFaceInfo().size() == 0)
         {
             wxMessageBox(dlg.GetStringSelection() + " contains no signing faces, skipping");
             return;
         }
 
-        AddFaces(m->faceInfo);
+        AddFaces(m->GetFaceInfo());
 
         NameChoice->Enable();
         FaceTypeChoice->Enable();
@@ -1573,8 +1605,7 @@ void ModelFaceDialog::ImportFaces(const wxString& filename)
     }
 }
 
-void ModelFaceDialog::AddFaces(std::map<std::string, std::map<std::string, std::string> > faces)
-{
+void ModelFaceDialog::AddFaces(std::map<std::string, std::map<std::string, std::string>> const& faces) {
     bool overRide = false;
     bool showDialog = true;
 

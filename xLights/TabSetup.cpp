@@ -418,6 +418,12 @@ void xLightsFrame::OnButton_ChangeTemporarilyAgainClick(wxCommandEvent& event)
     PromptForShowDirectory(false);
 }
 
+bool xLightsFrame::OnButton_OpenBaseShowDirClick(wxCommandEvent& event) {
+    displayElementsPanel->SetSequenceElementsModelsViews(nullptr, nullptr, nullptr, nullptr, nullptr);
+    layoutPanel->ClearUndo();
+    return SetDir(_outputManager.GetBaseShowDir(), false);
+}
+
 void xLightsFrame::OnButton_ChangeShowFolderTemporarily(wxCommandEvent& event)
 {
     if (Button_CheckShowFolderTemporarily->GetLabel() == "Change Temporarily") {
@@ -1449,7 +1455,6 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         Connect(ID_List_Controllers, wxEVT_RIGHT_DOWN, (wxObjectEventFunction)&xLightsFrame::OnListControllersRClick);
         Connect(ID_List_Controllers, wxEVT_LIST_COL_CLICK, (wxObjectEventFunction)&xLightsFrame::OnListControllersColClick);
         Connect(ID_List_Controllers, wxEVT_LIST_ITEM_RIGHT_CLICK, (wxObjectEventFunction)&xLightsFrame::OnListControllersItemRClick);
-        Connect(ID_List_Controllers, wxEVT_LIST_ITEM_SELECTED, (wxObjectEventFunction)&xLightsFrame::OnListItemSelectedControllers);
         Connect(ID_List_Controllers, wxEVT_LIST_ITEM_DESELECTED, (wxObjectEventFunction)&xLightsFrame::OnListItemDeselectedControllers);
         Connect(ID_List_Controllers, wxEVT_LIST_BEGIN_DRAG, (wxObjectEventFunction)&xLightsFrame::OnListItemBeginDragControllers);
         Connect(ID_List_Controllers, wxEVT_LIST_ITEM_SELECTED, (wxObjectEventFunction)&xLightsFrame::OnListItemSelectedControllers);
@@ -1459,6 +1464,12 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         List_Controllers->AppendColumn("Address");
         List_Controllers->AppendColumn("Universes/Id");
         List_Controllers->AppendColumn("Channels");
+        List_Controllers->AppendColumn("Vendor");
+        List_Controllers->AppendColumn("Model");
+        List_Controllers->AppendColumn("Variant");
+        List_Controllers->AppendColumn("Active");
+        List_Controllers->AppendColumn("Auto Layout");
+        List_Controllers->AppendColumn("Auto Size");
         List_Controllers->AppendColumn("Description");
 
         ButtonAddControllerEthernet->SetToolTip("Use this button to add E1.31, Artnet, DDP and ZCPP controllers.");
@@ -1481,9 +1492,9 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         Controllers_PropertyEditor->Connect(wxEVT_PG_ITEM_EXPANDED, (wxObjectEventFunction)&xLightsFrame::OnControllerPropertyGridExpanded, 0, this);
         Controllers_PropertyEditor->SetValidationFailureBehavior(wxPGVFBFlags::MarkCell | wxPGVFBFlags::Beep);
 
-        Controllers_PropertyEditor->AddActionTrigger(wxPGKeyboardActions::NextProperty, WXK_RETURN);
+        Controllers_PropertyEditor->AddActionTrigger(wxPGKeyboardAction::NextProperty, WXK_RETURN);
         Controllers_PropertyEditor->DedicateKey(WXK_RETURN);
-        Controllers_PropertyEditor->AddActionTrigger(wxPGKeyboardActions::NextProperty, WXK_TAB);
+        Controllers_PropertyEditor->AddActionTrigger(wxPGKeyboardAction::NextProperty, WXK_TAB);
         Controllers_PropertyEditor->DedicateKey(WXK_TAB);
     }
 
@@ -1504,12 +1515,17 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         if (std::find(begin(selections), end(selections), it->GetName()) != selections.end()) {
             List_Controllers->SetItemState(row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
         }
-        //List_Controllers->SetItem(row, 1, it->GetColumn6Label());
         List_Controllers->SetItem(row, 1, it->GetColumn1Label());
         List_Controllers->SetItem(row, 2, it->GetColumn2Label());
         List_Controllers->SetItem(row, 3, it->GetColumn3Label());
         List_Controllers->SetItem(row, 4, it->GetColumn4Label());
         List_Controllers->SetItem(row, 5, it->GetColumn5Label());
+        List_Controllers->SetItem(row, 6, it->GetColumn6Label());
+        List_Controllers->SetItem(row, 7, it->GetColumn7Label());
+        List_Controllers->SetItem(row, 8, it->GetColumn8Label());
+        List_Controllers->SetItem(row, 9, it->GetColumn9Label());
+        List_Controllers->SetItem(row, 10, it->GetColumn10Label());
+        List_Controllers->SetItem(row, 11, it->GetColumn11Label());
         if (it->IsFromBase())
         {
             if (it->IsActive()) {
@@ -1525,13 +1541,13 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
 
     auto sz = 0;
     for (int i = 0; i < List_Controllers->GetColumnCount() - 1; i++) {
-        List_Controllers->SetColumnWidth(i, wxLIST_AUTOSIZE);
-        if (List_Controllers->GetColumnWidth(i) < 100) List_Controllers->SetColumnWidth(i, 100);
+        List_Controllers->SetColumnWidth(i, wxLIST_AUTOSIZE_USEHEADER);
+        //if (List_Controllers->GetColumnWidth(i) < 75) List_Controllers->SetColumnWidth(i, 75);
         sz += List_Controllers->GetColumnWidth(i);
     }
 
     int lc = List_Controllers->GetColumnCount() - 1;
-    List_Controllers->SetColumnWidth(lc, wxLIST_AUTOSIZE);
+    List_Controllers->SetColumnWidth(lc, wxLIST_AUTOSIZE_USEHEADER);
     if (List_Controllers->GetColumnWidth(lc) < 100) List_Controllers->SetColumnWidth(lc, 100);
 
     if (sz + List_Controllers->GetColumnWidth(lc) < List_Controllers->GetSize().GetWidth()) {
@@ -1545,13 +1561,6 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         FlexGridSizerSetupControllerButtons->Add(LedPing, 1, wxALL | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL, 5);
         LedPing->Show();
 
-        if (StaticTextDummy != nullptr) {
-            // I remove the static text as this was the only way I seem to be able to make the LED visible
-            FlexGridSizerSetupControllerButtons->Detach(StaticTextDummy);
-            Panel5->RemoveChild(StaticTextDummy);
-            delete StaticTextDummy;
-            StaticTextDummy = nullptr;
-        }
     }
 
     // try to ensure what should be visible is visible in roughly the same part of the screen
@@ -1564,6 +1573,8 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         List_Controllers->EnsureVisible(itemSelected);
     }
 
+    Panel2->SetMinSize(wxSize(400, -1));
+    Panel5->SetMinSize(this->FromDIP(wxSize(380, -1)));
     List_Controllers->Thaw();
 
     Panel2->Layout();

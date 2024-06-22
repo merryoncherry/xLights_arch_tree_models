@@ -470,6 +470,9 @@ protected:
 
         static const long ID_MNU_SELECTALL;
         static const long ID_MNU_SELECTNONE;
+        static const long ID_MNU_COLLAPSEALL;
+        static const long ID_MNU_EXPANDALL;
+        static const long ID_MNU_SHOWALLMAPPED;
 
 	private:
         wxString FindTab(wxString &line);
@@ -495,7 +498,12 @@ protected:
 		//*)
 
         void RightClickTimingTracks(wxContextMenuEvent& event);
+        void RightClickModels(wxDataViewEvent& event);
+        void CollapseAll();
+        void ExpandAll();
+        void ShowAllMapped();
         void OnPopupTimingTracks(wxCommandEvent& event);
+        void OnPopupModels(wxCommandEvent& event);
         void OnDrop(wxCommandEvent& event);
         void HandleDropAvailable(wxDataViewItem dropTarget, std::string availableModelName);
         void SetImportMediaTooltip();
@@ -519,7 +527,7 @@ protected:
         static wxString AggressiveAutomap(const wxString& name);
         std::function<bool(const std::string&, const std::string&, const std::string&, const std::string&, const std::list<std::string>&)> aggressive =
             [](const std::string& s, const std::string& c, const std::string& extra1, const std::string& extra2, const std::list<std::string>& aliases) {
-                if (AggressiveAutomap(wxString(s).Trim(true).Trim(false).Lower()) == c)
+                if (AggressiveAutomap(wxString(s).Trim(true).Trim(false).Lower()) == AggressiveAutomap(wxString(c))) // alias trimmed and lower at save
                     return true;
 
                 for (const auto& it : aliases) {

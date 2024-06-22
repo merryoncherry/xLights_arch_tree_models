@@ -51,7 +51,7 @@ SubModel::SubModel(Model* p, wxXmlNode* n) :
     _layout(n->GetAttribute("layout")),
     _type(n->GetAttribute("type", "ranges")),
     _bufferStyle(n->GetAttribute("bufferstyle", DEFAULT))
-{
+ {
 
     // copy change count from owning model ... otherwise we lose track of changes when the model is recreated
     changeCount = p->changeCount;
@@ -66,6 +66,8 @@ SubModel::SubModel(Model* p, wxXmlNode* n) :
     parm1 = 1;
     parm2 = 1;
     parm3 = 1;
+    
+    StringType = p->StringType;
 
     //static log4cpp::Category &logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     //logger_base.debug("Submodel init %s:%s", (const char*)p->GetFullName().c_str(), (const char*)name.c_str());
@@ -90,7 +92,11 @@ SubModel::SubModel(Model* p, wxXmlNode* n) :
             std::set<int> nodeIdx;
             while (n->HasAttribute(wxString::Format("line%d", line))) {
                 wxString nodes = n->GetAttribute(wxString::Format("line%d", line));
-                _properyGridDisplay = nodes + "," + _properyGridDisplay;
+                if (_properyGridDisplay == "") {
+                    _properyGridDisplay = nodes;
+                } else {
+                    _properyGridDisplay = _properyGridDisplay + "," + nodes;
+                }
                 wxStringTokenizer wtkz(nodes, ",");
                 while (wtkz.HasMoreTokens()) {
                     wxString valstr = wtkz.GetNextToken();
@@ -163,8 +169,11 @@ SubModel::SubModel(Model* p, wxXmlNode* n) :
             std::vector<int> nodeIndexes;
             while (n->HasAttribute(wxString::Format("line%d", line))) {
                 wxString nodes = n->GetAttribute(wxString::Format("line%d", line));
-                //logger_base.debug("    Line %d: %s", line, (const char*)nodes.c_str());
-                _properyGridDisplay = nodes + "," + _properyGridDisplay;
+                if (_properyGridDisplay == "") {
+                    _properyGridDisplay = nodes;
+                } else {
+                    _properyGridDisplay = _properyGridDisplay + "," + nodes;
+                }
                 wxStringTokenizer wtkz(nodes, ",");
                 while (wtkz.HasMoreTokens()) {
                     wxString valstr = wtkz.GetNextToken();
@@ -198,10 +207,9 @@ SubModel::SubModel(Model* p, wxXmlNode* n) :
                                     }
                                 } else {
                                     node = Nodes[nodeIndexMap[nn]].get();
-                                    int i = node->Coords.size();
-                                    node->Coords.push_back(node->Coords[0]);
-                                    node->Coords[i].bufX = col;
-                                    node->Coords[i].bufY = row;
+                                    node->Coords.push_front(node->Coords[0]);
+                                    node->Coords[0].bufX = col;
+                                    node->Coords[0].bufY = row;
                                 }
                                 if (vert) {
                                     row++;
@@ -334,19 +342,19 @@ void SubModel::AddProperties(wxPropertyGridInterface* grid, OutputManager* outpu
 {
     wxPGProperty* p = grid->Append(new wxStringProperty("SubModel Type", "SMT", _type));
     p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-    p->ChangeFlag(wxPG_PROP_READONLY, true);
+    p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
 
     p = grid->Append(new wxStringProperty("SubModel Layout", "SML", _layout));
     p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-    p->ChangeFlag(wxPG_PROP_READONLY, true);
+    p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
 
     p = grid->Append(new wxStringProperty("SubModel Buffer Style", "SMBS", _bufferStyle));
     p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-    p->ChangeFlag(wxPG_PROP_READONLY, true);
+    p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
 
     p = grid->Append(new wxStringProperty("SubModel", "SMN", _properyGridDisplay));
     p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-    p->ChangeFlag(wxPG_PROP_READONLY, true);
+    p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
 
     auto modelGroups = parent->GetModelManager().GetGroupsContainingModel(this);
     if (modelGroups.size() > 0) {
@@ -363,6 +371,204 @@ void SubModel::AddProperties(wxPropertyGridInterface* grid, OutputManager* outpu
         p = grid->Append(new wxStringProperty("In Model Groups", "MGS", mgs));
         p->SetHelpString(mgscr);
         p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-        p->ChangeFlag(wxPG_PROP_READONLY, true);
+        p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
+    }
+    auto smaliases = parent->GetSubModel(this->GetName())->GetAliases();
+    if (smaliases.size() > 0) {
+        std::string sma;
+        std::string smacr;
+        for (const auto& it : smaliases) {
+            if (sma != "") {
+                sma += ", ";
+                smacr += "\n";
+            }
+            sma += it;
+            smacr += it;
+        }
+        p = grid->Append(new wxStringProperty("SubModel Aliases", "SMA", sma));
+        p->SetHelpString(smacr);
+        p->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+        p->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
+    }
+  
+}
+
+static const std::string VERT_PER_STRAND("Vertical Per Strand");
+static const std::string HORIZ_PER_STRAND("Horizontal Per Strand");
+static const std::string LEGACY_SINGLE_LINE("** Single Line Legacy");
+
+// When in a ModelGroup, it may get these and we can optimize these as well
+static const std::string HORIZ_PER_MODELSTRAND("Horizontal Per Model/Strand");
+static const std::string VERT_PER_MODELSTRAND("Vertical Per Model/Strand");
+static const std::string PERMODEL_VERT_PER_STRAND("Per Model Vertical Per Strand");
+static const std::string PERMODEL_HORIZ_PER_STRAND("Per Model Horizontal Per Strand");
+
+std::vector<std::string> SubModel::SUBMODEL_BUFFER_STYLES;
+const std::vector<std::string>& SubModel::GetBufferStyles() const {
+    struct Initializer {
+        Initializer() {
+            SUBMODEL_BUFFER_STYLES = Model::DEFAULT_BUFFER_STYLES;
+            SUBMODEL_BUFFER_STYLES.push_back(VERT_PER_STRAND);
+            SUBMODEL_BUFFER_STYLES.push_back(HORIZ_PER_STRAND);
+        }
+    };
+    static Initializer ListInitializationGuard;
+    return SUBMODEL_BUFFER_STYLES;
+}
+const std::string SubModel::AdjustBufferStyle(const std::string &style) const {
+    if (style == LEGACY_SINGLE_LINE) {
+        return style;
+    }
+    return Model::AdjustBufferStyle(style);
+}
+
+void SubModel::GetBufferSize(const std::string &type, const std::string &camera, const std::string &transform, int &BufferWi, int &BufferHi, int stagger) const {
+    std::string ntype = type;
+    bool isRanges = _type == "ranges";
+    if (isRanges && (type == VERT_PER_STRAND || type == HORIZ_PER_STRAND)) {
+        bool vert = _layout == "vertical";
+        if (vert && (type == HORIZ_PER_STRAND)) {
+            Model::GetBufferSize("Default", camera, "Rotate CW 90", BufferWi, BufferHi, stagger);
+            AdjustForTransform(transform, BufferWi, BufferHi);
+        } else if (!vert && (type == VERT_PER_STRAND)) {
+            Model::GetBufferSize("Default", camera, "Rotate CC 90", BufferWi, BufferHi, stagger);
+            AdjustForTransform(transform, BufferWi, BufferHi);
+        } else {
+            Model::GetBufferSize(type, camera, transform, BufferWi, BufferHi, stagger);
+        }
+    } else if (isRanges && (type == HORIZ_PER_MODELSTRAND || type == VERT_PER_MODELSTRAND || type == PERMODEL_HORIZ_PER_STRAND || type == PERMODEL_VERT_PER_STRAND)) {
+        bool vert = _layout == "vertical";
+        if (!vert && (type == HORIZ_PER_MODELSTRAND || type == PERMODEL_HORIZ_PER_STRAND)) {
+            Model::GetBufferSize("Default", camera, "Rotate CW 90", BufferWi, BufferHi, stagger);
+            AdjustForTransform(transform, BufferWi, BufferHi);
+        } else if (vert && (type == VERT_PER_MODELSTRAND || type == PERMODEL_VERT_PER_STRAND)) {
+            Model::GetBufferSize("Default", camera, "Rotate CC 90", BufferWi, BufferHi, stagger);
+            AdjustForTransform(transform, BufferWi, BufferHi);
+        } else {
+            Model::GetBufferSize(type, camera, transform, BufferWi, BufferHi, stagger);
+        }
+    } else if (type == LEGACY_SINGLE_LINE) {
+        std::vector<int> vsizes;
+        std::vector<int> hsizes;
+        bool vert = _layout == "vertical";
+        for (auto &n : Nodes) {
+            for (auto &c : n->Coords) {
+                while (c.bufX >= hsizes.size()) {
+                    hsizes.push_back(-1);
+                }
+                while (c.bufY >= vsizes.size()) {
+                    vsizes.push_back(-1);
+                }
+                hsizes[c.bufX] = std::max(hsizes[c.bufX], c.bufY);
+                vsizes[c.bufY] = std::max(vsizes[c.bufY], c.bufX);
+            }
+        }
+        int total = 0;
+        if (vert) {
+            for (auto s : vsizes) {
+                total += s + 1;
+            }
+        } else {
+            for (auto s : hsizes) {
+                total += s + 1;
+            }
+        }
+        BufferHi = 1;
+        BufferWi = total;
+        AdjustForTransform(transform, BufferWi, BufferHi);
+    } else {
+        Model::GetBufferSize(type, camera, transform, BufferWi, BufferHi, stagger);
+    }
+}
+void SubModel::InitRenderBufferNodes(const std::string &type, const std::string &camera, const std::string &transform,
+                                     std::vector<NodeBaseClassPtr> &newNodes, int &BufferWi, int &BufferHi, int stagger, bool deep) const {
+    std::string ntype = type;
+    bool isRanges = _type == "ranges";
+    int firstNode = newNodes.size();
+    if (isRanges && (type == VERT_PER_STRAND || type == HORIZ_PER_STRAND)) {
+        bool vert = _layout == "vertical";
+        // these can be optimized as the default for "isRanges" is per strand.  We can use "default" or a simple rotate
+        // to avoid re-calculating everything
+        if (vert && (type == HORIZ_PER_STRAND)) {
+            Model::InitRenderBufferNodes("Dafault", camera, "None", newNodes, BufferWi, BufferHi, stagger, deep);
+            ApplyTransform("Rotate CW 90", newNodes, BufferWi, BufferHi, firstNode);
+            ApplyTransform(transform, newNodes, BufferWi, BufferHi);
+        } else if (!vert && (type == VERT_PER_STRAND)) {
+            Model::InitRenderBufferNodes("Dafault", camera, "None", newNodes, BufferWi, BufferHi, stagger, deep);
+            ApplyTransform("Rotate CC 90", newNodes, BufferWi, BufferHi, firstNode);
+            ApplyTransform(transform, newNodes, BufferWi, BufferHi);
+        } else {
+            Model::InitRenderBufferNodes("Default", camera, transform, newNodes, BufferWi, BufferHi, stagger, deep);
+        }
+    } else if (isRanges && (type == HORIZ_PER_MODELSTRAND || type == VERT_PER_MODELSTRAND || type == PERMODEL_HORIZ_PER_STRAND || type == PERMODEL_VERT_PER_STRAND)) {
+        bool vert = _layout == "vertical";
+        if (!vert && (type == HORIZ_PER_MODELSTRAND || type == PERMODEL_HORIZ_PER_STRAND)) {
+            Model::InitRenderBufferNodes("Dafault", camera, "None", newNodes, BufferWi, BufferHi, stagger, deep);
+            ApplyTransform("Rotate CW 90", newNodes, BufferWi, BufferHi, firstNode);
+            ApplyTransform(transform, newNodes, BufferWi, BufferHi);
+        } else if (vert && (type == VERT_PER_MODELSTRAND || type == PERMODEL_VERT_PER_STRAND)) {
+            Model::InitRenderBufferNodes("Dafault", camera, "None", newNodes, BufferWi, BufferHi, stagger, deep);
+            ApplyTransform("Rotate CC 90", newNodes, BufferWi, BufferHi, firstNode);
+            ApplyTransform(transform, newNodes, BufferWi, BufferHi);
+        } else {
+            Model::InitRenderBufferNodes("Default", camera, transform, newNodes, BufferWi, BufferHi, stagger, deep);
+        }
+    } else if (type == LEGACY_SINGLE_LINE) {
+        Model::InitRenderBufferNodes("Default", camera, "None", newNodes, BufferWi, BufferHi, stagger, deep);
+        std::vector<int> vsizes;
+        std::vector<int> hsizes;
+        bool vert = _layout == "vertical";
+        for (auto &n : Nodes) {
+            for (auto &c : n->Coords) {
+                while (c.bufX >= hsizes.size()) {
+                    hsizes.push_back(-1);
+                }
+                while (c.bufY >= vsizes.size()) {
+                    vsizes.push_back(-1);
+                }
+                hsizes[c.bufX] = std::max(hsizes[c.bufX], c.bufY);
+                vsizes[c.bufY] = std::max(vsizes[c.bufY], c.bufX);
+            }
+        }
+        int total = 0;
+        if (vert) {
+            for (auto s : vsizes) {
+                total += s + 1;
+            }
+        } else {
+            for (auto s : hsizes) {
+                total += s + 1;
+            }
+        }
+        BufferHi = 1;
+        BufferWi = total;
+        
+        for (int n = firstNode; n < newNodes.size(); n++) {
+            for (auto &c : newNodes[n]->Coords) {
+                int curX = c.bufX;
+                int curY = c.bufY;
+                int pos = 0;
+                if (vert) {
+                    while (curX > 0 && curY > vsizes[curX]) {
+                        pos += vsizes[curX] + 1;
+                        curY -= (vsizes[curX] + 1);
+                        --curX;
+                    }
+                    pos += curY;
+                } else {
+                    while (curY > 0 && curX > hsizes[curY]) {
+                        pos += hsizes[curY] + 1;
+                        curX -= (hsizes[curY] + 1);
+                        --curY;
+                    }
+                    pos += curX;
+                }
+                c.bufX = pos;
+                c.bufY = 0;
+            }
+        }
+        ApplyTransform(transform, newNodes, BufferWi, BufferHi);
+    } else {
+        Model::InitRenderBufferNodes(type, camera, transform, newNodes, BufferWi, BufferHi, stagger, deep);
     }
 }

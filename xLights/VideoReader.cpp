@@ -20,6 +20,9 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/pixdesc.h>
 #include <libavutil/hwcontext.h>
+#if __has_include(<libavdevice/avdevice.h>)
+#include <libavdevice/avdevice.h>
+#endif
 }
 
 #include <log4cpp/Category.hh>
@@ -64,6 +67,7 @@ static enum AVPixelFormat get_hw_format(AVCodecContext* ctx, const enum AVPixelF
 }
 
 bool VideoReader::HW_ACCELERATION_ENABLED = false;
+WINHARDWARERENDERTYPE VideoReader::HW_ACCELERATION_TYPE = WINHARDWARERENDERTYPE::FFMPEG_AUTO;
 
 void VideoReader::SetHardwareAcceleratedVideo(bool accel)
 {
@@ -74,6 +78,10 @@ void VideoReader::SetHardwareAcceleratedVideo(bool accel)
 #endif
 }
 
+void VideoReader::SetHardwareRenderType(int type) 
+{
+    HW_ACCELERATION_TYPE = static_cast<WINHARDWARERENDERTYPE>( type );
+}
 
 void VideoReader::InitHWAcceleration() {
     InitVideoToolboxAcceleration();
@@ -112,7 +120,7 @@ VideoReader::VideoReader(const std::string& filename, int maxwidth, int maxheigh
 
 #ifdef __WXMSW__
 
-    if ( HW_ACCELERATION_ENABLED && ::IsWindows8OrGreater() ) {
+    if (HW_ACCELERATION_ENABLED && ::IsWindows8OrGreater() && HW_ACCELERATION_TYPE == WINHARDWARERENDERTYPE::DIRECX11_API) {
         _windowsHardwareVideoReader = new WindowsHardwareVideoReader(filename, _wantAlpha, usenativeresolution, keepaspectratio, maxwidth, maxheight, _pixelFmt);
         if (_windowsHardwareVideoReader->IsOk()) {
             _frames = _windowsHardwareVideoReader->GetFrames();
@@ -339,12 +347,31 @@ void VideoReader::reopenContext(bool allowHWDecoder) {
         avcodec_free_context(&_codecContext);
         _codecContext = nullptr;
     }
-
-    #if LIBAVFORMAT_VERSION_MAJOR > 57
+#if LIBAVFORMAT_VERSION_MAJOR > 57
     enum AVHWDeviceType type = ::AVHWDeviceType::AV_HWDEVICE_TYPE_NONE;
     if (allowHWDecoder && IsHardwareAcceleratedVideo()) {
 #if defined(__WXMSW__)
-        std::list<std::string> hwdecoders;
+        std::list<std::string> hwdecoders = { "cuda", "amf", "qsv", "vulkan" };
+
+        switch (HW_ACCELERATION_TYPE) {
+            case WINHARDWARERENDERTYPE::FFMPEG_CUDA:
+                hwdecoders = { "cuda" };
+                break;
+            case WINHARDWARERENDERTYPE::FFMPEG_QSV:
+                hwdecoders = { "qsv" };
+                break;
+            case WINHARDWARERENDERTYPE::FFMPEG_VULKAN:
+                hwdecoders = { "vulkan" };
+                break;
+            case WINHARDWARERENDERTYPE::FFMPEG_AMF:
+                hwdecoders = { "amf" };
+                break;
+            case WINHARDWARERENDERTYPE::FFMPEG_AUTO:
+            case WINHARDWARERENDERTYPE::DIRECX11_API:
+            default:
+                break;
+        }
+
 #elif defined(__WXOSX__)
         std::list<std::string> hwdecoders = { "videotoolbox" };
 #else
@@ -372,7 +399,7 @@ void VideoReader::reopenContext(bool allowHWDecoder) {
             }
         }
     }
-    #endif
+#endif
 
     _codecContext = avcodec_alloc_context3(_decoder);
     if (!_codecContext) {
@@ -408,7 +435,11 @@ void VideoReader::reopenContext(bool allowHWDecoder) {
             {
                 _codecContext->hw_device_ctx = av_buffer_ref(_hw_device_ctx);
                 _codecContext->get_format = get_hw_format;
-                logger_base.debug("Hardware decoding enabled for codec '%s'", _codecContext->codec->long_name);
+                const char *devName = "";
+#if __has_include(<libavdevice/avdevice.h>)
+                devName = av_hwdevice_get_type_name(type);
+#endif
+                logger_base.debug("Hardware decoding('%s') enabled for codec '%s'", devName, _codecContext->codec->long_name);
             }
         }
         else
