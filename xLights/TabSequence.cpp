@@ -1257,7 +1257,7 @@ void xLightsFrame::OpenRenderAndSaveSequences(const wxArrayString &origFilenames
             mLastAutosaveCount = mSavedChangeCount;
 
             if (saveVideo) {
-                ExportVideoPreview(GetShowDirectory() + wxFileName::GetPathSeparator() + "PreviewVideo.mp4", false);
+                ExportVideoPreview(GetShowDirectory() + GetPathSeparator() + _("PreviewVideo.mp4"), false);
             }
 
             auto nFileNames = fileNames;
