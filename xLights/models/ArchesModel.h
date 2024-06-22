@@ -38,6 +38,13 @@ class ArchesModel : public ModelWithScreenLocation<ThreePointScreenLocation>
         virtual bool ModelSupportsLayerSizes() const override { return true; }
         virtual void OnLayerSizesChange(bool countChanged) override;
 
+        bool GetZigZag() const { return zigzag; }
+        int GetHollow() const { return _hollow; }
+        int GetGap() const { return _gap; }
+
+        //virtual bool SupportsVisitors() override {return true;}
+        //void Accept(BaseObjectVisitor &visitor) const override { return visitor.Visit(*this); }
+
     protected:
         virtual void InitModel() override;
         virtual int MapToNodeIndex(int strand, int node) const override;
@@ -53,4 +60,5 @@ class ArchesModel : public ModelWithScreenLocation<ThreePointScreenLocation>
         int arc;
         int _gap = 0;
         int _hollow = 70;
+        bool zigzag = true;
 };

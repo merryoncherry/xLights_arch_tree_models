@@ -260,6 +260,7 @@ wxString xLightsFrame::LoadEffectsFileNoCheck()
         root->AddChild(SettingsNode);
         SetXmlSetting("previewWidth", "1280");
         SetXmlSetting("previewHeight", "720");
+        SetXmlSetting("LayoutMode3D", "0");
         UnsavedRgbEffectsChanges = true;
     }
     int previewWidth = wxAtoi(GetXmlSetting("previewWidth", "1280"));
@@ -374,6 +375,12 @@ wxString xLightsFrame::LoadEffectsFileNoCheck()
         modelPreview->SetBackgroundBrightness(layoutPanel->GetBackgroundBrightnessForSelectedPreview(), layoutPanel->GetBackgroundAlphaForSelectedPreview());
         modelPreview->SetScaleBackgroundImage(layoutPanel->GetBackgroundScaledForSelectedPreview());
     }
+    
+    wxConfigBase* config = wxConfigBase::Get();
+    bool is_3d = config->ReadBool("LayoutMode3D", false);
+    is_3d = GetXmlSetting("LayoutMode3D", is_3d ? "1" : "0") == "1";
+    modelPreview->Set3D(is_3d);
+    layoutPanel->Set3d(is_3d);
 
     UpdateLayoutSave();
     UpdateControllerSave();
@@ -1625,6 +1632,7 @@ void xLightsFrame::EnableSequenceControls(bool enable)
         MenuItemShiftEffects->Enable(false);
         MenuItemShiftSelectedEffects->Enable(false);
         MenuItem_ColorReplace->Enable(false);
+        if (revertToMenuItem) revertToMenuItem->Enable(false);
     }
     if (!enable && _seqData.NumFrames() > 0) {
         //file is loaded, but we're doing something that requires controls disabled (such as rendering)

@@ -50,6 +50,10 @@ class xlVertexAccumulator;
 class xlGraphicsContext;
 typedef std::unique_ptr<NodeBaseClass> NodeBaseClassPtr;
 
+//convert to Structs someday
+using FaceStateData = std::map<std::string, std::map<std::string, std::string>>;
+using FaceStateNodes = std::map<std::string, std::map<std::string, std::list<int>>>;
+
 #define NO_CONTROLLER "No Controller"
 #define USE_START_CHANNEL "Use Start Channel"
 
@@ -132,6 +136,19 @@ public:
     ControllerCaps* GetControllerCaps() const;
     Controller* GetController() const;
 
+    std::string GetModelStartChannel() const { return ModelStartChannel; }
+    const std::string GetStartSide() const { return _startSide; }
+    const std::string GetDirection() const { return _dir; }
+    long GetParm1() const { return parm1; }
+    long GetParm2() const { return parm2; }
+    long GetParm3() const { return parm3; }
+    int GetTransparency() const { return transparency; }
+    const std::string GetNodeNames() const { return _nodeNamesString; }
+    const std::string GetStrandNames() const { return _strandNamesString; }
+
+    void SetDirection( const std::string dir ) { _dir = dir; }
+    void SetStartSide( const std::string start_side ) { _startSide = start_side; }
+
     virtual bool SupportsChangingStringCount() const { return false; };
     virtual bool ChangeStringCount(long count,  std::string& message) { return false; };
 
@@ -148,34 +165,46 @@ public:
     void ExportDimensions(wxFile& f) const;
 
     virtual bool AllNodesAllocated() const { return true; }
-    static void ParseFaceInfo(wxXmlNode* fiNode, std::map<std::string, std::map<std::string, std::string> >& faceInfo);
-    static void WriteFaceInfo(wxXmlNode* fiNode, const std::map<std::string, std::map<std::string, std::string> >& faceInfo);
+    static void ParseFaceInfo(wxXmlNode* fiNode, FaceStateData& faceInfo);
+    static void WriteFaceInfo(wxXmlNode* fiNode, const FaceStateData& faceInfo);
     wxString SerialiseFace() const;
     wxString SerialiseState() const;
     wxString SerialiseGroups() const;
     wxString SerialiseConnection() const;
     void AddModelGroups(wxXmlNode* n, int w, int h, const wxString& name, bool& merge, bool& ask);
-    std::map<std::string, std::map<std::string, std::string> > faceInfo;
-    std::map<std::string, std::map<std::string, std::list<int> > > faceInfoNodes;
 
     void UpdateFaceInfoNodes();
     void UpdateStateInfoNodes();
 
-    static void ParseStateInfo(wxXmlNode* fiNode, std::map<std::string, std::map<std::string, std::string> >& stateInfo);
-    static void WriteStateInfo(wxXmlNode* fiNode, const std::map<std::string, std::map<std::string, std::string> >& stateInfo, bool customColours = false);
-    std::map<std::string, std::map<std::string, std::string> > stateInfo;
-    std::map<std::string, std::map<std::string, std::list<int>>> stateInfoNodes;
+    static void ParseStateInfo(wxXmlNode* fiNode, FaceStateData& stateInfo);
+    static void WriteStateInfo(wxXmlNode* fiNode, const FaceStateData& stateInfo, bool customColours = false);
+
+    [[nodiscard]] virtual FaceStateData const& GetFaceInfo() const { return faceInfo; };
+    [[nodiscard]] virtual FaceStateNodes const& GetFaceInfoNodes() const { return faceInfoNodes; };
+    [[nodiscard]] virtual FaceStateData const& GetStateInfo() const { return stateInfo; };
+    [[nodiscard]] virtual FaceStateNodes const& GetStateInfoNodes() const { return stateInfoNodes; };
+
+    virtual void SetFaceInfo(FaceStateData const& info) { faceInfo = info; };
+    virtual void SetFaceInfoNodes(FaceStateNodes const& nodes) { faceInfoNodes = nodes; };
+    virtual void SetStateInfo(FaceStateData const& info) { stateInfo = info; };
+    virtual void SetStateInfoNodes(FaceStateNodes const& nodes) { stateInfoNodes = nodes; };
+
     void AddFace(wxXmlNode* n);
     void AddState(wxXmlNode* n);
     void AddSubmodel(wxXmlNode* n);
+    void AddModelAliases(wxXmlNode* n);
     void ImportShadowModels(wxXmlNode* n, xLightsFrame* xlights);
 
     wxString SerialiseSubmodel() const;
+    wxString SerialiseAliases() const;
     virtual wxString CreateBufferAsSubmodel() const;
+    bool importAliases = false;
+    bool skipImportAliases = false;
 
     std::map<std::string, std::map<std::string, std::string>> GetDimmingInfo() const;
     virtual std::list<std::string> CheckModelSettings() override;
     virtual const std::vector<std::string>& GetBufferStyles() const { return DEFAULT_BUFFER_STYLES; };
+    virtual const std::string AdjustBufferStyle(const std::string &style) const;
     virtual void GetBufferSize(const std::string& type, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const;
     virtual void InitRenderBufferNodes(const std::string& type, const std::string& camera, const std::string& transform,
         std::vector<NodeBaseClassPtr>& Nodes, int& BufferWi, int& BufferHi, int stagger, bool deep = false) const;
@@ -199,7 +228,6 @@ public:
 
     static const std::vector<std::string> DEFAULT_BUFFER_STYLES;
 
-    virtual bool StrandsZigZagOnString() const { return false; };
     int GetDefaultBufferWi() const { return BufferWi; }
     int GetDefaultBufferHt() const { return BufferHt; }
     virtual bool IsDMXModel() const { return false; }
@@ -246,7 +274,7 @@ protected:
     std::string ComputeStringStartChannel(int x);
     void ApplyTransform(const std::string& transform,
         std::vector<NodeBaseClassPtr>& Nodes,
-        int& bufferWi, int& bufferHi) const;
+        int& bufferWi, int& bufferHi, int startNode = 0) const;
     void AdjustForTransform(const std::string& transform,
         int& bufferWi, int& bufferHi) const;
     void DumpBuffer(std::vector<NodeBaseClassPtr>& newNodes, int bufferWi, int bufferHi) const;
@@ -282,12 +310,16 @@ protected:
     int blackTransparency = 0;
     wxColour modelTagColour = *wxBLACK;
     uint8_t _lowDefFactor = 100;
+    std::string _startSide = "B";
+    std::string _dir = "L";
 
     int StrobeRate = 0; // 0 = no strobing
     bool zeroBased =  false;
 
     std::vector<std::string> strandNames;
     std::vector<std::string> nodeNames;
+    std::string _nodeNamesString;
+    std::string _strandNamesString;
     long parm1 = 0;         /* Number of strings in the model or number of arches or canes (except for frames & custom) */
     long parm2 = 0;         /* Number of nodes per string in the model or number of segments per arch or cane (except for frames & custom) */
     long parm3 = 0;         /* Number of strands per string in the model or number of lights per arch or cane segment (except for frames & custom) */
@@ -302,6 +334,11 @@ protected:
     void ParseSubModel(wxXmlNode* subModelNode);
     void ColourClashingChains(wxPGProperty* p);
     uint32_t ApplyLowDefinition(uint32_t val) const;
+
+    FaceStateData faceInfo;
+    FaceStateNodes faceInfoNodes;
+    FaceStateData stateInfo;
+    FaceStateNodes stateInfoNodes;
 
 public:
     bool IsControllerConnectionValid() const;
@@ -417,7 +454,7 @@ public:
     bool IsValidStartChannelString() const;
     virtual uint32_t GetFirstChannel() const;
     virtual uint32_t GetLastChannel() const;
-    uint32_t GetNumChannels();
+    uint32_t GetNumChannels() const;
     uint32_t GetNodeNumber(size_t nodenum) const;
     uint32_t GetNodeNumber(int bufY, int bufX) const;
     bool UpdateStartChannelFromChannelString(std::map<std::string, Model*>& models, std::list<std::string>& used);
@@ -472,7 +509,7 @@ public:
     void GetNodeChannelValues(size_t nodenum, unsigned char* buf);
     void SetNodeChannelValues(size_t nodenum, const unsigned char* buf);
     xlColor GetNodeColor(size_t nodenum) const;
-    virtual xlColor GetNodeMaskColor(size_t nodenum) const;
+    virtual const xlColor &GetNodeMaskColor(size_t nodenum) const;
     void SetNodeColor(size_t nodenum, const xlColor& c);
     wxChar GetChannelColorLetter(wxByte chidx);
     std::string GetRGBOrder() const { return rgbOrder; }
@@ -525,7 +562,7 @@ public:
             return strandNames[x];
         }
         if (def) {
-            return wxString::Format("Strand %d", (int)x + 1).ToStdString();
+            return std::string("Strand ") + std::to_string(x + 1);
         }
         return "";
     }
@@ -541,14 +578,14 @@ public:
             return nodeNames[x];
         }
         if (def) {
-            return wxString::Format("Node %d", (int)x + 1).ToStdString();
+            return std::string("Node ") + std::to_string(x + 1);
         }
         return "";
     }
 
     static std::string StartChanAttrName(int idx)
     {
-        return wxString::Format(wxT("String%i"), idx + 1).ToStdString();  // a space between "String" and "%i" breaks the start channels listed in Indiv Start Chans
+        return std::string("String") + std::to_string(idx + 1); // a space between "String" and "%i" breaks the start channels listed in Indiv Start Chans
     }
     // returns true for models that only have 1 string and where parm1 does NOT represent the # of strings
     static bool HasOneString(const std::string& DispAs)

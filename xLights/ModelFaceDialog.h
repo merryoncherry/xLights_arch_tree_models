@@ -94,8 +94,8 @@ class ModelFaceDialog : public wxDialog
     static const long FACES_DIALOG_SHIFT;
     static const long FACES_DIALOG_REVERSE;
 
-    void SetFaceInfo(Model* cls, std::map<std::string, std::map<std::string, std::string>>& info);
-    void GetFaceInfo(std::map<std::string, std::map<std::string, std::string>>& info);
+    void SetFaceInfo(Model* cls, std::map<std::string, std::map<std::string, std::string>> const& info);
+    [[nodiscard]] std::map<std::string, std::map<std::string, std::string>> GetFaceInfo() const;
 
 protected:
     //(*Identifiers(ModelFaceDialog)
@@ -154,6 +154,9 @@ private:
     void OnButtonImportClick(wxCommandEvent& event);
     void OnMatrixModelsGridLabelLeftDClick(wxGridEvent& event);
     void OnCheckBox_OutputToLightsClick(wxCommandEvent& event);
+    void OnMatrixModelsGridResize(wxSizeEvent& event);
+    void OnSingleNodeGridResize(wxSizeEvent& event);
+    void OnNodeRangeGridResize(wxSizeEvent& event);
     //*)
 
     void OnAddBtnPopup(wxCommandEvent& event);
@@ -189,7 +192,7 @@ private:
     wxString getSubmodelNodes(Model* sm);
     void ImportFaces(const wxString& filename);
     void ImportFacesFromModel();
-    void AddFaces(std::map<std::string, std::map<std::string, std::string>> faces);
+    void AddFaces(std::map<std::string, std::map<std::string, std::string>> const& faces);
     wxArrayString getModelList(ModelManager* modelManager);
     void CopyFaceData();
     void RenameFace();

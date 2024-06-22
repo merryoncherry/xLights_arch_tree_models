@@ -70,20 +70,6 @@ class SubModelTextDropTarget : public wxTextDropTarget
         wxString _type;
 };
 
-//https://forums.wxwidgets.org/viewtopic.php?f=20&t=41045
-class StretchGrid : public wxGrid
-{
-public:
-    StretchGrid (wxWindow *parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
-	       long style = wxWANTS_CHARS, const wxString& name = wxGridNameStr);
-    ~StretchGrid ();
-
-protected:
-    void OnGridWindowSize (wxSizeEvent& event);
-    void OnColHeaderSize (wxGridSizeEvent& event);
-    void AutoSizeLastCol ();
-};
-
 class SubModelsDialog : public wxDialog
 {
     struct SubModelInfo {
@@ -143,7 +129,6 @@ public:
     void Save();
 
     //(*Declarations(SubModelsDialog)
-    StretchGrid* NodesGrid;
     wxButton* AddButton;
     wxButton* AddRowButton;
     wxButton* ButtonCopy;
@@ -164,6 +149,7 @@ public:
     wxChoice* ChoiceBufferStyle;
     wxFlexGridSizer* PreviewSizer;
     wxFlexGridSizer* SubBufferSizer;
+    wxGrid* NodesGrid;
     wxListCtrl* ListCtrl_SubModels;
     wxNotebook* TypeNotebook;
     wxPanel* ModelPreviewPanelLocation;
@@ -230,6 +216,7 @@ protected:
     static const long SUBMODEL_DIALOG_EXPORT_XMODEL;
     static const long SUBMODEL_DIALOG_EXPORT_TOOTHERS;
     static const long SUBMODEL_DIALOG_GENERATE;
+    static const long SUBMODEL_DIALOG_ALIASES;
     static const long SUBMODEL_DIALOG_SHIFT;
     static const long SUBMODEL_DIALOG_FLIP_HOR;
     static const long SUBMODEL_DIALOG_FLIP_VER;
@@ -281,6 +268,7 @@ protected:
     void UnSelectAll();
 
     void Generate();
+    void Aliases();
     void Shift();
     void FlipHorizontal();
     void FlipVertical();
@@ -353,6 +341,7 @@ private:
     void OnInit(wxInitDialogEvent& event);
     void OnNodesGridCellRightClick(wxGridEvent& event);
     void OnCheckBox_OutputToLightsClick(wxCommandEvent& event);
+    void OnSplitterSashPosChanging(wxSplitterEvent& event);
     //*)
 
     void OnCancel(wxCloseEvent& event);
@@ -382,6 +371,7 @@ private:
 
     void OnDrop(wxCommandEvent& event);
     //void OnGridChar(wxKeyEvent& event);
+    bool shouldProcessGridCellChanged = true;
 
     DECLARE_EVENT_TABLE()
 };

@@ -78,8 +78,7 @@ public:
     int GetFirstSelectedEffectStartMS() const;
     int GetLastSelectedEffectEndMS() const;
     void SetRenderDisabled(bool rd);
-    bool IsRenderDisabled() const
-    {
+    virtual bool IsRenderDisabled() const {
         return _renderDisabled;
     }
 
@@ -203,6 +202,9 @@ public:
 
     [[nodiscard]] virtual bool HasEffects() const override;
 
+    virtual bool IsRenderDisabled() const override {
+        return _renderDisabled || ((Element*)GetModelElement())->IsRenderDisabled();
+    }
 protected:
     ModelElement *mParentModel = nullptr;
 };
@@ -261,6 +263,7 @@ class ModelElement : public Element
 
         [[nodiscard]] virtual bool HasEffects() const override;
         [[nodiscard]] int GetEffectCount() const override;
+        [[nodiscard]] int GetModelEffectCount() const;
         int GetSubModelAndStrandCount() const;
         int GetSubModelCount() const;
         SubModelElement *GetSubModel(int i) const;

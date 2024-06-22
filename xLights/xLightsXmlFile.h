@@ -46,7 +46,7 @@ public:
     static const wxString ERASE_MODE;
     static const wxString CANVAS_MODE;
 
-    bool Open(const wxString& ShowDir, bool ignore_audio = false);
+    bool Open(const wxString& ShowDir, bool ignore_audio, const wxFileName& realFilename);
 
     void AddJukebox(wxXmlNode* node);
     void Save(SequenceElements& elements);
@@ -127,6 +127,7 @@ public:
     void DeleteTimingSection(const std::string& section);
     void SetTimingSectionName(const std::string& section, const std::string& name);
     bool TimingAlreadyExists(const std::string& section, xLightsFrame* xLightsParent);
+    bool TimingMatchesModelName(const std::string& section, xLightsFrame* xLightsParent);
     wxArrayString GetTimingList() const
     {
         return timing_list;
@@ -214,7 +215,7 @@ private:
     AudioManager* audio = nullptr;
 
     void CreateNew();
-    bool LoadSequence(const wxString& ShowDir, bool ignore_audio = false);
+    bool LoadSequence(const wxString& ShowDir, bool ignore_audio, const wxFileName &realFilename);
     bool LoadV3Sequence();
     bool Save();
     bool SaveCopy() const;
