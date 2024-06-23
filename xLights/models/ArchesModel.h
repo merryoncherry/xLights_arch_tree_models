@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include "Model.h"
@@ -38,6 +38,13 @@ class ArchesModel : public ModelWithScreenLocation<ThreePointScreenLocation>
         virtual bool ModelSupportsLayerSizes() const override { return true; }
         virtual void OnLayerSizesChange(bool countChanged) override;
 
+        bool GetZigZag() const { return zigzag; }
+        int GetHollow() const { return _hollow; }
+        int GetGap() const { return _gap; }
+
+        //virtual bool SupportsVisitors() override {return true;}
+        //void Accept(BaseObjectVisitor &visitor) const override { return visitor.Visit(*this); }
+
     protected:
         virtual void InitModel() override;
         virtual int MapToNodeIndex(int strand, int node) const override;
@@ -53,4 +60,5 @@ class ArchesModel : public ModelWithScreenLocation<ThreePointScreenLocation>
         int arc;
         int _gap = 0;
         int _hollow = 70;
+        bool zigzag = true;
 };

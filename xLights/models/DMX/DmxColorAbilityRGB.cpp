@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/propgrid/propgrid.h>
@@ -16,7 +16,7 @@
 #include "../BaseObject.h"
 #include "../Model.h"
 
-#include "../../Color.h"
+
 #include "../Node.h"
 
 void DmxColorAbilityRGB::InitColor( wxXmlNode* ModelXml)
@@ -27,9 +27,47 @@ void DmxColorAbilityRGB::InitColor( wxXmlNode* ModelXml)
     white_channel = wxAtoi(ModelXml->GetAttribute("DmxWhiteChannel", "0"));
 }
 
+void DmxColorAbilityRGB::SetRedChannel( wxXmlNode* ModelXml, int chan )
+{
+    red_channel = chan;
+    ModelXml->DeleteAttribute("DmxRedChannel");
+    ModelXml->AddAttribute("DmxRedChannel", wxString::Format("%d", red_channel));
+}
+
+void DmxColorAbilityRGB::SetGreenChannel( wxXmlNode* ModelXml, int chan )
+{
+    green_channel = chan;
+    ModelXml->DeleteAttribute("DmxGreenChannel");
+    ModelXml->AddAttribute("DmxGreenChannel", wxString::Format("%d", green_channel));
+}
+
+void DmxColorAbilityRGB::SetBlueChannel( wxXmlNode* ModelXml, int chan )
+{
+    blue_channel = chan;
+    ModelXml->DeleteAttribute("DmxBlueChannel");
+    ModelXml->AddAttribute("DmxBlueChannel", wxString::Format("%d", blue_channel));
+}
+
+void DmxColorAbilityRGB::SetWhiteChannel( wxXmlNode* ModelXml, int chan )
+{
+    white_channel = chan;
+    ModelXml->DeleteAttribute("DmxWhiteChannel");
+    ModelXml->AddAttribute("DmxWhiteChannel", wxString::Format("%d", white_channel));
+}
+
 bool DmxColorAbilityRGB::IsColorChannel(uint32_t channel) const
 {
     return (red_channel == channel || green_channel == channel || blue_channel == channel || white_channel == channel);
+}
+
+int DmxColorAbilityRGB::GetNumChannels() const
+{
+    int num_channels = 0;
+    num_channels += red_channel > 0 ? 1 : 0;
+    num_channels += green_channel > 0 ? 1 : 0;
+    num_channels += blue_channel > 0 ? 1 : 0;
+    num_channels += white_channel > 0 ? 1 : 0;
+    return num_channels;
 }
 
 void DmxColorAbilityRGB::SetColorPixels(const xlColor& color, xlColorVector& pixelVector) const
@@ -95,7 +133,7 @@ bool DmxColorAbilityRGB::IsValidModelSettings(Model* m) const
 
 void DmxColorAbilityRGB::AddColorTypeProperties(wxPropertyGridInterface *grid) const {
 
-    wxPGProperty* p = grid->Append(new wxUIntProperty("Red Channel", "DmxRedChannel", red_channel));
+    auto p = grid->Append(new wxUIntProperty("Red Channel", "DmxRedChannel", red_channel));
     p->SetAttribute("Min", 0);
     p->SetAttribute("Max", 512);
     p->SetEditor("SpinCtrl");

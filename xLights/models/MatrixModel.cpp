@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/propgrid/propgrid.h>
@@ -641,6 +641,10 @@ void MatrixModel::ExportXlightsModel()
     f.Write(wxString::Format("LowDefinition=\"%s\" ", ld));
     f.Write(ExportSuperStringColors());
     f.Write(" >\n");
+    wxString aliases = SerialiseAliases();
+    if (aliases != "") {
+        f.Write(aliases);
+    }
     wxString state = SerialiseState();
     if (state != "")
     {

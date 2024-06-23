@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/propgrid/propgrid.h>
@@ -602,7 +602,7 @@ void DmxServo3d::DisplayModelOnWindow(ModelPreview* preview, xlGraphicsContext* 
         boundingBox[4] = 0.5;
         boundingBox[5] = 0.5;
     }
-    sprogram->addStep([=](xlGraphicsContext* ctx) {
+    sprogram->addStep([is_3d, this](xlGraphicsContext* ctx) {
         ctx->PushMatrix();
         if (!is_3d) {
             //not 3d, flatten to the 0 plane
@@ -610,7 +610,7 @@ void DmxServo3d::DisplayModelOnWindow(ModelPreview* preview, xlGraphicsContext* 
         }
         GetModelScreenLocation().ApplyModelViewMatrices(ctx);
     });
-    tprogram->addStep([=](xlGraphicsContext* ctx) {
+    tprogram->addStep([is_3d, this](xlGraphicsContext* ctx) {
         ctx->PushMatrix();
         if (!is_3d) {
             //not 3d, flatten to the 0 plane

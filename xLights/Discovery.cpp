@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/socket.h>
@@ -644,7 +644,7 @@ void Discovery::Discover() {
         //first check to see if any of the socket have received data
         for (const auto& dg : datagrams) {
             for (const auto &socket : dg->sockets) {
-                if (socket->IsOk() && socket->IsData()) {
+                while (socket->IsOk() && socket->IsData()) {
                     socket->Read(&buffer[0], sizeof(buffer));
                     readSize = socket->GetLastIOReadSize();
                     if (readSize != 0) {

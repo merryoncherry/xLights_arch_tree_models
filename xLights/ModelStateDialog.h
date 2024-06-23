@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 //(*Headers(ModelStateDialog)
@@ -62,8 +62,8 @@ public:
     wxStaticText* StaticText3;
     //*)
 
-    void SetStateInfo(Model* cls, std::map<std::string, std::map<std::string, std::string>>& info);
-    void GetStateInfo(std::map<std::string, std::map<std::string, std::string>>& info);
+    void SetStateInfo(Model* cls, std::map<std::string, std::map<std::string, std::string>> const& info);
+    [[nodiscard]] std::map<std::string, std::map<std::string, std::string>> GetStateInfo() const;
     void StartOutputToLights();
     bool StopOutputToLights();
 
@@ -167,7 +167,7 @@ private:
     void ImportStatesFromModel();
     void ImportStatesFromSubModels();
     std::string cleanSubName(std::string name);
-    void AddStates(std::map<std::string, std::map<std::string, std::string>> states);
+    void AddStates(std::map<std::string, std::map<std::string, std::string>> const& states);
     wxArrayString getModelList(ModelManager* modelManager);
 
     void CopyStates(wxGridEvent& event);

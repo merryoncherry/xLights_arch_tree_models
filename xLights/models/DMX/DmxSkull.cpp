@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/propgrid/propgrid.h>
@@ -629,7 +629,7 @@ void DmxSkull::DisplayModelOnWindow(ModelPreview* preview, xlGraphicsContext* ct
         boundingBox[4] = 0.5;
         boundingBox[5] = 0.5;
     }
-    sprogram->addStep([=](xlGraphicsContext* ctx) {
+    sprogram->addStep([this, is_3d](xlGraphicsContext* ctx) {
         ctx->PushMatrix();
         if (!is_3d) {
             //not 3d, flatten to the 0 plane
@@ -639,7 +639,7 @@ void DmxSkull::DisplayModelOnWindow(ModelPreview* preview, xlGraphicsContext* ct
         ctx->Scale(0.7f, 0.7f, 0.7f);
         ctx->Translate(0, -0.7f, is_3d ? 0 : 0.5f);
     });
-    tprogram->addStep([=](xlGraphicsContext* ctx) {
+    tprogram->addStep([this, is_3d](xlGraphicsContext* ctx) {
         ctx->PushMatrix();
         if (!is_3d) {
             //not 3d, flatten to the 0 plane

@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include "../Node.h"
@@ -44,6 +44,8 @@ class DmxColorAbility
         virtual void ExportParameters(wxFile& f, wxXmlNode* ModelXml) const = 0;
         virtual void ImportParameters(wxXmlNode* ImportXml, Model* m) const = 0;
         virtual void SetNodeNames(std::vector<std::string> & names) const = 0;
+        virtual int GetNumChannels() const = 0;
+        [[nodiscard]] virtual xlColorVector GetColors() const { return xlColorVector(); }
 
     protected:
         DmxColorAbility() = default;

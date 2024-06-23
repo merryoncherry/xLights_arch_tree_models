@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/propgrid/propgrid.h>
@@ -40,7 +40,9 @@ void DmxFloodlight::AddTypeProperties(wxPropertyGridInterface* grid, OutputManag
     }
     AddShutterTypeProperties(grid);
 
-    auto p = grid->Append(new wxFloatProperty("Beam Display Length", "DmxBeamLength", beam_length));
+    auto p = grid->Append(new wxPropertyCategory("Common Properties", "CommonProperties"));
+
+    p = grid->Append(new wxFloatProperty("Beam Display Length", "DmxBeamLength", beam_length));
     p->SetAttribute("Min", 0);
     p->SetAttribute("Max", 100);
     p->SetAttribute("Precision", 2);
@@ -156,7 +158,7 @@ void DmxFloodlight::DisplayModelOnWindow(ModelPreview* preview, xlGraphicsContex
             int start = vac->getCount();
             DrawModel(vac, center, edge, is_3d ? beam_length * min_size : 0);
             int end = vac->getCount();
-            transparentProgram->addStep([=](xlGraphicsContext* ctx) {
+            transparentProgram->addStep([=, this](xlGraphicsContext* ctx) {
                 ctx->PushMatrix();
                 if (!is_3d) {
                     //not 3d, flatten to the 0 plane
@@ -305,7 +307,7 @@ void DmxFloodlight::ImportXlightsModel(wxXmlNode* root, xLightsFrame* xlights, f
     }
 }
 
-void DmxFloodlight::EnableFixedChannels(xlColorVector& pixelVector)
+void DmxFloodlight::EnableFixedChannels(xlColorVector& pixelVector) const
 {
     if (shutter_channel != 0 && shutter_on_value != 0) {
         if (Nodes.size() > shutter_channel - 1) {

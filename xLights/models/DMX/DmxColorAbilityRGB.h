@@ -3,16 +3,15 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include "DmxColorAbility.h"
-
-
+#include "../../Color.h"
 
 class wxPropertyGridInterface;
 class wxPropertyGridEvent;
@@ -45,12 +44,19 @@ class DmxColorAbilityRGB : public DmxColorAbility
         void ExportParameters(wxFile& f, wxXmlNode* ModelXml) const override;
         void ImportParameters(wxXmlNode* ImportXml, Model* m) const override;
         void SetNodeNames(std::vector<std::string> & names) const override;
+        int GetNumChannels() const override;
 
         [[nodiscard]] uint32_t GetRedChannel() const { return red_channel; }
         [[nodiscard]] uint32_t GetGreenChannel() const { return green_channel; }
         [[nodiscard]] uint32_t GetBlueChannel() const { return blue_channel; }
         [[nodiscard]] uint32_t GetWhiteChannel() const { return white_channel; }
-    private:
+    
+        void SetRedChannel( wxXmlNode* ModelXml, int chan );
+        void SetGreenChannel( wxXmlNode* ModelXml, int chan );
+        void SetBlueChannel( wxXmlNode* ModelXml, int chan );
+        void SetWhiteChannel( wxXmlNode* ModelXml, int chan );
+
+private:
         uint32_t red_channel;
         uint32_t green_channel;
         uint32_t blue_channel;

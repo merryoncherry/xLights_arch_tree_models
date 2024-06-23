@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include "Model.h"
@@ -18,8 +18,6 @@ class MatrixModel : public ModelWithScreenLocation<BoxedScreenLocation>
         MatrixModel(wxXmlNode *node, const ModelManager &manager, bool zeroBased = false);
         virtual ~MatrixModel();
         virtual int GetNumStrands() const override;
-
-        virtual bool StrandsZigZagOnString() const override { return true; }
 
         bool SupportsChangingStringCount() const override{ return true; };
         bool ChangeStringCount(long count, std::string& message) override;

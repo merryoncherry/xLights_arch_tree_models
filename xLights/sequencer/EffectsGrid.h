@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #ifndef _glpane_
@@ -202,6 +202,8 @@ public:
     }
 
 protected:
+    bool m_wheel_down = false;
+    int m_previous_mouse_x = 0;
 
 private:
     Effect* GetEffectAtRowAndTime(int row, int ms,int &index, HitLocation &selectionType);
@@ -211,16 +213,18 @@ private:
     void CreateEffectForFile(int x, int y, const std::string& effectName, const std::string& filename);
     void render(wxPaintEvent& evt);
     void magnify(wxMouseEvent& event);
-	void mouseMoved(wxMouseEvent& event);
-	void mouseDown(wxMouseEvent& event);
-	void mouseWheelMoved(wxMouseEvent& event);
-	void mouseReleased(wxMouseEvent& event);
-	void rightClick(wxMouseEvent& event);
-	void mouseLeftDClick(wxMouseEvent& event);
-	void mouseLeftWindow(wxMouseEvent& event);
+    void mouseMoved(wxMouseEvent& event);
+    void mouseDown(wxMouseEvent& event);
+    void mouseWheelMoved(wxMouseEvent& event);
+    void mouseReleased(wxMouseEvent& event);
+    void rightClick(wxMouseEvent& event);
+    void mouseLeftDClick(wxMouseEvent& event);
+    void mouseLeftWindow(wxMouseEvent& event);
+    void mouseMiddleDown(wxMouseEvent& event);
+    void mouseMiddleUp(wxMouseEvent& event);
     void OnLostMouseCapture(wxMouseCaptureLostEvent& event);
-	void keyPressed(wxKeyEvent& event);
-	void keyReleased(wxKeyEvent& event);
+    void keyPressed(wxKeyEvent& event);
+    void keyReleased(wxKeyEvent& event);
 
     void CreateEffectIconTextures(xlGraphicsContext *ctx);
     void SetRCToolTip();

@@ -3,20 +3,20 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
  //(*Headers(ColorCurveDialog)
-#include <wx/button.h>
-#include <wx/choice.h>
-#include <wx/dialog.h>
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-//*)
+ #include <wx/button.h>
+ #include <wx/choice.h>
+ #include <wx/dialog.h>
+ #include <wx/sizer.h>
+ #include <wx/stattext.h>
+ //*)
 
 #include <wx/colourdata.h>
 #include <wx/dir.h>
@@ -81,6 +81,7 @@ private:
     std::list<ccSortableColorPoint> _undo;
     int _start;
     int _end;
+    int _totalBorderWidth;
     Element* _timingElement;
 };
 

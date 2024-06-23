@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 //(*InternalHeaders(SeqSettingsDialog)
@@ -123,14 +123,14 @@ const long SeqSettingsDialog::ID_CHOICE_Models = wxNewId();
 const long SeqSettingsDialog::ID_BUTTON_models_next = wxNewId();
 
 
-wxDEFINE_EVENT(EVT_DELETE_ROW, wxCommandEvent);
+wxDEFINE_EVENT(EVT_GRID_ROW_CLICKED, wxCommandEvent);
 wxDEFINE_EVENT(EVT_NAME_CHANGE, wxCommandEvent);
 
 BEGIN_EVENT_TABLE(SeqSettingsDialog,wxDialog)
 	//(*EventTable(SeqSettingsDialog)
 	//*)
     EVT_COMMAND(wxID_ANY, EVT_NAME_CHANGE, SeqSettingsDialog::OnButton_Xml_Rename_TimingClick)
-    EVT_COMMAND(wxID_ANY, EVT_DELETE_ROW, SeqSettingsDialog::OnButton_Xml_Delete_TimingClick)
+    EVT_COMMAND(wxID_ANY, EVT_GRID_ROW_CLICKED, SeqSettingsDialog::OnButton_Xml_Delete_TimingClick)
 END_EVENT_TABLE()
 
 #define string_format wxString::Format

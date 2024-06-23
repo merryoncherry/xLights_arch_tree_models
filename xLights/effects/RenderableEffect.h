@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/bmpbndl.h>
@@ -106,6 +106,8 @@ public:
     {}
     virtual void SetPanelStatus(Model* cls)
     {}
+    virtual void SetEffectTimeRange(int startTimeMs, int endTimeMs)
+    {}
     virtual wxString GetEffectString();
 
     // Methods for rendering the effect
@@ -117,11 +119,7 @@ public:
     virtual void Render(Effect* effect, const SettingsMap& settings, RenderBuffer& buffer) = 0;
     virtual void RenameTimingTrack(std::string oldname, std::string newname, Effect* effect)
     {}
-    virtual std::list<std::string> CheckEffectSettings(const SettingsMap& settings, AudioManager* media, Model* model, Effect* eff, bool renderCache)
-    {
-        std::list<std::string> res;
-        return res;
-    };
+    virtual std::list<std::string> CheckEffectSettings(const SettingsMap& settings, AudioManager* media, Model* model, Effect* eff, bool renderCache);
 
     virtual bool CanBeRandom()
     {

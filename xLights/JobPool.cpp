@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 // needed to ensure the __WXMSW__ is defined
@@ -400,7 +400,7 @@ void JobPool::PushJob(Job *job)
     }
     signal.notify_one();
 }
-void JobPool::PushJobs(std::list<Job *> jobs) {
+void JobPool::PushJobs(const std::list<Job *> &jobs) {
     std::unique_lock<std::mutex> locker(queueLock);
     for (auto job : jobs) {
         queue.push_back(job);

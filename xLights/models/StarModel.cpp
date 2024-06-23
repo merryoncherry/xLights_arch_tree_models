@@ -1,11 +1,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/propgrid/propgrid.h>
@@ -83,8 +83,9 @@ const std::vector<std::string> &StarModel::GetBufferStyles() const {
     return STAR_BUFFER_STYLES;
 }
 
-void StarModel::GetBufferSize(const std::string& type, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const
+void StarModel::GetBufferSize(const std::string& tp, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const
 {
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
     if (type == "Layer Star") {
         BufferHi = GetNumStrands();
         BufferWi = 0;
@@ -106,11 +107,12 @@ void StarModel::GetBufferSize(const std::string& type, const std::string& camera
     }
 }
 
-void StarModel::InitRenderBufferNodes(const std::string& type,
+void StarModel::InitRenderBufferNodes(const std::string& tp,
     const std::string& camera,
     const std::string& transform,
     std::vector<NodeBaseClassPtr>& newNodes, int& BufferWi, int& BufferHi, int stagger, bool deep) const
 {
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
     if (type == "Layer Star") {
         BufferHi = GetNumStrands();
         BufferWi = 0;
@@ -715,6 +717,10 @@ void StarModel::ExportXlightsModel()
     f.Write(wxString::Format("SourceVersion=\"%s\" ", v));
     f.Write(ExportSuperStringColors());
     f.Write(" >\n");
+    wxString aliases = SerialiseAliases();
+    if (aliases != "") {
+        f.Write(aliases);
+    }
     wxString groups = SerialiseGroups();
     if (groups != "") {
         f.Write(groups);

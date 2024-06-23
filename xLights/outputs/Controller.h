@@ -3,11 +3,11 @@
 /***************************************************************
  * This source files comes from the xLights project
  * https://www.xlights.org
- * https://github.com/smeighan/xLights
+ * https://github.com/xLightsSequencer/xLights
  * See the github commit history for a record of contributing
  * developers.
  * Copyright claimed based on commit dates recorded in Github
- * License: https://github.com/smeighan/xLights/blob/master/License.txt
+ * License: https://github.com/xLightsSequencer/xLights/blob/master/License.txt
  **************************************************************/
 
 #include <wx/wx.h>
@@ -100,7 +100,7 @@ public:
     #pragma region Getters and Setters
     Output* GetOutput(int outputNumber) const; // output number is zero based
     Output* GetOutput(int32_t absoluteChannel, int32_t& startChannel) const;
-    std::list<Output*> GetOutputs() const { return _outputs; }
+    const std::list<Output*> &GetOutputs() const { return _outputs; }
     int GetOutputCount() const { return _outputs.size(); }
     Output* GetFirstOutput() const { wxASSERT(_outputs.size() > 0); return _outputs.front(); }
 
@@ -272,8 +272,13 @@ public:
     virtual std::string GetColumn2Label() const { return ""; }
     virtual std::string GetColumn3Label() const { return GetUniverseString(); }
     virtual std::string GetColumn4Label() const { return wxString::Format("%ld [%ld-%ld]", (long)GetChannels(), (long)GetStartChannel(), (long)GetEndChannel()); }
-    virtual std::string GetColumn5Label() const { return GetDescription(); }
-    virtual std::string GetColumn6Label() const { return wxString::Format("%d", GetId()); }
+    virtual std::string GetColumn5Label() const { return GetVendor(); }
+    virtual std::string GetColumn6Label() const { return GetModel(); }
+    virtual std::string GetColumn7Label() const { return GetVariant(); }
+    virtual std::string GetColumn8Label() const { return DecodeActiveState(GetActive()); }
+    virtual std::string GetColumn9Label() const { return toStr(IsAutoLayout()); }
+    virtual std::string GetColumn10Label() const { return toStr(IsAutoSize()); }
+    virtual std::string GetColumn11Label() const { return GetDescription(); }
 
     virtual Output::PINGSTATE Ping() { _lastPingResult = Output::PINGSTATE::PING_UNAVAILABLE; return GetLastPingState(); }
     virtual void AsyncPing() { _lastPingResult = Output::PINGSTATE::PING_UNKNOWN; }
