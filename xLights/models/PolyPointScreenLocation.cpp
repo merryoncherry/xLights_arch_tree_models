@@ -208,9 +208,9 @@ void PolyPointScreenLocation::Read(wxXmlNode* ModelNode)
         worldPos_z = wxAtof(ModelNode->GetAttribute("WorldPosZ", "0.0"));
         if (isnan(worldPos_z)) worldPos_z = 0.0;
 
-        scalex = wxAtof(ModelNode->GetAttribute("ScaleX", "100.0"));
-        scaley = wxAtof(ModelNode->GetAttribute("ScaleY", "100.0"));
-        scalez = wxAtof(ModelNode->GetAttribute("ScaleZ", "100.0"));
+        scalex = wxAtof(ModelNode->GetAttribute("ScaleX", "1.0"));
+        scaley = wxAtof(ModelNode->GetAttribute("ScaleY", "1.0"));
+        scalez = wxAtof(ModelNode->GetAttribute("ScaleZ", "1.0"));
 
         if (scalex <= 0 || std::isinf(scalex) || isnan(scalex)) {
             scalex = 1.0f;
@@ -1872,7 +1872,7 @@ void PolyPointScreenLocation::AddDimensionProperties(wxPropertyGridInterface* pr
         last = mPos[i].AsVector();
     }
     wxPGProperty* prop = propertyEditor->Append(new wxFloatProperty(wxString::Format("Length (%s)", RulerObject::GetUnitDescription()), "RealLength", len));
-    prop->ChangeFlag(wxPG_PROP_READONLY, true);
+    prop->ChangeFlag(wxPGPropertyFlags::ReadOnly, true);
     prop->SetAttribute("Precision", 2);
     prop->SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
     

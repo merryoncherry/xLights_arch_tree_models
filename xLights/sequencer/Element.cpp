@@ -405,7 +405,7 @@ void StrandElement::InitFromModel(Model &model) {
     int nc = model.GetStrandLength(mStrand);
     mName = model.GetStrandName(mStrand);
     for (int x = 0; x < mNodeLayers.size(); x++) {
-        mNodeLayers[x]->SetName(model.GetNodeName(x));
+        mNodeLayers[x]->SetNodeName(model.GetNodeName(x));
     }
     while (mNodeLayers.size() < nc) {
         NodeLayer *nl = new NodeLayer(this, model.GetNodeName(mNodeLayers.size()));
@@ -593,6 +593,18 @@ bool ModelElement::HasEffects() const
     }
 
     return false;
+}
+
+int ModelElement::GetModelEffectCount() const
+{
+    int sum = std::accumulate(
+        mEffectLayers.begin(),
+        mEffectLayers.end(), 0,
+        [](int i, EffectLayer* l) {
+            return l->GetEffectCount() + i;
+        });
+
+    return sum;
 }
 
 int ModelElement::GetEffectCount() const {
