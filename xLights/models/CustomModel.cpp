@@ -473,11 +473,12 @@ const std::vector<std::string>& CustomModel::GetBufferStyles() const
     return CUSTOM_BUFFERSTYLES;
 }
 
-void CustomModel::GetBufferSize(const std::string& type, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const
+void CustomModel::GetBufferSize(const std::string& tp, const std::string& camera, const std::string& transform, int& BufferWi, int& BufferHi, int stagger) const
 {
     int width = parm1;
     int height = parm2;
     int depth = _depth;
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
 
     if ((SingleNode || SingleChannel) && IsMultiCoordsPerNode())
     {
@@ -485,7 +486,8 @@ void CustomModel::GetBufferSize(const std::string& type, const std::string& came
         BufferHi = 1;
     }
     else if (StartsWith(type, "Per Preview") || type == "Single Line" || type == "As Pixel" ||
-        type == "Horizontal Per Strand" || type == "Vertical Per Strand") {
+        type == "Horizontal Per Strand" || type == "Vertical Per Strand" ||
+        type == "Horizontal Per Model/Strand" || type == "Vertical Per Model/Strand") {
         Model::GetBufferSize(type, camera, transform, BufferWi, BufferHi, stagger);
     }
     else if (type == "Stacked X Horizontally") {
@@ -543,11 +545,12 @@ void CustomModel::GetBufferSize(const std::string& type, const std::string& came
     AdjustForTransform(transform, BufferWi, BufferHi);
 }
 
-void CustomModel::InitRenderBufferNodes(const std::string& type, const std::string& camera, const std::string& transform, std::vector<NodeBaseClassPtr>& Nodes, int& BufferWi, int& BufferHi, int stagger, bool deep) const
+void CustomModel::InitRenderBufferNodes(const std::string& tp, const std::string& camera, const std::string& transform, std::vector<NodeBaseClassPtr>& Nodes, int& BufferWi, int& BufferHi, int stagger, bool deep) const
 {
     int width = parm1;
     int height = parm2;
     int depth = _depth;
+    std::string type = tp.starts_with("Per Model ") ? tp.substr(10) : tp;
 
     wxASSERT(width > 0 && height > 0 && depth > 0);
 
@@ -823,7 +826,7 @@ std::string CustomModel::ComputeStringStartNode(int x) const
     int nodes = GetNodeCount();
     float nodesPerString = (float)nodes / (float)strings;
 
-    return wxString::Format("%d", (int)(x * nodesPerString + 1)).ToStdString();
+    return std::to_string((int)(x * nodesPerString + 1));
 }
 
 int CustomModel::GetCustomNodeStringNumber(int node) const
@@ -858,7 +861,7 @@ std::string CustomModel::GetNodeName(size_t x, bool def) const {
         return Nodes[x]->GetName();
     }
     if (def) {
-        return wxString::Format("Node %d", (int)(x + 1)).ToStdString();
+        return std::string("Node ") + std::to_string(x + 1);
     }
     return "";
 }
@@ -1129,6 +1132,7 @@ void CustomModel::ImportXlightsModel(wxXmlNode* root, xLightsFrame* xlights, flo
         wxString pc = root->GetAttribute("PixelCount");
         wxString pt = root->GetAttribute("PixelType");
         wxString psp = root->GetAttribute("PixelSpacing");
+        wxString lg = root->GetAttribute("LayoutGroup");
 
         // generally xmodels dont have these ... but there are some cases where we do where it would point to a shadow model ... in those cases we want to bring it in
         wxString smf = root->GetAttribute("ShadowModelFor");
@@ -1151,6 +1155,7 @@ void CustomModel::ImportXlightsModel(wxXmlNode* root, xLightsFrame* xlights, flo
         SetProperty("PixelCount", pc);
         SetProperty("PixelType", pt);
         SetProperty("PixelSpacing", psp);
+        SetProperty("LayoutGroup", lg);
         if (smf != "") {
             SetProperty("ShadowModelFor", smf);
         }
@@ -1429,6 +1434,7 @@ void CustomModel::ExportXlightsModel()
     wxString a = ModelXml->GetAttribute("Antialias");
     wxString sn = ModelXml->GetAttribute("StrandNames");
     wxString nn = ModelXml->GetAttribute("NodeNames");
+    wxString lg = ModelXml->GetAttribute("LayoutGroup");
     wxString v = xlights_version_string;
 
     f.Write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<custommodel \n");
@@ -1443,12 +1449,17 @@ void CustomModel::ExportXlightsModel()
     f.Write(wxString::Format("Antialias=\"%s\" ", a));
     f.Write(wxString::Format("StrandNames=\"%s\" ", sn));
     f.Write(wxString::Format("NodeNames=\"%s\" ", nn));
+    f.Write(wxString::Format("LayoutGroup=\"%s\" ", lg));
     f.Write("CustomModel=\"");
     f.Write(cm);
     f.Write("\" ");
     f.Write(wxString::Format("SourceVersion=\"%s\" ", v));
     f.Write(ExportSuperStringColors());
     f.Write(" >\n");
+    wxString aliases = SerialiseAliases();
+    if (aliases != "") {
+        f.Write(aliases);
+    }
     wxString face = SerialiseFace();
     if (face != "") {
         f.Write(face);

@@ -110,3 +110,44 @@ struct MetalShockwaveData {
     uint16_t blend;
     uint16_t allowAlpha;
 };
+
+struct TransitionData {
+    uint32_t width;
+    uint32_t height;
+
+    uint32_t pWidth;
+    uint32_t pHeight;
+
+    float adjust;
+    float progress;
+    
+    bool hasPrev;
+    bool reverse;
+    bool out;
+};
+
+struct LayerBlendingData {
+    int32_t nodeCount;
+    uint32_t bufferWi;
+    uint32_t bufferHi;
+    
+    bool useMask;
+    
+    float hueAdjust;
+    float valueAdjust;
+    float saturationAdjust;
+    
+    int brightness;
+    int contrast;
+    float fadeFactor;
+    float effectMixThreshold;
+    bool effectMixVaries;
+    int mixTypeData;
+    
+    int outputSparkleCount;
+    simd::uchar4 sparkleColor;
+    
+    bool isChromaKey;
+    int chromaSensitivity;
+    simd::uchar4 chromaColor;
+};

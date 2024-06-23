@@ -62,6 +62,10 @@
     #include "OpenGL/gl3.h"
     #define __gl_h_
     #include <OpenGL/OpenGL.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #endif
 
 #include "ShaderEffect.h"
@@ -87,6 +91,8 @@
 #include <set>
 #include <mutex>
 #include <string>
+
+
 
 namespace
 {
@@ -183,16 +189,6 @@ namespace
 
 bool ShaderEffect::useBackgroundRender = false;
 
-ShaderEffect::ShaderEffect(int i) : RenderableEffect(i, "Shader", shader_16_xpm, shader_24_xpm, shader_32_xpm, shader_48_xpm, shader_64_xpm)
-{
-
-}
-
-ShaderEffect::~ShaderEffect()
-{
-
-}
-
 bool ShaderEffect::IsShaderFile(std::string filename)
 {
     wxFileName fn(filename);
@@ -216,13 +212,10 @@ std::list<std::string> ShaderEffect::CheckEffectSettings(const SettingsMap& sett
 
     wxString ifsFilename = settings.Get("E_0FILEPICKERCTRL_IFS", "");
 
-    if (ifsFilename == "" || !FileExists(ifsFilename))
-    {
-        res.push_back(wxString::Format("    ERR: Shader effect cant find file '%s'. Model '%s', Start %s", ifsFilename, model->GetName(), FORMATTIME(eff->GetStartTimeMS())).ToStdString());
-    }
-    else if (!IsFileInShowDir(xLightsFrame::CurrentDir, ifsFilename.ToStdString()))
-    {
-        res.push_back(wxString::Format("    WARN: Shader effect file '%s' not under show directory. Model '%s', Start %s", ifsFilename, model->GetName(), FORMATTIME(eff->GetStartTimeMS())).ToStdString());
+    if (ifsFilename == "" || !FileExists(ifsFilename)) {
+        res.push_back(wxString::Format("    ERR: Shader effect cant find file '%s'. Model '%s', Start %s", ifsFilename, model->GetFullName(), FORMATTIME(eff->GetStartTimeMS())).ToStdString());
+    } else if (!IsFileInShowDir(xLightsFrame::CurrentDir, ifsFilename.ToStdString())) {
+        res.push_back(wxString::Format("    WARN: Shader effect file '%s' not under show directory. Model '%s', Start %s", ifsFilename, model->GetFullName(), FORMATTIME(eff->GetStartTimeMS())).ToStdString());
     }
 
     return res;
@@ -550,12 +543,13 @@ private:
 
 
 #if defined(__WXOSX__)
-constexpr int osxSharedContextCount = 24;
-constexpr int COMPILED_PROGRAM_RETAIN_COUNT = osxSharedContextCount;
+constexpr int osxMaxSharedContextCount = 24;
+constexpr int COMPILED_PROGRAM_RETAIN_COUNT = 24;
 static WXGLContext sharedContext = 0;
 static std::list<WXGLContext> sharedContexts;
 static std::mutex sharedContextsLock;
 static std::condition_variable sharedContextsNotifier;
+static int osxSharedContextCount = 0;
 #else
 constexpr int COMPILED_PROGRAM_RETAIN_COUNT = 10;
 #endif
@@ -811,6 +805,17 @@ std::map<std::string, ShaderRenderCache::ShaderInfo*> ShaderRenderCache::shaderM
 std::set<std::string> ShaderRenderCache::failedShaders;
 std::mutex ShaderRenderCache::shaderMapMutex;
 
+
+ShaderEffect::ShaderEffect(int i) : RenderableEffect(i, "Shader", shader_16_xpm, shader_24_xpm, shader_32_xpm, shader_48_xpm, shader_64_xpm)
+{
+}
+
+ShaderEffect::~ShaderEffect()
+{
+
+}
+
+
 bool ShaderEffect::CanRenderOnBackgroundThread(Effect* effect, const SettingsMap& settings, RenderBuffer& buffer)
 {
 
@@ -945,6 +950,36 @@ void adjustWGLContext(WXGLContext ctx) {
 
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     logger_base.info(configs);
+    WXGLUnsetCurrentContext();
+}
+WXGLContext createContext() {
+    wxGLAttributes attributes;
+    attributes.AddAttribute(51 /* NSOpenGLPFAMinimumPolicy */ );
+    attributes.AddAttribute(96 /* NSOpenGLPFAAcceleratedCompute */ );
+    attributes.AddAttribute(97 /* NSOpenGLPFAAllowOfflineRenderers */ );
+    attributes.MinRGBA(8, 8, 8, 8).EndList();
+    wxGLContextAttrs cxtAttrs;
+    cxtAttrs.CoreProfile().EndList();
+
+    
+    WXGLPixelFormat pixelFormat = WXGLChoosePixelFormat(attributes.GetGLAttrs(),
+                                                        attributes.GetSize(),
+                                                        cxtAttrs.GetGLAttrs(),
+                                                        cxtAttrs.GetSize());
+    if (!pixelFormat) {
+        // couldn't get an AcceleratedCompute format, let's at least try defaults
+        wxGLAttributes attributes2;
+        attributes2.PlatformDefaults().MinRGBA(8, 8, 8, 8).EndList();
+        pixelFormat = WXGLChoosePixelFormat(attributes2.GetGLAttrs(),
+                                            attributes2.GetSize(),
+                                            cxtAttrs.GetGLAttrs(),
+                                            cxtAttrs.GetSize());
+    }
+    WXGLContext ctx = WXGLCreateContext(pixelFormat, sharedContext);
+    adjustWGLContext(ctx);
+    WXGLDestroyPixelFormat(pixelFormat);
+
+    return ctx;
 }
 #endif
 
@@ -954,38 +989,11 @@ bool ShaderEffect::SetGLContext(ShaderRenderCache *cache) {
     if (cache->s_glContext == nullptr) {
         std::unique_lock<std::mutex> lock(sharedContextsLock);
         if (sharedContext == 0) {
-            wxGLAttributes attributes;
-            attributes.AddAttribute(51 /* NSOpenGLPFAMinimumPolicy */ );
-            attributes.AddAttribute(96 /* NSOpenGLPFAAcceleratedCompute */ );
-            attributes.AddAttribute(97 /* NSOpenGLPFAAllowOfflineRenderers */ );
-            attributes.MinRGBA(8, 8, 8, 8).EndList();
-            wxGLContextAttrs cxtAttrs;
-            cxtAttrs.CoreProfile().EndList();
-
-            
-            WXGLPixelFormat pixelFormat = WXGLChoosePixelFormat(attributes.GetGLAttrs(),
-                                                                attributes.GetSize(),
-                                                                cxtAttrs.GetGLAttrs(),
-                                                                cxtAttrs.GetSize());
-            if (!pixelFormat) {
-                // couldn't get an AcceleratedCompute format, let's at least try defaults
-                wxGLAttributes attributes2;
-                attributes2.PlatformDefaults().MinRGBA(8, 8, 8, 8).EndList();
-                pixelFormat = WXGLChoosePixelFormat(attributes2.GetGLAttrs(),
-                                                    attributes2.GetSize(),
-                                                    cxtAttrs.GetGLAttrs(),
-                                                    cxtAttrs.GetSize());
-            }
-            
-            sharedContext = WXGLCreateContext(pixelFormat, 0);
-            adjustWGLContext(sharedContext);
-            for (int x = 0; x < osxSharedContextCount; x++) {
-                // create some shared contexts to use if we run out
-                WXGLContext sc = WXGLCreateContext(pixelFormat, sharedContext);
-                adjustWGLContext(sc);
-                sharedContexts.push_front(sc);
-            }
-            WXGLDestroyPixelFormat(pixelFormat);
+            sharedContext = createContext();
+        }
+        if (sharedContexts.empty() && osxSharedContextCount < osxMaxSharedContextCount) {
+            sharedContexts.push_front(createContext());
+            ++osxSharedContextCount;
         }
         while (sharedContexts.empty()) {
             sharedContextsNotifier.wait(lock);
@@ -1134,21 +1142,22 @@ void ShaderEffect::Render(Effect* eff, const SettingsMap& SettingsMap, RenderBuf
         if (s_audioTex == 0)
             s_audioTex = FFTAudioTexture();
 
+        LOG_GL_ERRORV(glActiveTexture(GL_TEXTURE0));
+        LOG_GL_ERRORV(glBindTexture(GL_TEXTURE_2D, s_audioTex));
+
         AudioManager* audioManager = buffer.GetMedia();
         if (audioManager != nullptr) {
-            FRAMEDATATYPE datatype = ( _shaderConfig->IsAudioFFTShader() ) ? FRAMEDATA_VU : FRAMEDATA_HIGH;
-            auto fftData = audioManager->GetFrameData(buffer.curPeriod, datatype, "");
-
-            std::vector<float> fft128;
-            if ( _shaderConfig->IsAudioFFTShader() )
-               fft128.insert( fft128.begin(), fftData->cbegin(), fftData->cend()  );
-            else
-               fft128.insert( fft128.begin(), 127, *(fftData->cbegin()) );
-            fft128.push_back( 0.f );
-
-            LOG_GL_ERRORV(glActiveTexture(GL_TEXTURE0));
-            LOG_GL_ERRORV(glBindTexture(GL_TEXTURE_2D, s_audioTex));
-            LOG_GL_ERRORV(glTexSubImage2D(GL_TEXTURE_2D, 0, 0,0, fft128.size(),1, GL_RED, GL_FLOAT, fft128.data()));
+            auto fftData = audioManager->GetFrameData(buffer.curPeriod, "");
+            if (fftData) {
+                std::vector<float> fft128;
+                if ( _shaderConfig->IsAudioFFTShader() )
+                    fft128.insert( fft128.begin(), fftData->vu.cbegin(), fftData->vu.cend()  );
+                else
+                    fft128.insert( fft128.begin(), 127, fftData->max );
+                fft128.push_back( 0.f );
+                
+                LOG_GL_ERRORV(glTexSubImage2D(GL_TEXTURE_2D, 0, 0,0, fft128.size(),1, GL_RED, GL_FLOAT, fft128.data()));
+            }
         }
     } else {
         LOG_GL_ERRORV(glActiveTexture(GL_TEXTURE0));
@@ -1792,3 +1801,8 @@ bool ShaderConfig::UsesEvents() const
     }
     return false;
 }
+
+
+#ifdef __WXOSX__
+#pragma clang diagnostic push
+#endif

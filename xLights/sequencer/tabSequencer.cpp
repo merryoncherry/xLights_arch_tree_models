@@ -1108,21 +1108,20 @@ void xLightsFrame::EffectChanged(wxCommandEvent& event)
     Effect* effect = (Effect*)event.GetClientData();
     SetEffectControls(effect->GetParentEffectLayer()->GetParentElement()->GetFullName(),
                       effect->GetEffectName(), effect->GetSettings(), effect->GetPaletteMap(),
-                      true);
+                      effect->GetStartTimeMS(), effect->GetEndTimeMS(), true);
     selectedEffectString = "";  // force update to effect rendering
 }
 
 // flags something has changed in an effect but does not send the effect
 void xLightsFrame::EffectUpdated(wxCommandEvent& event)
 {
-    if (selectedEffect != nullptr)
-    {
+    if (selectedEffect != nullptr) {
         // For canvas mode the timing panel needs to know how many layers are under this effect
         int layers = selectedEffect->GetParentEffectLayer()->GetParentElement()->GetEffectLayerCount();
         int start = selectedEffect->GetParentEffectLayer()->GetLayerNumber() + 1;
 		std::vector<int> effectLayers = selectedEffect->GetParentEffectLayer()->GetParentElement()->GetLayersWithEffectsByTime(selectedEffect->GetStartTimeMS(), selectedEffect->GetEndTimeMS());
         if (start > layers) start = -1;
-        timingPanel->SetLayersBelow(start, layers, effectLayers);
+        timingPanel->SetLayersBelow(start, layers, effectLayers, _sequenceElements.SupportsModelBlending());
     }
 }
 
@@ -1209,7 +1208,7 @@ void xLightsFrame::SelectedEffectChanged(SelectedEffectChangedEvent& event)
                 int start = effect->GetParentEffectLayer()->GetLayerNumber() + 1;
                 std::vector<int> effectLayers = effect->GetParentEffectLayer()->GetParentElement()->GetLayersWithEffectsByTime(effect->GetStartTimeMS(), effect->GetEndTimeMS());
                 if (start > layers) start = -1;
-                timingPanel->SetLayersBelow(start, layers, effectLayers);
+                timingPanel->SetLayersBelow(start, layers, effectLayers, _sequenceElements.SupportsModelBlending());
 
                 bool resetStrings = false;
                 if ("Random" == effect->GetEffectName()) {
@@ -1223,7 +1222,7 @@ void xLightsFrame::SelectedEffectChanged(SelectedEffectChangedEvent& event)
                 }
                 SetEffectControls(effect->GetParentEffectLayer()->GetParentElement()->GetFullName(),
                     effect->GetEffectName(), effect->GetSettings(), effect->GetPaletteMap(),
-                    !event.isNew);
+                    effect->GetStartTimeMS(), effect->GetEndTimeMS(), !event.isNew);
                 selectedEffectString = GetEffectTextFromWindows(selectedEffectPalette);
                 selectedEffect = effect;
 
@@ -1298,6 +1297,25 @@ void xLightsFrame::EffectDroppedOnGrid(wxCommandEvent& event)
                                        _sequenceElements.GetSelectedRange(i)->EndTime,
                                        EFFECT_SELECTED,false);
 
+        // Change render buffer to Per Model for models that need it
+        Model* m = AllModels[el->GetParentElement()->GetModelName()];
+        if( m->GetDisplayAs() == "ModelGroup" ) {
+            auto mg = dynamic_cast<ModelGroup*>(m);
+            if (mg != nullptr) {
+                // see if all models in the group match the desired model types
+                bool all_good = true;
+                for (const auto& it : mg->GetFlatModels(true, false)) {
+                    if (it->GetDisplayAs() != "DmxMovingHeadAdv" && it->GetDisplayAs() != "DmxMovingHead") {
+                        all_good = false;
+                        break;
+                    }
+                }
+                if( all_good ) {
+                    effect->GetSettings()["B_CHOICE_BufferStyle"] = "Per Model Default";
+                }
+            }
+        }
+
         last_effect_created = effect;
 
         _sequenceElements.get_undo_mgr().CaptureAddedEffect( el->GetParentElement()->GetFullName(), el->GetIndex(), effect->GetID() );
@@ -1333,7 +1351,8 @@ void xLightsFrame::EffectDroppedOnGrid(wxCommandEvent& event)
     {
         SetEffectControls(last_effect_created->GetParentEffectLayer()->GetParentElement()->GetFullName(),
                           last_effect_created->GetEffectName(), last_effect_created->GetSettings(),
-                          last_effect_created->GetPaletteMap(), false);
+                          last_effect_created->GetPaletteMap(), last_effect_created->GetStartTimeMS(),
+                          last_effect_created->GetEndTimeMS(), false);
         selectedEffectString = GetEffectTextFromWindows(selectedEffectPalette);
         selectedEffect = last_effect_created;
     }
@@ -1441,7 +1460,8 @@ void xLightsFrame::EffectFileDroppedOnGrid(wxCommandEvent& event)
     {
         SetEffectControls(last_effect_created->GetParentEffectLayer()->GetParentElement()->GetFullName(),
             last_effect_created->GetEffectName(), last_effect_created->GetSettings(),
-            last_effect_created->GetPaletteMap(), false);
+            last_effect_created->GetPaletteMap(), last_effect_created->GetStartTimeMS(),
+            last_effect_created->GetEndTimeMS(), false);
         selectedEffectString = GetEffectTextFromWindows(selectedEffectPalette);
         selectedEffect = last_effect_created;
     }
@@ -2139,6 +2159,8 @@ void xLightsFrame::RandomizeEffect(wxCommandEvent& event)
                                   el->GetEffect(j)->GetEffectName(),
                                   el->GetEffect(j)->GetSettings(),
                                   el->GetEffect(j)->GetPaletteMap(),
+                                  el->GetEffect(j)->GetStartTimeMS(),
+                                  el->GetEffect(j)->GetEndTimeMS(),
                                   true);
                 selectedEffectString = GetEffectTextFromWindows(selectedEffectPalette);
                 selectedEffect = el->GetEffect(j);
@@ -2492,7 +2514,7 @@ bool xLightsFrame::TimerRgbSeq(long msec)
 
 void xLightsFrame::SetEffectControls(const std::string &modelName, const std::string &effectName,
                                      const SettingsMap &settings, const SettingsMap &palette,
-                                     bool setDefaults) {
+                                     int startTimeMs, int endTimeMs, bool setDefaults) {
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     if (CurrentSeqXmlFile == nullptr) return;
     //timingPanel->Freeze();
@@ -2506,7 +2528,7 @@ void xLightsFrame::SetEffectControls(const std::string &modelName, const std::st
         ResetPanelDefaultSettings(effectName, model, false);
     }
 
-    EffectsPanel1->SetEffectPanelStatus(model, effectName);
+    EffectsPanel1->SetEffectPanelStatus(model, effectName, startTimeMs, endTimeMs);
     SetEffectControls(settings);
     SetEffectControls(palette);
     RenderableEffect *ef = GetEffectManager().GetEffect(effectName);
@@ -3274,25 +3296,20 @@ void PTProgress(wxProgressDialog* pd, int p)
     }
 }
 
-std::map<int, std::list<float>> xLightsFrame::LoadPolyphonicTranscription(AudioManager* audio, int intervalMS)
+std::map<int, std::vector<float>> xLightsFrame::LoadPolyphonicTranscription(AudioManager* audio, int intervalMS)
 {
     static log4cpp::Category &logger_pianodata = log4cpp::Category::getInstance(std::string("log_pianodata"));
-    std::map<int, std::list<float>> res;
+    std::map<int, std::vector<float>> res;
 
-    if (audio != nullptr)
-    {
-        try
-        {
-            if (!audio->IsPolyphonicTranscriptionDone())
-            {
+    if (audio != nullptr) {
+        try {
+            if (!audio->IsPolyphonicTranscriptionDone()) {
                 wxProgressDialog pd("Processing Audio", "");
                 logger_pianodata.info("Processing Polyphonic Transcription to produce notes");
                 audio->DoPolyphonicTranscription(&pd, &PTProgress);
                 logger_pianodata.info("Processing Polyphonic Transcription - DONE");
             }
-        }
-        catch (...)
-        {
+        } catch (...) {
             logger_pianodata.warn("Exception caught processing Polyphonic Transcription");
         }
 
@@ -3300,17 +3317,14 @@ std::map<int, std::list<float>> xLightsFrame::LoadPolyphonicTranscription(AudioM
 
         int frames = audio->LengthMS() / intervalMS;
 
-        for (size_t i = 0; i < frames; i++)
-        {
-            std::list<float> const * const pdata = audio->GetFrameData(i, FRAMEDATA_NOTES, "");
-            if (pdata != nullptr)
-            {
-                res[i*intervalMS] = *pdata;
+        for (size_t i = 0; i < frames; i++) {
+            auto pdata = audio->GetFrameData(i, "", true);
+            if (pdata != nullptr) {
+                res[i*intervalMS] = pdata->notes;
             }
         }
 
-        if (logger_pianodata.isDebugEnabled())
-        {
+        if (logger_pianodata.isDebugEnabled()) {
             logger_pianodata.debug("Note data calculated:");
             logger_pianodata.debug("Time MS, Keys");
             for (auto it = res.begin(); it != res.end(); ++it)
@@ -3333,10 +3347,10 @@ std::map<int, std::list<float>> xLightsFrame::LoadPolyphonicTranscription(AudioM
     return res;
 }
 
-std::map<int, std::list<float>> xLightsFrame::LoadAudacityFile(std::string file, int intervalMS)
+std::map<int, std::vector<float>> xLightsFrame::LoadAudacityFile(std::string file, int intervalMS)
 {
     static log4cpp::Category &logger_pianodata = log4cpp::Category::getInstance(std::string("log_pianodata"));
-    std::map<int, std::list<float>> res;
+    std::map<int, std::vector<float>> res;
 
     logger_pianodata.debug("Processing audacity file " + file);
     logger_pianodata.debug("Interval %d.", intervalMS);
@@ -3367,7 +3381,7 @@ std::map<int, std::list<float>> xLightsFrame::LoadAudacityFile(std::string file,
                     {
                         if (res.find(i) == res.end())
                         {
-                            std::list<float> ff;
+                            std::vector<float> ff;
                             ff.push_back(components[2]);
                             res[i] = ff;
                         }
@@ -3412,10 +3426,10 @@ std::map<int, std::list<float>> xLightsFrame::LoadAudacityFile(std::string file,
     return res;
 }
 
-std::map<int, std::list<float>> xLightsFrame::LoadMusicXMLFile(std::string file, int intervalMS, int speedAdjust, int startAdjustMS, std::string track)
+std::map<int, std::vector<float>> xLightsFrame::LoadMusicXMLFile(std::string file, int intervalMS, int speedAdjust, int startAdjustMS, std::string track)
 {
     static log4cpp::Category &logger_pianodata = log4cpp::Category::getInstance(std::string("log_pianodata"));
-    std::map<int, std::list<float>> res;
+    std::map<int, std::vector<float>> res;
 
     float speedadjust = speedAdjust / 100.0;
 
@@ -3440,7 +3454,7 @@ std::map<int, std::list<float>> xLightsFrame::LoadMusicXMLFile(std::string file,
                     {
                         if (res.find(i) == res.end())
                         {
-                            std::list<float> ff;
+                            std::vector<float> ff;
                             ff.push_back(it->midi);
                             res[i] = ff;
                         }
@@ -3488,10 +3502,10 @@ std::map<int, std::list<float>> xLightsFrame::LoadMusicXMLFile(std::string file,
     return res;
 }
 
-std::map<int, std::list<float>> xLightsFrame::LoadMIDIFile(std::string file, int intervalMS, int speedAdjust, int startAdjustMS, std::string track)
+std::map<int, std::vector<float>> xLightsFrame::LoadMIDIFile(std::string file, int intervalMS, int speedAdjust, int startAdjustMS, std::string track)
 {
     static log4cpp::Category& logger_pianodata = log4cpp::Category::getInstance(std::string("log_pianodata"));
-    std::map<int, std::list<float>> res;
+    std::map<int, std::vector<float>> res;
 
     float speedadjust = speedAdjust / 100.0;
 
@@ -3539,7 +3553,7 @@ std::map<int, std::list<float>> xLightsFrame::LoadMIDIFile(std::string file, int
                         int end = UpperTS(time, intervalMS);
 
                         for (int j = start; j < end; j += intervalMS) {
-                            std::list<float> f;
+                            std::vector<float> f;
                             for (int k = 0; k <= 127; ++k) {
                                 if (notestate[k] > 0) {
                                     f.push_back(k);
@@ -3594,7 +3608,7 @@ void xLightsFrame::ExecuteImportNotes(wxCommandEvent& command)
 
         int interval = CurrentSeqXmlFile->GetFrameMS();
         wxString type = dlgNoteImport.Choice_Piano_Notes_Source->GetStringSelection();
-        std::map<int, std::list<float>> notes;
+        std::map<int, std::vector<float>> notes;
         if (type == "Audacity Timing File") {
             notes = LoadAudacityFile(dlgNoteImport.TextCtrl_Piano_File->GetValue().ToStdString(), interval);
         } else if (type == "Music XML File") {
@@ -3612,21 +3626,21 @@ void xLightsFrame::ExecuteImportNotes(wxCommandEvent& command)
     }
 }
 
-std::string xLightsFrame::CreateNotesLabel(const std::list<float>& notes) const
+std::string xLightsFrame::CreateNotesLabel(const std::vector<float>& notes) const
 {
     std::string res;
 
-    for (auto it = notes.begin(); it != notes.end(); ++it) {
+    for (auto f : notes) {
         if (res != "") {
             res += ",";
         }
-        res += DecodeMidi((int)*it);
+        res += DecodeMidi(f);
     }
 
     return res;
 }
 
-void xLightsFrame::CreateNotes(EffectLayer* el, std::map<int, std::list<float>>& notes, int interval, int frames)
+void xLightsFrame::CreateNotes(EffectLayer* el, std::map<int, std::vector<float>>& notes, int interval, int frames)
 {
     size_t last = 0;
     std::string lastLabel = "";

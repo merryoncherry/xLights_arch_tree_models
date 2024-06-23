@@ -34,7 +34,6 @@
 #include <wx/menu.h>
 #include <wx/panel.h>
 #include <wx/sizer.h>
-#include <wx/splitter.h>
 #include <wx/stattext.h>
 #include <wx/timer.h>
 //*)
@@ -337,7 +336,7 @@ public:
     bool IsExiting() const { return _exiting; }
     void SetEffectControls(const std::string &modelName, const std::string &name,
                            const SettingsMap &settings, const SettingsMap &palette,
-                           bool setDefaults);
+                           int startTimeMs, int endTimeMs, bool setDefaults);
     void SetEffectControls(const SettingsMap &settings);
     void ApplyLast(wxCommandEvent& event);
     void SetEffectControlsApplyLast(const SettingsMap &settings);
@@ -624,6 +623,7 @@ public:
     void OnCheckBox_AutoUpdateBaseClick(wxCommandEvent& event);
     void OnButton_UpdateBaseClick(wxCommandEvent& event);
     void ShowHideSelectEffectsWindow(wxCommandEvent& event);
+    bool OnButton_OpenBaseShowDirClick(wxCommandEvent& event);
     //*)
     void OnCharHook(wxKeyEvent& event);
     void OnHelp(wxHelpEvent& event);
@@ -697,6 +697,7 @@ public:
     static const long ID_STATICTEXT4;
     static const long ID_STATICTEXT2;
     static const long ID_BUTTON14;
+    static const long ID_BUTTON17;
     static const long ID_BUTTON15;
     static const long ID_STATICTEXT3;
     static const long ID_CHECKBOX1;
@@ -716,8 +717,7 @@ public:
     static const long ID_BUTTON12;
     static const long ID_BUTTON8;
     static const long ID_STATICTEXT1;
-    static const long ID_PANEL6;
-    static const long ID_SPLITTERWINDOW1;
+    static const long ID_PANEL3;
     static const long ID_PANEL_SETUP;
     static const long ID_PANEL_PREVIEW;
     static const long XLIGHTS_SEQUENCER_TAB;
@@ -875,12 +875,14 @@ public:
     wxButton* Button_ChangeTemporarilyAgain;
     wxButton* Button_CheckShowFolderTemporarily;
     wxButton* Button_ClearBaseShowDir;
+    wxButton* Button_OpenBaseShowDir;
     wxButton* Button_OpenProxy;
     wxButton* Button_UpdateBase;
     wxCheckBox* CheckBox_AutoUpdateBase;
     wxChoice* ChoiceParm1;
     wxChoice* ChoiceParm2;
     wxFlexGridSizer* FlexGridSizer1;
+    wxFlexGridSizer* FlexGridSizer2;
     wxFlexGridSizer* FlexGridSizerSetup;
     wxFlexGridSizer* FlexGridSizerSetupControllerButtons;
     wxFlexGridSizer* FlexGridSizerSetupControllers;
@@ -1003,7 +1005,6 @@ public:
     wxPanel* PanelPreview;
     wxPanel* PanelSequencer;
     wxPanel* PanelSetup;
-    wxSplitterWindow* SplitterWindowControllers;
     wxStaticBoxSizer* StaticBoxSizer1;
     wxStaticText* FileNameText;
     wxStaticText* ShowDirectoryLabel;
@@ -1074,6 +1075,7 @@ public:
     bool _promptBatchRenderIssues = true;
     bool _disablePromptBatchRenderIssues = false;
     bool _hwVideoAccleration = false;
+    int _hwVideoRenderer = 1;
     bool _showACLights = false;
     bool _showACRamps = false;
     wxString _enableRenderCache;
@@ -1184,6 +1186,9 @@ public:
 
     bool HardwareVideoAccelerated() const { return _hwVideoAccleration; }
     void SetHardwareVideoAccelerated(bool b);
+
+    int HardwareVideoRenderer() const { return _hwVideoRenderer; }
+    void SetHardwareVideoRenderer(int type);
 
     bool ShadersOnBackgroundThreads() const;
     void SetShadersOnBackgroundThreads(bool b);
@@ -1444,7 +1449,6 @@ private:
     void CreateDefaultEffectsXml();
     bool TimerRgbSeq(long msec);
     void SetChoicebook(wxChoicebook* cb, const wxString& PageName);
-    wxString GetXmlSetting(const wxString& settingName,const wxString& defaultValue) const;
     void SetPanelSequencerLabel(const std::string& sequence);
 
     void DisplayXlightsFilename(const wxString& filename) const;
@@ -1511,6 +1515,7 @@ public:
     void RenderAll();
 
     void SetXmlSetting(const wxString& settingName,const wxString& value);
+    wxString GetXmlSetting(const wxString& settingName,const wxString& defaultValue) const;
     uint32_t GetMaxNumChannels();
 
     void UpdateSequenceVideoPanel( const wxString& path );
@@ -1799,12 +1804,12 @@ private:
     void ExportEffects(wxString const& filename);
     int ExportElement(wxFile& f, Element* e, std::map<std::string, int>& effectfrequency, std::map<std::string, int>& effectTotalTime, std::list<std::string>& allfiles);
     int ExportNodes(wxFile& f, StrandElement* e, NodeLayer* nl, int n, std::map<std::string, int>& effectfrequency, std::map<std::string, int>& effectTotalTime, std::list<std::string>& allfiles);
-    std::map<int, std::list<float>> LoadPolyphonicTranscription(AudioManager* audio, int intervalMS);
-    std::map<int, std::list<float>> LoadAudacityFile(std::string file, int intervalMS);
-    std::map<int, std::list<float>> LoadMIDIFile(std::string file, int intervalMS, int speedAdjust, int startAdjustMS, std::string track);
-    std::map<int, std::list<float>> LoadMusicXMLFile(std::string file, int intervalMS, int speedAdjust, int startAdjustMS, std::string track);
-    void CreateNotes(EffectLayer* el, std::map<int, std::list<float>>& notes, int interval, int frames);
-    std::string CreateNotesLabel(const std::list<float>& notes) const;
+    std::map<int, std::vector<float>> LoadPolyphonicTranscription(AudioManager* audio, int intervalMS);
+    std::map<int, std::vector<float>> LoadAudacityFile(std::string file, int intervalMS);
+    std::map<int, std::vector<float>> LoadMIDIFile(std::string file, int intervalMS, int speedAdjust, int startAdjustMS, std::string track);
+    std::map<int, std::vector<float>> LoadMusicXMLFile(std::string file, int intervalMS, int speedAdjust, int startAdjustMS, std::string track);
+    void CreateNotes(EffectLayer* el, std::map<int, std::vector<float>>& notes, int interval, int frames);
+    std::string CreateNotesLabel(const std::vector<float>& notes) const;
     std::string CheckSequence(bool displayInEditor, bool writeToFile);
     void ValidateEffectAssets();
     bool CleanupRGBEffectsFileLocations();

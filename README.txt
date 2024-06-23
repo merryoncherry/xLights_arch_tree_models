@@ -11,6 +11,123 @@ Issue Tracker is found here: www.github.com/xLightsSequencer/xLights/issues
 
 XLIGHTS/NUTCRACKER RELEASE NOTES
 ---------------------------------
+2024.11 Jun 15, 2024
+   - enh (dkulp)        Add ability to set display names for Model/Submodel layers
+   - enh (dkulp)        For VSA import, set the layer name to mach the servo
+   - enh (dkulp)        Add effect background for Servo Effect
+   - enh (dkulp)        Make Servo effect easier to use for common "Ramp" use cases by not requiring the value curves for those
+   - enh (dkulp)        Make sure preview honors the min/max configured for the servo
+   - enh (dkulp)        Change MovingHeadPanel to use dialog units and/or default sizes for buttons
+   - enh (gil)          Show Active Timing Marks in Moving Head Effect Dimmer Panel; Only set MH channels that have actually been changed
+   - enh (dkulp)        Allow Canvas mode effects to set pixels transparent (ex: shaders only applying to part of buffer)
+   - enh (cybercop23)   Sort Model Icons + swapped Download & Import
+   - enh (cybercop23)   Removed Wreath model from being created
+   - enh (scott)        Added Timing Event Bar Bounce to VU Meter
+   - enh (derwin12)     Ability to order the views in the Display Editor window
+   - enh (cybercop23)   Add Aliases for Models and Groups to the Export Model
+   - enh (cybercop23)   Layout Panel - Remove start/end channels for shadow items, MH type
+   - enh (cybercop23)   Add quick open base button
+   - enh (cybercop23)   Sort dropdowns for In/Out Transitions
+   - enh (PeteMatthews) Add sACN/ArtNet support for ILightThat controller
+   - enh (cybercop23)   Stack button on ctrl page and remove the slider to prevent full close of right panel
+   - enh (derwin12)     Allow for a model vid export to be done at high or lowdef render via scripting
+   - enh (derwin12)     Add middle mouse to pan sequencer
+   - enh (derwin12)     Check that timing track name doesnt conflict with models
+   - enh (derwin12)     Show Set Center Point dialog for all groups
+   - enh (cybercop23)   Move Delete to lower in thej list to reduce accidental click
+   - enh (derwin12)     Optionally retain the effect duration when duplicating an effect
+   - bug (derwin12)     Keep buttons visible in submodel dialog
+   - bug (gil)          Fix Pan value curve
+   - bug (derwin12)     Model groups with one model causing stalling/crashing
+   - bug (MrPierreB)    Bars effect - Fix bug where the highlight color is not used when other layer blending options are selected
+   - bug (gil)          Fix model paste when no model is selected
+   - bug (dkulp)        Fix ValueCurve bottom not being visible or selectable on Mac.
+   - bug (dkulp)        Some fixes for colored buttons on sonoma having their sizes changing
+   - bug (dkulp)        Make sure sorting is turned off during the model list "Freeze" and re-enabled on "Thaw"
+   - bug (dkulp)        FireEffect: only call GetMaxBuffer during init, use that size throughout the effect rendering for consistency
+   - bug (scott)        DMXEffect - some more fixes after update to 48dmx channels
+   - bug (gil)          Fix major bug with MovingHeadEffect on groups...it was triggering all heads whether they were selected or not
+   - bug (gil)          Fix Sketch panel resize
+   - bug (keith)        Fix some E4-S Mk3 controller issues with v1.5 firmware, zig-zag, content-type
+2024.10 Apr 30, 2024
+   - enh (MrPierreB)    Add ability to control the highlight color for the Bars effect
+   - enh (gil)          Add Preset support for Dimmers
+   - enh (gil)          Adjust Moving Head mesh materials and allow user to control brightness
+   - enh (PeteMathews)  Support controller from ILightThat
+   - enh (gil)          Preview Moving Head beam brightness uses dimmer
+   - enh (gil)          Add "Dimmer" tab to new moving head effect
+   - enh (cybercop23)   Allow export/import of aliases for all model types
+   - enh (derwin12)     Add option to Display Elements to sort bases on node counts
+   - bug (derwin12)     Fix submodel node updates when changing to new submodel choice
+   - bug (cybercop23)   Suppress "Add To groups" if source model doesn't belong to any groups
+   - bug (gil)          Fix crash in MovingHeadPanel with non-moving head models
+   - bug (gil)          Fix migration of moving heads with negative range or motion
+   - bug (gil)          Fix DmxMovingHead orientations ot match new model
+   - bug (gil)          Fix Moving Head default node names
+   - bug (gil)          Fix Moving Head Copy/Paste and presets
+   - bug (derwin12/scott) Fix some issues with UTF-8 characters in media filenames
+   - bug (scott)        Fix State effect panel using Faces intead of states
+   - bug (dkulp)        Fix various layer blending issues with Moving Heads/DMX models
+   - bug (dkulp)        Fix some crashes with effects on empty groups
+   - bug (dkulp)        Fix Model Preview of Tree/Cube/Sphere in some unusual circumstances
+   - bug (derwin12)
+2024.09 Apr 16, 2024
+   - enh (dkulp)        MacOS - Use GPU for  layer blending
+   - enh (derwin12)     Add preference to override the highlight color for lists
+   - enh (cybercop23)   Remove start/end channels from groups and sub-models in Model list
+   - enh (cybercop23)   Add LayoutGroup to Import/Export for CustomModel
+   - enh (gil)          New Moving Head effect - see https://github.com/xLightsSequencer/xLights/discussions/4260
+   - enh (scott)        Windows - Update to FFMpeg 6.1.1, fixes Vulkan, add AMD AMF decoders
+   - enh (dkulp)        Check Sequence - check effects against proper model/submodel and log SubModel the effect is on
+   - enh (cybercop23)   Add SubModel alias to info panel
+   - enh (derwin12)     Add SubModel alias editing to Layout Panel
+   - enh (cybercop23)   Add option to add new models to the same groups during copy/paste
+   - enh (dkulp)        Add the "Model Blending" layer to the list of layers selectable for Canvas mode effects
+   - enh (dkulp)        Faster audio processing/loading using far less memory
+   - enh (dkulp)        Optimize internal "Node" creation/memory for faster loading and reduced overhead
+   - bug (dkulp)        Disabling model from rendering should also disable strands/nodes/submodels
+   - bug (dkulp)        Disabled Canvas effects shouldn't render or blend
+   - bug (gil)          Fix - 3D export of tree model is Z-Order backwords
+   - bug (gil)          Fix - "FromBase" XML attribue being set multiple times can corrupt the xlights_rgbeffects.xml file
+   - bug (cybercop23)   Remove duplicate Models/SubModels from groups when replacing a model
+   - bug (derwin12)     Shape Effect Emoji cannot be Y centered
+   - bug (gil)          Fix DMX Model color issues
+   - bug (derwin12)     Window - Enable/Disable HW Video Decoding dropdown without having to close/re-enter preferences
+   - bug (dkulp)        Fix sparkles with GPU rendering
+   - bug (dkulp)        Fix some renderings of SubModels in groups
+   - bug (derwin12)     Fix print dialog in Layout and Wiring views
+   - bug (dkulp)        Fix potential memory corruption with states/faces effects in groups
+   - bug (dkulp)        ShaderEffect - fix shaders that ask for AudioFFT on sequences with no audio
+   - bug (derwin12)     Fix Total Nodes tooltip on groups containing submodels
+   - bug (scott)        Increase ValueCurve text field sizes to account for negative sign on values
+2024.08 Apr 6, 2024
+   - enh (scott)        Ability to set type of Video Hardware Decoder on Windows
+   - enh (dkulp)        Optimize faces effect initialization on large models
+   - enh (scott)        Support two mouth colors if using Force Custom Colors
+   - bug (dkulp)        Fix crash with sparkles
+   - bug (dkulp)        Fix some crashes when deleting layers while rendering
+   - bug (dkulp)        Fix issues with model blending not working
+   - bug (derwin12)     Fix handling of custom models from base folders
+   - bug (keith)        Fix crash when adding aliases to newly created submodels
+   - bug (dkulp)        Fix saving zstd fseq files with massive channel counts
+2024.07 Apr 2, 2024
+   - enh (joero4)       Update ColorCurve dialog to make it easier to adjust near edges
+   - enh (dkulp)        MacOS - Add Shockwave to GPU rendered effects
+   - enh (dkulp)        MacOS - transitions handled on GPU
+   - enh (derwin12)     Lua script updates to allow updating the master view
+   - enh (scott)        Added RGB2Go controllers
+   - enh (derwin12)     Add ability toadd and edit aliases on SubModels
+   - enh (derwin12)     Save and use 3D mode selection in xlight_rgbeffects.xml file
+   - enh (derwin12)     Show any model warnings (missing nodes, etc..) before allowing users to create faces
+   - bug (dkulp)        Fix some issues where Buffer Styles list would not update to syles valid for submodels
+   - bug (dkulp)        Fix disabled effects still rendering
+   - bug (scott)        Fix SVG shape effect (nanosvg update)
+   - bug (scott)        Fix Scripting dialog not working
+   - bug (dkulp)        MacOS - limit number of OpenGL contexts created for Shader Effect, reduce memory usage
+   - bug (dkulp)        MacOS - Fix non-mask transitions not rendering properly with GPU rendered effects
+   - bug (dkulp)        Fix timing of "From Middle" transition when buffer ht is not 1
+   - bug (dkulp)        Switch to sequence tab before loading sequence to avoid a very hard to reproduce/debug crash
+   - bug (derwin12)     Fix crash in DMX Remap Channel Dialog
 2024.06 Mar 25, 2024
    - enh (dkulp)        Update wxWidgets to latest patches to fix various Dark Mode issues and Mac docking issues
    - enh (dkulp)        Add Horizontal/Vertical By Strand buffer styles to SubModels

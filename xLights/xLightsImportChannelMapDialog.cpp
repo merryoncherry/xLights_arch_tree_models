@@ -24,6 +24,7 @@
 #include "xLightsMain.h"
 #include "models/Model.h"
 #include "models/ModelGroup.h"
+#include "ColorManager.h"
 #include "UtilFunctions.h"
 #include "ExternalHooks.h"
 #include "MediaImportOptionsDialog.h"
@@ -181,7 +182,7 @@ bool xLightsImportTreeModel::GetAttr(const wxDataViewItem &item, unsigned int co
     }
 
     if (node->IsGroup()) {
-            attr.SetColour(CyanOrBlue());
+        attr.SetColour(ColorManager::instance()->CyanOrBlueOverride());
         set = true;
     }
 
@@ -559,7 +560,7 @@ xLightsImportChannelMapDialog::xLightsImportChannelMapDialog(wxWindow* parent, c
     Button_Cancel = new wxButton(Panel1, ID_BUTTON4, _("Cancel"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
     FlexGridSizer2->Add(Button_Cancel, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     FlexGridSizer2->Add(-1,-1,1, wxALL|wxEXPAND, 5);
-    Button_UpdateAliases = new wxButton(Panel1, ID_BUTTON6, _("Update Model Aliases Using Mapping"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON6"));
+    Button_UpdateAliases = new wxButton(Panel1, ID_BUTTON6, _("Update All Aliases Using Mapping"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON6"));
     FlexGridSizer2->Add(Button_UpdateAliases, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Button_AutoMap = new wxButton(Panel1, ID_BUTTON5, _("Auto Map"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON5"));
     FlexGridSizer2->Add(Button_AutoMap, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
@@ -923,7 +924,7 @@ void xLightsImportChannelMapDialog::PopulateAvailable(bool ccr)
 
             // If importing from xsqPkg flag known groups by color like is currently done in mapped list
             if (m->type == "ModelGroup") {
-                ListCtrl_Available->SetItemTextColour(j, CyanOrBlue());
+                ListCtrl_Available->SetItemTextColour(j, ColorManager::instance()->CyanOrBlueOverride());
             }
             j++;
         }
@@ -2235,13 +2236,13 @@ void xLightsImportChannelMapDialog::MarkUsed()
             // not used
             ImportChannel* im = GetImportChannel(ListCtrl_Available->GetItemText(i).ToStdString());
             if (im != nullptr && im->type == "ModelGroup") {
-                ListCtrl_Available->SetItemTextColour(i, CyanOrBlue());
+                ListCtrl_Available->SetItemTextColour(i, ColorManager::instance()->CyanOrBlueOverride());
             } else {
                 ListCtrl_Available->SetItemTextColour(i, wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT));
             }
         } else {
             //used
-            ListCtrl_Available->SetItemTextColour(i, LightOrMediumGrey());
+            ListCtrl_Available->SetItemTextColour(i, ColorManager::instance()->LightOrMediumGreyOverride());
         }
     }
     ListCtrl_Available->Thaw();
@@ -2701,10 +2702,16 @@ void xLightsImportChannelMapDialog::OnTextCtrl_FindToText(wxCommandEvent& event)
 
 void xLightsImportChannelMapDialog::OnButton_UpdateAliasesClick(wxCommandEvent& event)
 {
-    for (size_t i = 0; i < _dataModel->GetChildCount(); ++i) {
+    wxDataViewItemArray models;
+    _dataModel->GetChildren(wxDataViewItem(0), models);
+    for (size_t i = 0; i < models.size(); ++i) {
         xLightsImportModelNode* m = _dataModel->GetNthChild(i);
-        if (m->HasMapping()) {
-            xlights->GetModel(m->_model)->AddAlias(m->_mapping);
+        if (m->HasMapping()) xlights->GetModel(m->_model)->AddAlias(m->_mapping);
+        wxDataViewItemArray strands;
+        _dataModel->GetChildren(models[i], strands);
+        for (size_t j = 0; j < strands.size(); ++j) {
+            xLightsImportModelNode* astrand = (xLightsImportModelNode*)strands[j].GetID();
+            if (astrand->HasMapping()) xlights->GetModel((astrand->_model + "/" + astrand->_strand))->AddAlias(astrand->_mapping);
         }
     }
     xlights->SetStatusText(_("Update Aliases Done."));

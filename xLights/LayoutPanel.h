@@ -122,22 +122,22 @@ class LayoutPanel: public wxPanel
 	protected:
 
 		//(*Identifiers(LayoutPanel)
-		static const long ID_PANEL4;
-		static const long ID_PANEL_Objects;
-		static const long ID_NOTEBOOK_OBJECTS;
-		static const long ID_PANEL3;
-		static const long ID_PANEL2;
-		static const long ID_SPLITTERWINDOW1;
-		static const long ID_CHECKBOX_3D;
-		static const long ID_CHECKBOXOVERLAP;
-		static const long ID_BUTTON_SAVE_PREVIEW;
-		static const long ID_PANEL5;
-		static const long ID_STATICTEXT1;
-		static const long ID_CHOICE_PREVIEWS;
-		static const long ID_SCROLLBAR1;
-		static const long ID_SCROLLBAR2;
-		static const long ID_PANEL1;
-		static const long ID_SPLITTERWINDOW2;
+		static const wxWindowID ID_PANEL4;
+		static const wxWindowID ID_PANEL_Objects;
+		static const wxWindowID ID_NOTEBOOK_OBJECTS;
+		static const wxWindowID ID_PANEL3;
+		static const wxWindowID ID_PANEL2;
+		static const wxWindowID ID_SPLITTERWINDOW1;
+		static const wxWindowID ID_CHECKBOX_3D;
+		static const wxWindowID ID_CHECKBOXOVERLAP;
+		static const wxWindowID ID_BUTTON_SAVE_PREVIEW;
+		static const wxWindowID ID_PANEL5;
+		static const wxWindowID ID_STATICTEXT1;
+		static const wxWindowID ID_CHOICE_PREVIEWS;
+		static const wxWindowID ID_SCROLLBAR1;
+		static const wxWindowID ID_SCROLLBAR2;
+		static const wxWindowID ID_PANEL1;
+		static const wxWindowID ID_SPLITTERWINDOW2;
 		//*)
 
 		static const long ID_TREELISTVIEW_MODELS;
@@ -220,7 +220,7 @@ class LayoutPanel: public wxPanel
         static const long ID_ADD_OBJECT_MESH;
         static const long ID_ADD_DMX_MOVING_HEAD;
         static const long ID_ADD_DMX_GENERAL;
-        static const long ID_ADD_DMX_MOVING_HEAD_3D;
+        static const long ID_ADD_DMX_MOVING_HEAD_ADV;
         static const long ID_ADD_DMX_SERVO;
         static const long ID_ADD_DMX_SERVO_3D;
         static const long ID_ADD_DMX_SKULL;
@@ -353,6 +353,7 @@ class LayoutPanel: public wxPanel
         void BulkEditControllerPreview();
         void BulkEditDimmingCurves();
         void ReplaceModel();
+        void EditSubModelAlias();
         void ShowNodeLayout();
         void EditSubmodels();
         void EditFaces();
@@ -384,7 +385,7 @@ class LayoutPanel: public wxPanel
         Model* GetModelFromTreeItem(wxTreeListItem treeItem);
         wxTreeListItem GetTreeItemFromModel(Model* model);
         std::vector<Model*> GetSelectedModelsFromGroup(wxTreeListItem groupItem, bool nested = true);
-        std::vector<Model*> GetSelectedModelsForEdit();
+        std::vector<Model*> GetSelectedModelsForEdit(bool incSubModels = false);
         void SetTreeModelSelected(Model* model, bool isPrimary);
         void SetTreeGroupModelsSelected(Model* model, bool isPrimary);
         void SetTreeSubModelSelected(Model* model, bool isPrimary);
@@ -535,6 +536,7 @@ class LayoutPanel: public wxPanel
         static const long ID_MNU_ADD_MODEL_GROUP;
         static const long ID_MNU_ADD_TO_EXISTING_GROUPS;
         static const long ID_MNU_BULKEDIT_GROUP_TAGCOLOR;
+        static const long ID_MNU_EDIT_SUBMODEL_ALIAS;
         void OnModelsPopup(wxCommandEvent& event);
         LayoutGroup* GetLayoutGroup(const std::string& name);
 		const wxString& GetBackgroundImageForSelectedPreview();
@@ -570,6 +572,10 @@ class LayoutPanel: public wxPanel
             xLightsFrame* xlights = nullptr;
         };
         ModelListComparator comparator;
+        unsigned treeSortCol;
+        bool treeSortAscending;
+        bool treeSorted;
+    
         bool zoom_gesture_active = false;
         bool rotate_gesture_active = false;
 };

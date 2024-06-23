@@ -418,6 +418,12 @@ void xLightsFrame::OnButton_ChangeTemporarilyAgainClick(wxCommandEvent& event)
     PromptForShowDirectory(false);
 }
 
+bool xLightsFrame::OnButton_OpenBaseShowDirClick(wxCommandEvent& event) {
+    displayElementsPanel->SetSequenceElementsModelsViews(nullptr, nullptr, nullptr, nullptr, nullptr);
+    layoutPanel->ClearUndo();
+    return SetDir(_outputManager.GetBaseShowDir(), false);
+}
+
 void xLightsFrame::OnButton_ChangeShowFolderTemporarily(wxCommandEvent& event)
 {
     if (Button_CheckShowFolderTemporarily->GetLabel() == "Change Temporarily") {
@@ -1449,7 +1455,6 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         Connect(ID_List_Controllers, wxEVT_RIGHT_DOWN, (wxObjectEventFunction)&xLightsFrame::OnListControllersRClick);
         Connect(ID_List_Controllers, wxEVT_LIST_COL_CLICK, (wxObjectEventFunction)&xLightsFrame::OnListControllersColClick);
         Connect(ID_List_Controllers, wxEVT_LIST_ITEM_RIGHT_CLICK, (wxObjectEventFunction)&xLightsFrame::OnListControllersItemRClick);
-        Connect(ID_List_Controllers, wxEVT_LIST_ITEM_SELECTED, (wxObjectEventFunction)&xLightsFrame::OnListItemSelectedControllers);
         Connect(ID_List_Controllers, wxEVT_LIST_ITEM_DESELECTED, (wxObjectEventFunction)&xLightsFrame::OnListItemDeselectedControllers);
         Connect(ID_List_Controllers, wxEVT_LIST_BEGIN_DRAG, (wxObjectEventFunction)&xLightsFrame::OnListItemBeginDragControllers);
         Connect(ID_List_Controllers, wxEVT_LIST_ITEM_SELECTED, (wxObjectEventFunction)&xLightsFrame::OnListItemSelectedControllers);
@@ -1487,9 +1492,9 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         Controllers_PropertyEditor->Connect(wxEVT_PG_ITEM_EXPANDED, (wxObjectEventFunction)&xLightsFrame::OnControllerPropertyGridExpanded, 0, this);
         Controllers_PropertyEditor->SetValidationFailureBehavior(wxPGVFBFlags::MarkCell | wxPGVFBFlags::Beep);
 
-        Controllers_PropertyEditor->AddActionTrigger(wxPGKeyboardActions::NextProperty, WXK_RETURN);
+        Controllers_PropertyEditor->AddActionTrigger(wxPGKeyboardAction::NextProperty, WXK_RETURN);
         Controllers_PropertyEditor->DedicateKey(WXK_RETURN);
-        Controllers_PropertyEditor->AddActionTrigger(wxPGKeyboardActions::NextProperty, WXK_TAB);
+        Controllers_PropertyEditor->AddActionTrigger(wxPGKeyboardAction::NextProperty, WXK_TAB);
         Controllers_PropertyEditor->DedicateKey(WXK_TAB);
     }
 
@@ -1556,13 +1561,6 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         FlexGridSizerSetupControllerButtons->Add(LedPing, 1, wxALL | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL, 5);
         LedPing->Show();
 
-        if (StaticTextDummy != nullptr) {
-            // I remove the static text as this was the only way I seem to be able to make the LED visible
-            FlexGridSizerSetupControllerButtons->Detach(StaticTextDummy);
-            Panel5->RemoveChild(StaticTextDummy);
-            delete StaticTextDummy;
-            StaticTextDummy = nullptr;
-        }
     }
 
     // try to ensure what should be visible is visible in roughly the same part of the screen
@@ -1575,6 +1573,8 @@ void xLightsFrame::InitialiseControllersTab(bool rebuildPropGrid) {
         List_Controllers->EnsureVisible(itemSelected);
     }
 
+    Panel2->SetMinSize(wxSize(400, -1));
+    Panel5->SetMinSize(this->FromDIP(wxSize(380, -1)));
     List_Controllers->Thaw();
 
     Panel2->Layout();

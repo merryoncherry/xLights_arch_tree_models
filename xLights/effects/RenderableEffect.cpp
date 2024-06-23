@@ -433,8 +433,8 @@ void RenderableEffect::adjustSettings(const std::string &version, Effect *effect
         std::string mn = effect->GetParentEffectLayer()->GetParentElement()->GetFullName();
         SubModel * m = dynamic_cast<SubModel*>(xLightsApp::GetFrame()->GetModel(mn));
         if (m != nullptr) {
-            size_t mx = 0;
-            for (int x = 0; x < m->GetNodeCount(); x++) {
+            uint32_t mx = 0;
+            for (size_t x = 0; x < m->GetNodeCount(); ++x) {
                 mx = std::max(m->GetNode(x)->Coords.size(), mx);
             }
             if (mx > 1) {
@@ -453,7 +453,7 @@ std::list<std::string> RenderableEffect::CheckEffectSettings(const SettingsMap& 
     std::list<std::string> res;
     if (settings.Get("B_CHOICE_BufferStyle", "").starts_with("** ")) {
         res.push_back(wxString::Format("    WARN: Effect using legacy buffer format '%s' which will be removed in the future. Model '%s', Start %s", 
-                                       settings.Get("B_CHOICE_BufferStyle", ""), model->GetName(),
+                                       settings.Get("B_CHOICE_BufferStyle", ""), model->GetFullName(),
                                        FORMATTIME(eff->GetStartTimeMS())).ToStdString());
     }
     return res;

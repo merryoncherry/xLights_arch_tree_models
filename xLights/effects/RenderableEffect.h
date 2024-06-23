@@ -107,6 +107,8 @@ public:
     {}
     virtual void SetPanelStatus(Model* cls)
     {}
+    virtual void SetEffectTimeRange(int startTimeMs, int endTimeMs)
+    {}
     virtual wxString GetEffectString();
 
     // Methods for rendering the effect

@@ -32,8 +32,6 @@
 
 #define END_OF_RENDER_FRAME INT_MAX
 
-//other common strings
-static const std::string STR_EMPTY("");
 
 class EffectLayerInfo {
 public:
@@ -552,8 +550,11 @@ public:
         Effect* tempEffect = nullptr;
         int numLayers = el->GetEffectLayerCount();
 
+        std::vector<bool> partOfCanvas;
+        partOfCanvas.resize(info.validLayers.size());
         for (int x = 0; x < info.validLayers.size(); x++) {
             info.validLayers[x] = false;
+            partOfCanvas[x] = false;
         }
 
         // To support canvas mix type we must render them bottom to top
@@ -651,25 +652,38 @@ public:
 
             if (!freeze) {
                 // Mix canvas pre-loads the buffer with data from underlying layers
-                if (buffer->IsCanvasMix(layer) && layer < numLayers - 1) {
+                if (buffer->IsCanvasMix(layer) && layer < numLayers - 1 && !buffer->IsRenderingDisabled(layer)) {
                     maybeWaitForFrame(frame);
 
                     auto vl = info.validLayers;
+                    bool doBlendLayer = false;
                     if (info.settingsMaps[layer].Get("LayersSelected", "") != "") {
                         // remove from valid layers any layers we dont need to include
-                        wxArrayString ls = wxSplit(info.settingsMaps[layer].Get("LayersSelected", ""), '|');
+                        std::vector<std::string> ls;
+                        Split(info.settingsMaps[layer].Get("LayersSelected", ""), '|', ls);
+                        if (!ls.empty() && ls.back() == "Blend") {
+                            doBlendLayer = true;
+                            ls.pop_back();
+                        }
                         for (int i = layer + 1; i < vl.size(); i++) {
                             if (vl[i]) {
                                 bool found = false;
                                 for (auto it = ls.begin(); !found && it != ls.end(); ++it) {
-                                    if (wxAtoi(*it) + layer + 1 == i) {
+                                    if (std::atoi((*it).c_str()) + layer + 1 == i) {
                                         found = true;
                                     }
                                 }
                                 if (!found) {
                                     vl[i] = false;
+                                } else {
+                                    partOfCanvas[i] = true;
                                 }
                             }
+                        }
+                        if (doBlendLayer) {
+                            buffer->SetColors(numLayers, &((*seqData)[frame][0]));
+                            vl[numLayers] = true;
+                            blend = false;
                         }
                     }
 
@@ -677,9 +691,17 @@ public:
                     RenderBuffer& rb = buffer->BufferForLayer(layer, -1);
 
                     // I have to calc the output here to apply blend, rotozoom and transitions
-                    buffer->CalcOutput(frame, vl, layer);
+                    buffer->CalcOutput(frame, vl, layer, true);
                     std::vector<uint8_t> done(rb.GetPixelCount());
-                    rb.CopyNodeColorsToPixels(done);
+                    parallel_for(0, rb.GetNodes().size(), [&](int n) {
+                        for (auto &a : rb.GetNodes()[n]->Coords) {
+                            int x = a.bufX;
+                            int y = a.bufY;
+                            if (x >= 0 && x < rb.BufferWi && y >= 0 && y < rb.BufferHt && y*rb.BufferWi + x < rb.GetPixelCount()) {
+                                done[y*rb.BufferWi+x] = true;
+                            }
+                        }
+                    }, 500);
                     // now fill in any spaces in the buffer that don't have nodes mapped to them
                     parallel_for(0, rb.BufferHt, [&rb, &buffer, &done, &vl, frame](int y) {
                         xlColor c;
@@ -701,6 +723,7 @@ public:
                     info.validLayers[layer] = false;
                 } else if (info.validLayers[layer]) {
                     buffer->HandleLayerBlurZoom(frame, layer);
+                    buffer->HandleLayerTransitions(frame, layer);
                 }
             } else {
                 info.validLayers[layer] = true;
@@ -712,6 +735,13 @@ public:
         if (effectsToUpdate) {
             maybeWaitForFrame(frame);
             SetCalOutputStatus(frame, info.submodel, strand, -1);
+            for (int x = 0; x < partOfCanvas.size(); x++) {
+                // if the layer was used for a canvas effect, we don't want it
+                // reblended in
+                if (partOfCanvas[x]) {
+                    info.validLayers[x] = false;
+                }
+            }
             if (blend) {
                 buffer->SetColors(numLayers, &((*seqData)[frame][0]));
                 info.validLayers[numLayers] = true;
@@ -927,6 +957,7 @@ private:
         bool layerEnabled = true;
         if (el == nullptr || el->GetEffectIndex() == -1) {
             settingsMap.clear();
+            layerEnabled = false;
         } else {
             auto e = el->GetParentEffectLayer()->GetParentElement();
             if (e != nullptr) {

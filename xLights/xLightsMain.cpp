@@ -197,6 +197,7 @@ const long xLightsFrame::ID_BUTTON13 = wxNewId();
 const long xLightsFrame::ID_STATICTEXT4 = wxNewId();
 const long xLightsFrame::ID_STATICTEXT2 = wxNewId();
 const long xLightsFrame::ID_BUTTON14 = wxNewId();
+const long xLightsFrame::ID_BUTTON17 = wxNewId();
 const long xLightsFrame::ID_BUTTON15 = wxNewId();
 const long xLightsFrame::ID_STATICTEXT3 = wxNewId();
 const long xLightsFrame::ID_CHECKBOX1 = wxNewId();
@@ -216,8 +217,7 @@ const long xLightsFrame::ID_BUTTON7 = wxNewId();
 const long xLightsFrame::ID_BUTTON12 = wxNewId();
 const long xLightsFrame::ID_BUTTON8 = wxNewId();
 const long xLightsFrame::ID_STATICTEXT1 = wxNewId();
-const long xLightsFrame::ID_PANEL6 = wxNewId();
-const long xLightsFrame::ID_SPLITTERWINDOW1 = wxNewId();
+const long xLightsFrame::ID_PANEL3 = wxNewId();
 const long xLightsFrame::ID_PANEL_SETUP = wxNewId();
 const long xLightsFrame::ID_PANEL_PREVIEW = wxNewId();
 const long xLightsFrame::XLIGHTS_SEQUENCER_TAB = wxNewId();
@@ -770,8 +770,12 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     GridBagSizer1->Add(ShowDirectoryLabel, wxGBPosition(0, 4), wxDefaultSpan, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
     StaticText_BaseShowDirLabel = new wxStaticText(PanelSetup, ID_STATICTEXT2, _("Base Show Directory:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT2"));
     GridBagSizer1->Add(StaticText_BaseShowDirLabel, wxGBPosition(1, 0), wxDefaultSpan, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+    FlexGridSizer2 = new wxFlexGridSizer(0, 3, 0, 0);
     Button_ChangeBaseShowDir = new wxButton(PanelSetup, ID_BUTTON14, _("Change"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON14"));
-    GridBagSizer1->Add(Button_ChangeBaseShowDir, wxGBPosition(1, 1), wxDefaultSpan, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    FlexGridSizer2->Add(Button_ChangeBaseShowDir, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    Button_OpenBaseShowDir = new wxButton(PanelSetup, ID_BUTTON17, _("Open"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON17"));
+    FlexGridSizer2->Add(Button_OpenBaseShowDir, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    GridBagSizer1->Add(FlexGridSizer2, wxGBPosition(1, 1), wxDefaultSpan, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Button_ClearBaseShowDir = new wxButton(PanelSetup, ID_BUTTON15, _("Clear"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON15"));
     GridBagSizer1->Add(Button_ClearBaseShowDir, wxGBPosition(1, 2), wxDefaultSpan, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     StaticText_BaseShowDir = new wxStaticText(PanelSetup, ID_STATICTEXT3, _("No base show directory"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT3"));
@@ -787,7 +791,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     StaticBoxSizer1->Add(GridBagSizer1, 1, wxALL|wxEXPAND, 5);
     FlexGridSizerSetup->Add(StaticBoxSizer1, 1, wxALL|wxEXPAND, 5);
     StaticBoxSizer2 = new wxStaticBoxSizer(wxHORIZONTAL, PanelSetup, _("Controllers"));
-    FlexGridSizerNetworks = new wxFlexGridSizer(0, 3, 0, 0);
+    FlexGridSizerNetworks = new wxFlexGridSizer(0, 4, 0, 0);
     FlexGridSizerNetworks->AddGrowableCol(2);
     FlexGridSizerNetworks->AddGrowableRow(0);
     BoxSizer1 = new wxBoxSizer(wxVERTICAL);
@@ -810,42 +814,40 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     BitmapButtonMoveNetworkDown->SetToolTip(_("Move selected item down"));
     FlexGridSizer9->Add(BitmapButtonMoveNetworkDown, 1, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
     FlexGridSizerNetworks->Add(FlexGridSizer9, 1, wxBOTTOM|wxLEFT|wxALIGN_LEFT|wxALIGN_TOP, 10);
-    SplitterWindowControllers = new wxSplitterWindow(PanelSetup, ID_SPLITTERWINDOW1, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE, _T("ID_SPLITTERWINDOW1"));
-    SplitterWindowControllers->SetSashGravity(0.8);
-    Panel2 = new wxPanel(SplitterWindowControllers, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL2"));
+    Panel2 = new wxPanel(PanelSetup, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL2"));
     FlexGridSizerSetupControllers = new wxFlexGridSizer(0, 1, 0, 0);
     FlexGridSizerSetupControllers->AddGrowableCol(0);
     FlexGridSizerSetupControllers->AddGrowableRow(0);
     Panel2->SetSizer(FlexGridSizerSetupControllers);
-    Panel5 = new wxPanel(SplitterWindowControllers, ID_PANEL6, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL|wxALWAYS_SHOW_SB, _T("ID_PANEL6"));
-    Panel5->SetMinSize(wxSize(20,-1));
+    FlexGridSizerSetupControllers->Fit(Panel2);
+    FlexGridSizerSetupControllers->SetSizeHints(Panel2);
+    FlexGridSizerNetworks->Add(Panel2, 1, wxALL|wxEXPAND, 2);
+    Panel5 = new wxPanel(PanelSetup, ID_PANEL3, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL|wxALWAYS_SHOW_SB|wxFULL_REPAINT_ON_RESIZE, _T("ID_PANEL3"));
     FlexGridSizerSetupRight = new wxFlexGridSizer(0, 1, 0, 0);
     FlexGridSizerSetupRight->AddGrowableCol(0);
     FlexGridSizerSetupRight->AddGrowableRow(0);
     FlexGridSizerSetupProperties = new wxFlexGridSizer(0, 1, 0, 0);
     FlexGridSizerSetupProperties->AddGrowableCol(0);
     FlexGridSizerSetupProperties->AddGrowableRow(0);
-    FlexGridSizerSetupRight->Add(FlexGridSizerSetupProperties, 1, wxALL|wxEXPAND, 5);
-    FlexGridSizerSetupControllerButtons = new wxFlexGridSizer(1, 0, 0, 0);
+    FlexGridSizerSetupRight->Add(FlexGridSizerSetupProperties, 1, wxALL|wxEXPAND, 0);
+    FlexGridSizerSetupControllerButtons = new wxFlexGridSizer(2, 0, 0, 0);
     ButtonVisualise = new wxButton(Panel5, ID_BUTTON1, _("Visualise ..."), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
     FlexGridSizerSetupControllerButtons->Add(ButtonVisualise, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     ButtonUploadInput = new wxButton(Panel5, ID_BUTTON2, _("Upload Input"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
     FlexGridSizerSetupControllerButtons->Add(ButtonUploadInput, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    ButtonUploadOutput = new wxButton(Panel5, ID_BUTTON4, _("Upload Output"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
-    FlexGridSizerSetupControllerButtons->Add(ButtonUploadOutput, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     ButtonOpen = new wxButton(Panel5, ID_BUTTON7, _("Open"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON7"));
     FlexGridSizerSetupControllerButtons->Add(ButtonOpen, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    Button_OpenProxy = new wxButton(Panel5, ID_BUTTON12, _("Open Proxy"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON12"));
-    FlexGridSizerSetupControllerButtons->Add(Button_OpenProxy, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    StaticTextDummy = new wxStaticText(Panel5, ID_STATICTEXT1, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT1"));
+    FlexGridSizerSetupControllerButtons->Add(StaticTextDummy, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     ButtonControllerDelete = new wxButton(Panel5, ID_BUTTON8, _("Delete"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON8"));
     FlexGridSizerSetupControllerButtons->Add(ButtonControllerDelete, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    StaticTextDummy = new wxStaticText(Panel5, ID_STATICTEXT1, _("Label"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT1"));
-    FlexGridSizerSetupControllerButtons->Add(StaticTextDummy, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-    FlexGridSizerSetupRight->Add(FlexGridSizerSetupControllerButtons, 1, wxALL|wxEXPAND, 5);
+    ButtonUploadOutput = new wxButton(Panel5, ID_BUTTON4, _("Upload Output"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
+    FlexGridSizerSetupControllerButtons->Add(ButtonUploadOutput, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    Button_OpenProxy = new wxButton(Panel5, ID_BUTTON12, _("Open Proxy"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON12"));
+    FlexGridSizerSetupControllerButtons->Add(Button_OpenProxy, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    FlexGridSizerSetupRight->Add(FlexGridSizerSetupControllerButtons, 1, wxALL|wxALIGN_CENTER_HORIZONTAL, 5);
     Panel5->SetSizer(FlexGridSizerSetupRight);
-    SplitterWindowControllers->SplitVertically(Panel2, Panel5);
-    SplitterWindowControllers->SetSashPosition(1000);
-    FlexGridSizerNetworks->Add(SplitterWindowControllers, 1, wxALL|wxEXPAND, 5);
+    FlexGridSizerNetworks->Add(Panel5, 1, wxALL|wxEXPAND, 2);
     StaticBoxSizer2->Add(FlexGridSizerNetworks, 1, wxALL|wxEXPAND, 5);
     FlexGridSizerSetup->Add(StaticBoxSizer2, 1, wxALL|wxEXPAND, 5);
     PanelSetup->SetSizer(FlexGridSizerSetup);
@@ -1210,6 +1212,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     Connect(ID_BUTTON11, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsFrame::OnButton_ChangeShowFolderTemporarily);
     Connect(ID_BUTTON13, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsFrame::OnButton_ChangeTemporarilyAgainClick);
     Connect(ID_BUTTON14, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsFrame::OnButton_ChangeBaseShowDirClick);
+    Connect(ID_BUTTON17,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&xLightsFrame::OnButton_OpenBaseShowDirClick);
     Connect(ID_BUTTON15, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsFrame::OnButton_ClearBaseShowDirClick);
     Connect(ID_CHECKBOX1, wxEVT_COMMAND_CHECKBOX_CLICKED, (wxObjectEventFunction)&xLightsFrame::OnCheckBox_AutoUpdateBaseClick);
     Connect(ID_BUTTON16, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&xLightsFrame::OnButton_UpdateBaseClick);
@@ -1467,6 +1470,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     mBackupOnSave = false;
     mBackupOnLaunch = true;
     mSuppressFadeHints = false;
+    mSuppressColorWarn = false;
     me131Sync = false;
     mAltBackupDir = "";
     mIconSize = 16;
@@ -1726,6 +1730,9 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     config->Read("xLightsSuppressFadeHints", &mSuppressFadeHints, false);
     logger_base.debug("Suppress Transition Hints: %s.", toStr(mSuppressFadeHints));
 
+    config->Read("xLightsSuppressColorWarn", &mSuppressColorWarn, false);
+    logger_base.debug("Suppress Color Warning: %s.", toStr(mSuppressColorWarn));
+
     config->Read(_("xLightsAltBackupDir"), &mAltBackupDir);
     logger_base.debug("Alternate Backup Dir: '%s'.", (const char*)mAltBackupDir.c_str());
 
@@ -1808,9 +1815,6 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     InitEffectsPanel(EffectsPanel1);
     logger_base.debug("Effects panel initialised.");
 
-    auto consash = config->ReadLong("xLightsControllerSash", SplitterWindowControllers->GetSashPosition());
-    SplitterWindowControllers->SetSashPosition(consash);
-    logger_base.debug("Controller Sash Position: %d.", consash);
 
     EffectTreeDlg = nullptr; // must be before any call to SetDir
 
@@ -1869,10 +1873,10 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     }
 #endif
 
-    if (IsFromAppStore()) {
-        MenuItem_Update->GetMenu()->Remove(MenuItem_Update);
-        MenuItem_Update = nullptr;
-    }
+#ifdef __WXOSX__
+    MenuItem_Update->GetMenu()->Remove(MenuItem_Update);
+    MenuItem_Update = nullptr;
+#endif
 
     _valueCurvesPanel->UpdateValueCurveButtons(false);
     _coloursPanel->UpdateColourButtons(false, this);
@@ -1990,7 +1994,9 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     _taskBarIcon = std::make_unique<xlMacDockIcon>(this);
 #else
     config->Read(_("xLightsVideoReaderAccelerated"), &_hwVideoAccleration, false);
+    config->Read(_("xLightsVideoReaderRenderer"), &_hwVideoRenderer, 1);
     VideoReader::SetHardwareAcceleratedVideo(_hwVideoAccleration);
+    VideoReader::SetHardwareRenderType(_hwVideoRenderer);
 #endif
 #ifdef __WXMSW__
     // make sure Direct2DRenderer is created on the main thread before the other threads need it
@@ -2112,6 +2118,7 @@ xLightsFrame::~xLightsFrame()
     config->Write("xLightsBackupOnSave", mBackupOnSave);
     config->Write("xLightsBackupOnLaunch", mBackupOnLaunch);
     config->Write("xLightsSuppressFadeHints", mSuppressFadeHints);
+    config->Write("xLightsSuppressColorWarn", mSuppressColorWarn);
     config->Write("xLightse131Sync", me131Sync);
     config->Write("xLightsEffectAssistMode", mEffectAssistMode);
     config->Write("xLightsAltBackupDir", mAltBackupDir);
@@ -2120,8 +2127,6 @@ xLightsFrame::~xLightsFrame()
     config->Write("xLightsPlayVolume", playVolume);
     config->Write("xLightsVideoExportCodec", _videoExportCodec);
     config->Write("xLightsVideoExportBitrate", _videoExportBitrate);
-
-    config->Write("xLightsControllerSash", SplitterWindowControllers->GetSashPosition());
 
     SaveDockable();
 
@@ -2230,9 +2235,9 @@ void xLightsFrame::DoPostStartupCommands()
     if (!_renderMode && !_checkSequenceMode) {
 // Don't bother checking for updates when debugging.
 #if !defined(_DEBUG) || defined(SIMULATE_UPGRADE)
-        if (!IsFromAppStore()) {
-            CheckForUpdate(1, true, false);
-        }
+#ifndef __WXOSX__
+        CheckForUpdate(1, true, false);
+#endif
 #endif
         if (_userEmail == "")
             CollectUserEmail();
@@ -2307,6 +2312,16 @@ void xLightsFrame::OnAbout(wxCommandEvent& event)
 {
     wxString hdg = wxString::Format(_("About xLights %s"), GetDisplayVersionString());
     wxString ver = wxString::Format(_("Version: %s\n%s"), GetDisplayVersionString(), wxVERSION_STRING);
+#if defined(_MSC_VER)
+    ver += wxString::Format("\nVisual C++ %d" ,_MSC_VER);
+#endif
+#if defined(__clang_version__)
+    ver += wxString::Format("\nClang %s", __clang_version__);
+#else
+#if defined(__GNUC__)//clang also defines this
+    ver += wxString::Format("\nGCC %d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+#endif
+#endif
     AboutDialog dlg(this);
 
     dlg.IconBitmap->SetIcon(wxArtProvider::GetIconBundle("xlART_xLights_Icons", wxART_FRAME_ICON).GetIcon(wxSize(128, 128)));
@@ -3365,7 +3380,7 @@ bool xLightsFrame::ExportVideoPreview(wxString const& path)
         if (audioMgr != nullptr) {
             videoExporter.setGetAudioCallback(audioLambda);
         }
-        auto videoLambda = [=](AVFrame* f, uint8_t* buf, int bufSize, unsigned frameIndex) {
+        auto videoLambda = [=, this](AVFrame* f, uint8_t* buf, int bufSize, unsigned frameIndex) {
             const SequenceData::FrameData& frameData(this->_seqData[frameIndex]);
             const uint8_t* data = frameData[0];
             housePreview->captureNextFrame(width * contentScaleFactor, height * contentScaleFactor);
@@ -4482,6 +4497,7 @@ void xLightsFrame::ExportModels(wxString const& filename)
         model_header_cols.push_back("Location Y (" + unitDescription + ")");
         model_header_cols.push_back("Location Z (" + unitDescription + ")");
     }
+    model_header_cols.push_back("Aliases");
 
     std::map<int, double> _model_col_widths;
     for (int i = 0; i < model_header_cols.size(); i++) {
@@ -4568,6 +4584,15 @@ void xLightsFrame::ExportModels(wxString const& filename)
                 worksheet_write_number(modelsheet, row, 32, ruler->Measure(position.y), format);
                 worksheet_write_number(modelsheet, row, 33, ruler->Measure(position.z), format);
             }
+            std::list<std::string> aliases = model->GetAliases();
+            if (!aliases.empty()) {
+                auto it = aliases.begin();
+                std::string initial = *it;
+                ++it;
+                std::string separator = ", ";
+                std::string a = (std::accumulate(it, aliases.end(), initial, [&separator](const std::string& a, const std::string& b) { return a + separator + b; }));
+                write_worksheet_string(modelsheet, row, 34, a, format, _model_col_widths);
+            };
 
             ++row;
 
@@ -4586,7 +4611,7 @@ void xLightsFrame::ExportModels(wxString const& filename)
     }
 
     std::map<int, double> _group_col_widths;
-    const std::vector<std::string> groupHeader{ "Group Name", "Models", "Models Count", "Default Buffer W x H", "Preview" };
+    const std::vector<std::string> groupHeader{ "Group Name", "Models", "Models Count", "Default Buffer W x H", "Preview", "Aliases" };
     for (int i = 0; i < groupHeader.size(); i++) {
         worksheet_write_string(groupsheet, 0, i, groupHeader[i].c_str(), header_format);
         _group_col_widths[i] = groupHeader[i].size() + FACTOR; // estimate column width
@@ -4615,6 +4640,15 @@ void xLightsFrame::ExportModels(wxString const& filename)
             worksheet_write_number(groupsheet, row, 2, mg->ModelNames().size(), format);
             write_worksheet_string(groupsheet, row, 3, wxString::Format("%d x %d", w, h), format, _group_col_widths);
             write_worksheet_string(groupsheet, row, 4, model->GetLayoutGroup(), format, _group_col_widths);
+            std::list<std::string> aliases = model->GetAliases();
+            if (!aliases.empty()) {
+                auto it = aliases.begin();
+                std::string initial = *it;
+                ++it;
+                std::string separator = ", ";
+                std::string a = (std::accumulate(it, aliases.end(), initial,[&separator](const std::string& a, const std::string& b) { return a + separator + b; }));
+                write_worksheet_string(groupsheet, row, 5, a, format, _group_col_widths);
+            };
             ++row;
         }
     }
@@ -6529,7 +6563,11 @@ void xLightsFrame::CheckEffect(Effect* ef, wxFile& f, size_t& errcount, size_t& 
         }
 
         bool renderCache = _enableRenderCache == "Enabled" || (_enableRenderCache == "Locked Only" && ef->IsLocked());
-        std::list<std::string> warnings = re->CheckEffectSettings(sm, CurrentSeqXmlFile->GetMedia(), AllModels.GetModel(modelName), ef, renderCache);
+        Model *m = AllModels.GetModel(name);
+        if (m == nullptr) {
+            m = AllModels.GetModel(modelName);
+        }
+        std::list<std::string> warnings = re->CheckEffectSettings(sm, CurrentSeqXmlFile->GetMedia(), m, ef, renderCache);
         for (const auto& s : warnings) {
             LogAndWrite(f, s);
             if (s.find("WARN:") != std::string::npos) {
@@ -7702,10 +7740,13 @@ void xLightsFrame::ValidateWindow()
         Button_UpdateBase->Disable();
         Button_ClearBaseShowDir->Disable();
         CheckBox_AutoUpdateBase->Disable();
+        Button_OpenBaseShowDir->Disable();
     } else {
         Button_UpdateBase->Enable();
         Button_ClearBaseShowDir->Enable();
         CheckBox_AutoUpdateBase->Enable();
+        Button_OpenBaseShowDir->Enable();
+
     }
 }
 
@@ -7775,11 +7816,12 @@ void xLightsFrame::DoDonate()
 void xLightsFrame::OnMenuItem_DonateSelected(wxCommandEvent& event)
 {
 #ifdef __WXOSX__
-    DoInAppPurchases(this);
-    //DoDonate();
-#else
-    DoDonate();
+    if (IsFromAppStore()) {
+        DoInAppPurchases(this);
+        return;
+    }
 #endif
+    DoDonate();
 }
 
 #pragma endregion Help Menu
@@ -8393,6 +8435,7 @@ void xLightsFrame::SetShowBaseShowFolder(bool b)
     StaticText_BaseShowDir->Show(b);
     CheckBox_AutoUpdateBase->Show(b);
     Button_ChangeBaseShowDir->Show(b);
+    Button_OpenBaseShowDir->Show(b);
     StaticText_BaseShowDirLabel->Show(b);
     FlexGridSizer1->Layout();
     GridBagSizer1->Layout();
@@ -9829,6 +9872,13 @@ void xLightsFrame::SetHardwareVideoAccelerated(bool b)
     VideoReader::SetHardwareAcceleratedVideo(_hwVideoAccleration);
     wxConfigBase* config = wxConfigBase::Get();
     config->Write("xLightsVideoReaderAccelerated", VideoReader::IsHardwareAcceleratedVideo());
+}
+
+void xLightsFrame::SetHardwareVideoRenderer(int type) {
+    _hwVideoRenderer = type;
+    VideoReader::SetHardwareRenderType(_hwVideoRenderer);
+    wxConfigBase* config = wxConfigBase::Get();
+    config->Write("xLightsVideoReaderRenderer", VideoReader::GetHardwareRenderType());
 }
 
 bool xLightsFrame::ShadersOnBackgroundThreads() const

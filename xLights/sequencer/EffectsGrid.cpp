@@ -64,6 +64,8 @@ EVT_LEFT_UP(EffectsGrid::mouseReleased)
 EVT_MOUSE_CAPTURE_LOST(EffectsGrid::OnLostMouseCapture)
 EVT_RIGHT_DOWN(EffectsGrid::rightClick)
 EVT_LEFT_DCLICK(EffectsGrid::mouseLeftDClick)
+EVT_MIDDLE_DOWN(EffectsGrid::mouseMiddleDown)
+EVT_MIDDLE_UP(EffectsGrid::mouseMiddleUp)
 EVT_LEAVE_WINDOW(EffectsGrid::mouseLeftWindow)
 EVT_PAINT(EffectsGrid::render)
 END_EVENT_TABLE()
@@ -640,7 +642,7 @@ void EffectsGrid::FindEffectsForData(uint32_t channel, uint8_t chans, uint32_t _
             if (it.el != nullptr) {
                 logger_base.debug("                             Layer: %d", it.el->GetLayerNumber());
             } else if (it.nl != nullptr) {
-                logger_base.debug("                             Node: %s strand %d node %d", (char*)it.nl->GetName().c_str(), it.GetStrand() + 1, it.GetNode() + 1);
+                logger_base.debug("                             Node: %s strand %d node %d", (char*)it.nl->GetNodeName().c_str(), it.GetStrand() + 1, it.GetNode() + 1);
             }
             logger_base.debug("                             Effect: %s start %0.2fms", (char*)it.ef->GetEffectName().c_str(), (float)it.ef->GetStartTimeMS() / 1000.0);
         }
@@ -1317,6 +1319,22 @@ void EffectsGrid::mouseMoved(wxMouseEvent& event)
         mDragEndY = event.GetY();
         UpdateSelectionRectangle();
         Draw();
+    } else if (m_wheel_down) {
+        if (event.Dragging()) {
+            if (xlights->CurrentSeqXmlFile == nullptr)
+                return;
+
+            MainSequencer* ms = mSequenceElements->GetXLightsFrame()->GetMainSequencer();
+            int pos = ms->ScrollBarEffectsHorizontal->GetThumbPosition();
+            double delta_x = ((double)event.GetX() - m_previous_mouse_x);
+            double ts = ms->ScrollBarEffectsHorizontal->GetThumbSize() / 5000.0;
+            if (ts < 1.0) {
+                ts = 1.0;
+            }
+            ms->ScrollBarEffectsHorizontal->SetThumbPosition(pos - (delta_x * ts));
+            wxCommandEvent eventScroll(EVT_HORIZ_SCROLL);
+            ms->HorizontalScrollChanged(eventScroll);
+        }
     }
     else {
         if (!xlights->IsACActive() || rowIndex < mSequenceElements->GetNumberOfTimingRows()) {
@@ -1347,9 +1365,18 @@ void adjustMS(int timeMS, int& min, int& max)
     }
 }
 
-void EffectsGrid::mouseLeftWindow(wxMouseEvent& event)
-{
+void EffectsGrid::mouseLeftWindow(wxMouseEvent& event) {
     UpdateMousePosition(-1);
+    m_wheel_down = false;
+}
+
+void EffectsGrid::mouseMiddleDown(wxMouseEvent& event) {
+    m_previous_mouse_x = event.GetX();
+    m_wheel_down = true;
+}
+
+void EffectsGrid::mouseMiddleUp(wxMouseEvent& event) {
+    m_wheel_down = false;
 }
 
 int EffectsGrid::GetClippedPositionFromTimeMS(int ms) const
@@ -6974,6 +7001,10 @@ void EffectsGrid::DuplicateSelectedEffects()
                 if (tel == nullptr) {
                     return;
                 }
+                long start = mSelectedEffect->GetStartTimeMS();
+                long end = mSelectedEffect->GetEndTimeMS();
+                long length = end - start;
+
                 long startCol = tel->GetEffectByTime(mSelectedEffect->GetStartTimeMS())->GetID() + 2;
                 if (mSelectedEffect->GetStartTimeMS() == 0) {//first timing mark in the zero column, and second timing mark has start column of 0 too
                     startCol--;
@@ -6985,7 +7016,12 @@ void EffectsGrid::DuplicateSelectedEffects()
                     Effect* eff = tel->GetEffect(startCol);
                     if (nullptr != eff) {
                         long newstart = mTimeline->RoundToMultipleOfPeriod(eff->GetStartTimeMS(), mSequenceElements->GetFrequency());
-                        long newEnd = mTimeline->RoundToMultipleOfPeriod(eff->GetEndTimeMS(), mSequenceElements->GetFrequency());
+                        long newEnd;
+                        if (dialog.GetRetainDuration()) {
+                            newEnd = mTimeline->RoundToMultipleOfPeriod(newstart + length, mSequenceElements->GetFrequency());
+                        } else {
+                            newEnd = mTimeline->RoundToMultipleOfPeriod(eff->GetEndTimeMS(), mSequenceElements->GetFrequency());
+                        }
                         if (!el->HasEffectsInTimeRange(newstart, newEnd)) {
                             Effect* newef = el->AddEffect(0, xlights->GetEffectManager().GetEffectName(mSelectedEffect->GetEffectIndex()), mSelectedEffect->GetSettingsAsString(), mSelectedEffect->GetPaletteAsString(), newstart, newEnd, EFFECT_SELECTED, false);
                             mSequenceElements->get_undo_mgr().CaptureAddedEffect(el->GetParentElement()->GetName(), el->GetIndex(), newef->GetID());

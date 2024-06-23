@@ -157,7 +157,7 @@ public:
         _active = !_active;
         if (_active) RenderType();
     }
-    void SetValueAt(float offset, float value);
+    void SetValueAt(float offset, float value, bool force = false);
     void DeletePoint(float offset);
     bool IsSetPoint(float offset);
     void SetDivisor(float divisor) { _divisor = divisor; }

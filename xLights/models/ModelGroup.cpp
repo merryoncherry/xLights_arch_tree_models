@@ -731,8 +731,16 @@ bool ModelGroup::Reset(bool zeroBased) {
         if( GetCentreDefined()) {
             float cx = GetCentreX();
             float cy = GetCentreY();
-            offsetX = ((cx - ((xminx + xmaxx) / 2.0)) * 2000.0) / (xmaxx - xminx);
-            offsetY = ((cy - ((xminy + xmaxy) / 2.0)) * 2000.0) / (xmaxy - xminy);
+            if (xmaxx == xminx) {
+                offsetX = 0;
+            } else {
+                offsetX = ((cx - ((xminx + xmaxx) / 2.0)) * 2000.0) / (xmaxx - xminx);
+            }
+            if (xmaxy == xminy) {
+                offsetY = 0;
+            } else {
+                offsetY = ((cy - ((xminy + xmaxy) / 2.0)) * 2000.0) / (xmaxy - xminy);
+            }
         } else {
             offsetX = GetXCentreOffset();
             offsetY = GetYCentreOffset();
@@ -1392,7 +1400,7 @@ void ModelGroup::InitRenderBufferNodes(const std::string& tp,
             } else if (m != nullptr && m->IsActive()) {
                 int bw, bh;
                 bw = bh = 0;
-                m->InitRenderBufferNodes(horiz ? "Horizontal Per Strand" : "Vertical Per Strand", "2D", "None", Nodes, bw, bh, stagger);
+                m->InitRenderBufferNodes(type, "2D", "None", Nodes, bw, bh, stagger);
                 for (int x = startBM; x < Nodes.size(); x++) {
                     for (auto& it2 : Nodes[x]->Coords) {
                         if (horiz) {
@@ -1498,7 +1506,15 @@ void ModelGroup::InitRenderBufferNodes(const std::string& tp,
         }
         Model::InitRenderBufferNodes(type, camera, transform, Nodes, BufferWi, BufferHt, stagger);
     }
-
-    //wxASSERT(BufferWi != 0);
-    //wxASSERT(BufferHt != 0);
+    // Buffer needs at least one pixel as several effects will divide by the Width/Height and such
+    // which can result in divide by 0.
+    // Some of the buffer styles above (several of the PerModel) will result in one of these
+    // being 0 as there aren't models to iterate over.   We'll set to the default 1x1 buffer.
+    // Note:  this also matches the behavior of GetBufferSize(...) above
+    if (BufferWi == 0) {
+        BufferWi = 1;
+    }
+    if (BufferHt == 0) {
+        BufferHt = 1;
+    }
 }
