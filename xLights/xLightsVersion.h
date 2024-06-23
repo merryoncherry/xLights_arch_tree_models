@@ -20,7 +20,7 @@ static const wxString xlights_version_string  = "2024.11.1";
 #ifdef DEBUG
 static const wxString xlights_qualifier       = " DEBUG";
 #else
-static const wxString xlights_qualifier       = "MoC"; // " BETA,ALPHA,PROD";
+static const wxString xlights_qualifier       = ""; // " BETA,ALPHA,PROD";
 #endif
 static const wxString xlights_build_date      = __DATE__;
 	
