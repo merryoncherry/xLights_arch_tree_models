@@ -22,6 +22,7 @@
 #include "../xLightsMain.h"
 #include "UtilFunctions.h"
 #include "../ModelPreview.h"
+#include "CustomModel.h"
 
 #include <log4cpp/Category.hh>
 
@@ -178,7 +179,7 @@ void SphereModel::ExportXlightsModel()
     wxString da = ModelXml->GetAttribute("DisplayAs");
     wxString sl = ModelXml->GetAttribute("StartLatitude", "-86");
     wxString el = ModelXml->GetAttribute("EndLatitude", "86");
-    wxString d = ModelXml->GetAttribute("Degrees");
+    wxString d = ModelXml->GetAttribute("Degrees", "360");
 
     wxString v = xlights_version_string;
     f.Write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<spheremodel \n");
@@ -363,39 +364,6 @@ void SphereModel::ExportAsCustomXModel3D() const
         data[zz][yy][xx] = i++;
     }
 
-    wxString cm = "";
-    for (auto l : data)
-    {
-        if (cm != "") cm += "|";
-        wxString ll = "";
-
-        for (auto r : l)
-        {
-            if (ll != "") ll += ";";
-            wxString rr = "";
-
-            bool first = true;
-            for (auto c : r)
-            {
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    rr += ",";
-                }
-
-                if (c != -1)
-                {
-                    rr += wxString::Format("%d ", c);
-                }
-            }
-            ll += rr;
-        }
-        cm += ll;
-    }
-
     wxString p1 = wxString::Format("%i", (int)(scaleFactor3D * BufferWi + 1));
     wxString p2 = wxString::Format("%i", (int)(scaleFactor3D * BufferHt + 1));
     wxString dd = wxString::Format("%i", (int)(scaleFactor3D * BufferWi + 1));
@@ -438,7 +406,10 @@ void SphereModel::ExportAsCustomXModel3D() const
     if (psp != "")
         f.Write(wxString::Format("PixelSpacing=\"%s\" ", psp));
     f.Write("CustomModel=\"");
-    f.Write(cm);
+    f.Write(CustomModel::ToCustomModel(data));
+    f.Write("\" ");
+    f.Write("CustomModelCompressed=\"");
+    f.Write(CustomModel::ToCompressed(data));
     f.Write("\" ");
     f.Write(wxString::Format("SourceVersion=\"%s\" ", v));
     f.Write(ExportSuperStringColors());
