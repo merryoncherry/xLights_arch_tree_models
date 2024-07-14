@@ -12,6 +12,7 @@
 #include <wx/intl.h>
 #include <wx/string.h>
 //*)
+#include <wx/tooltip.h>
 
 #include "ButtonDetailsDialog.h"
 #include "xScheduleMain.h"
@@ -143,6 +144,8 @@ ButtonDetailsDialog::ButtonDetailsDialog(wxWindow* parent, CommandManager* comma
 
     TextCtrl_Parameters->SetToolTip(_commandManager->GetCommandParametersTip(Choice_Command->GetStringSelection().ToStdString()));
 
+    wxToolTip::SetAutoPop(10000);
+
     ValidateWindow();
 }
 
@@ -150,6 +153,7 @@ ButtonDetailsDialog::~ButtonDetailsDialog()
 {
 	//(*Destroy(ButtonDetailsDialog)
 	//*)
+    wxToolTip::SetAutoPop(-1);
 }
 
 

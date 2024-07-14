@@ -16,6 +16,7 @@
 #include <wx/intl.h>
 #include <wx/string.h>
 //*)
+#include <wx/tooltip.h>
 
 //(*IdInit(PlayListItemRunProcessPanel)
 const long PlayListItemRunProcessPanel::ID_STATICTEXT3 = wxNewId();
@@ -74,6 +75,8 @@ PlayListItemRunProcessPanel::PlayListItemRunProcessPanel(wxWindow* parent, PlayL
     TextCtrl_Command->SetToolTip(PlayListItemRunProcess::GetTooltip());
     TextCtrl_Delay->SetValue(wxString::Format(wxT("%.3f"), (float)process->GetDelay() / 1000.0));
     CheckBox_WaitForCompletion->SetValue(process->GetWaitForCompletion());
+
+	wxToolTip::SetAutoPop(10000);
 }
 
 PlayListItemRunProcessPanel::~PlayListItemRunProcessPanel()
@@ -84,6 +87,8 @@ PlayListItemRunProcessPanel::~PlayListItemRunProcessPanel()
     _process->SetCommand(TextCtrl_Command->GetValue().ToStdString());
     _process->SetDelay(wxAtof(TextCtrl_Delay->GetValue())*1000);
     _process->SetWaitForCompletion(CheckBox_WaitForCompletion->GetValue());
+
+	wxToolTip::SetAutoPop(-1);
 }
 
 

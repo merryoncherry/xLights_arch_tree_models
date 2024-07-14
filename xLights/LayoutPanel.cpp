@@ -4623,7 +4623,7 @@ void LayoutPanel::OnPreviewRightDown(wxMouseEvent& event)
 
     int selectedObjectCnt = editing_models ? ModelsSelectedCount() : ViewObjectsSelectedCount();
 
-    if (editing_models && selectedTreeModels.size() > 1 && selectedTreeGroups.size() == 0)
+    if (selectedObjectCnt > 1)
     {
         wxMenu* mnuBulkEdit = new wxMenu();
         AddBulkEditOptionsToMenu(mnuBulkEdit);
@@ -6893,7 +6893,7 @@ void LayoutPanel::ReplaceModel()
         xlights->AllModels.RenameInListOnly(modelToReplaceItWith->GetName(), dlg.GetStringSelection().ToStdString());
         modelToReplaceItWith->Rename(dlg.GetStringSelection().ToStdString());
         xlights->AllModels.Delete("Iamgoingtodeletethismodel");
-        // xlights->ReplaceModelWithModelFixGroups(rmn, riw);           // no need to rename since replacing already has the original model name in groups
+        xlights->ReplaceModelWithModelFixGroups(rmn, riw);
         xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RELOAD_ALLMODELS, "ReplaceModel", nullptr, nullptr, dlg.GetStringSelection().ToStdString());
         xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RGBEFFECTS_CHANGE, "ReplaceModel");
         xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_MODELS_REWORK_STARTCHANNELS, "ReplaceModel");
