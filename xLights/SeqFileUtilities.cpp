@@ -100,6 +100,11 @@ void xLightsFrame::AddAllModelsToSequence()
 
 void xLightsFrame::NewSequence(const std::string& media, uint32_t durationMS, uint32_t frameMS, const std::string& defView)
 {
+    if (readOnlyMode) {
+        DisplayError("Sequences cannot be created in read only mode!", this);
+        return;
+    }
+
     // close any open sequences
     if (!CloseSequence()) {
         return;
@@ -957,13 +962,13 @@ void xLightsFrame::OnMenuItemImportEffects(wxCommandEvent& event)
     static log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
 
     wxArrayString filters;
-    filters.push_back("All|*.xsq;*.sup;*.lms;*.lpe;*.las;*.loredit;*.xml;*.hlsdata;*.vix;*.tim;*.msq;*.vsa;*.zip;*.piz");
+    filters.push_back("All|*.xsq;*.sup;*.lms;*.lpe;*.las;*.loredit;*.xml;*.hlsdata;*.vix;*.tim;*.msq;*.vsa;*.zip;*.piz;*.xsqz");
     filters.push_back("SuperStar File (*.sup)|*.sup");
     filters.push_back("LOR Music Sequences (*.lms)|*.lms");
     filters.push_back("LOR Pixel Editor Sequences (*.lpe)|*.lpe");
     filters.push_back("LOR Animation Sequences (*.las)|*.las");
     filters.push_back("LOR S5(*.loredit)|*.loredit");
-    filters.push_back("xLights Sequence Package (*.zip;*.piz)|*.zip;*.piz");
+    filters.push_back("xLights Sequence Package (*.zip;*.piz;*.xsqz)|*.zip;*.piz;*.xsqz");
     filters.push_back("xLights Sequence (*.xsq)|*.xsq");
     filters.push_back("Old xLights Sequence (*.xml)|*.xml");
     filters.push_back("HLS hlsIdata Sequences(*.hlsIdata)|*.hlsIdata");
@@ -1025,7 +1030,7 @@ void xLightsFrame::OnMenuItemImportEffects(wxCommandEvent& event)
             ImportVixen3(fn);
         } else if (ext == "vix") {
             ImportVix(fn);
-        } else if (ext == "xml" || ext == "xsq" || ext == "zip" || ext == "piz") {
+        } else if (ext == "xml" || ext == "xsq" || ext == "zip" || ext == "xsqz" || ext == "piz") {
             ImportXLights(fn);
         } else if (ext == "msq") {
             ImportLSP(fn);

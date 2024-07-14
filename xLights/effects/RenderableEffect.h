@@ -135,6 +135,7 @@ public:
 
     virtual bool needToAdjustSettings(const std::string& version);
     virtual void adjustSettings(const std::string& version, Effect* effect, bool removeDefaults = true);
+    virtual void AdjustSettingsAfterSplit(Effect *first, Effect *second) {}
 
     virtual AssistPanel* GetAssistPanel(wxWindow* parent, xLightsFrame* xl_frame);
     virtual bool HasAssistPanel()
@@ -143,7 +144,6 @@ public:
     }
 
     static std::string UpgradeValueCurve(EffectManager* effectManager, const std::string& name, const std::string& value, const std::string& effectName);
-
 protected:
     static void SetSliderValue(wxSlider* slider, int value);
     static void SetSpinValue(wxSpinCtrl* spin, int value);

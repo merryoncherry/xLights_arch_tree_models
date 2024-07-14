@@ -19,6 +19,7 @@
 #include <wx/intl.h>
 #include <wx/string.h>
 //*)
+#include <wx/tooltip.h>
 
 //(*IdInit(PlayListItemRunCommandPanel)
 const long PlayListItemRunCommandPanel::ID_STATICTEXT3 = wxNewId();
@@ -99,6 +100,8 @@ PlayListItemRunCommandPanel::PlayListItemRunCommandPanel(wxWindow* parent, PlayL
     TextCtrl_Parm3->SetValue(Command->GetParm3());
     TextCtrl_Delay->SetValue(wxString::Format(wxT("%.3f"), (float)Command->GetDelay() / 1000.0));
 
+    wxToolTip::SetAutoPop(10000);
+
     ValidateWindow();
 }
 
@@ -112,6 +115,8 @@ PlayListItemRunCommandPanel::~PlayListItemRunCommandPanel()
     _Command->SetParm1(TextCtrl_Parm1->GetValue().ToStdString());
     _Command->SetParm2(TextCtrl_Parm2->GetValue().ToStdString());
     _Command->SetParm3(TextCtrl_Parm3->GetValue().ToStdString());
+
+	wxToolTip::SetAutoPop(-1);
 }
 
 void PlayListItemRunCommandPanel::OnTextCtrl_DelayText(wxCommandEvent& event)

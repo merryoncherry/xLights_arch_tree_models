@@ -71,7 +71,7 @@ SequencePackage::SequencePackage(const wxFileName& fileName, xLightsFrame* xligh
 {
     _xlights = xlights;
 
-    if (fileName.GetExt() == "zip" || fileName.GetExt() == "piz") {
+    if (fileName.GetExt() == "zip" || fileName.GetExt() == "piz" || fileName.GetExt() == "xsqz") {
         _xsqOnly = false;
         _pkgFile = fileName;
     } else {
@@ -83,13 +83,16 @@ SequencePackage::SequencePackage(const wxFileName& fileName, xLightsFrame* xligh
 SequencePackage::~SequencePackage()
 {
     // cleanup extracted files
-    if (!_xsqOnly && _tempDir.Exists()) {
+    if (!_xsqOnly && _tempDir.Exists() && !_leaveFiles) {
         wxDir::Remove(_tempDir.GetFullPath(), wxPATH_RMDIR_RECURSIVE);
     }
 }
 
 void SequencePackage::InitDefaultImportOptions()
 {
+    if (_xlights == nullptr)
+        return;
+
     // Set default target media directories based on a few assumptions. User
     // can still change these in the Mapping Dialog to whatever they would like.
 
@@ -309,6 +312,11 @@ wxXmlDocument& SequencePackage::GetRgbEffectsFile()
     return _rgbEffects;
 }
 
+std::string SequencePackage::GetTempShowFolder() const
+{
+    return wxPathOnly(_xsqFile.GetFullPath()).ToStdString();
+}
+
 bool SequencePackage::ModelsChanged() const
 {
     return _modelsChanged;
@@ -399,6 +407,9 @@ std::string SequencePackage::FixAndImportMedia(Effect* mappedEffect, EffectLayer
 
 void SequencePackage::ImportFaceInfo(Effect* mappedEffect, EffectLayer* target, const std::string& faceName)
 {
+    if (_xlights == nullptr)
+        return;
+
     auto targetModelName = target->GetParentElement()->GetModelName();
     auto srcModelName = mappedEffect->GetParentEffectLayer()->GetParentElement()->GetModelName();
     Model* targetModel = _xlights->AllModels[targetModelName];

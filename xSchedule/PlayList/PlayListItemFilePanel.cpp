@@ -16,6 +16,7 @@
 #include <wx/intl.h>
 #include <wx/string.h>
 //*)
+#include <wx/tooltip.h>
 
 //(*IdInit(PlayListItemFilePanel)
 const long PlayListItemFilePanel::ID_STATICTEXT3 = wxNewId();
@@ -82,6 +83,10 @@ PlayListItemFilePanel::PlayListItemFilePanel(wxWindow* parent, PlayListItemFile*
     TextCtrl_FName->SetToolTip(PlayListItemFile::GetTooltip());
     TextCtrl_Delay->SetValue(wxString::Format(wxT("%.3f"), (float)file->GetDelay() / 1000.0));
 	CheckBox_Append->SetValue(file->GetAppend());
+
+	wxToolTip::SetAutoPop(10000);
+
+	ValidateWindow();
 }
 
 PlayListItemFilePanel::~PlayListItemFilePanel()
@@ -93,6 +98,8 @@ PlayListItemFilePanel::~PlayListItemFilePanel()
     _file->SetContent(TextCtrl_Content->GetValue().ToStdString());
     _file->SetDelay(wxAtof(TextCtrl_Delay->GetValue())*1000);
 	_file->SetAppend(CheckBox_Append->GetValue());
+
+	wxToolTip::SetAutoPop(-1);
 }
 
 
@@ -113,4 +120,9 @@ void PlayListItemFilePanel::OnTextCtrl_FileNameText(wxCommandEvent& event)
 
 void PlayListItemFilePanel::OnTextCtrl_FNameText(wxCommandEvent& event)
 {
+}
+
+void PlayListItemFilePanel::ValidateWindow()
+{
+
 }
