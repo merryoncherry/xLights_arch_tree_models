@@ -16,6 +16,7 @@
 #include <wx/intl.h>
 #include <wx/string.h>
 //*)
+#include <wx/tooltip.h>
 
 //(*IdInit(PlayListItemMQTTPanel)
 const long PlayListItemMQTTPanel::ID_STATICTEXT3 = wxNewId();
@@ -111,6 +112,8 @@ PlayListItemMQTTPanel::PlayListItemMQTTPanel(wxWindow* parent, PlayListItemMQTT*
     TextCtrl_Data->SetToolTip(PlayListItemMQTT::GetTooltip());
     TextCtrl_Delay->SetValue(wxString::Format(wxT("%.3f"), (float)MQTT->GetDelay() / 1000.0));
 
+	wxToolTip::SetAutoPop(10000);
+
     ValidateWindow();
 }
 
@@ -127,6 +130,8 @@ PlayListItemMQTTPanel::~PlayListItemMQTTPanel()
     _MQTT->SetData(TextCtrl_Data->GetValue().ToStdString());
     _MQTT->SetDelay(wxAtof(TextCtrl_Delay->GetValue())*1000);
     _MQTT->SetClientId(TextCtrl_ClientId->GetValue().ToStdString());
+
+	wxToolTip::SetAutoPop(-1);
 }
 
 void PlayListItemMQTTPanel::OnTextCtrl_DelayText(wxCommandEvent& event)

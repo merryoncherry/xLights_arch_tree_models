@@ -16,6 +16,7 @@
 #include <wx/intl.h>
 #include <wx/string.h>
 //*)
+#include <wx/tooltip.h>
 
 //(*IdInit(PlayListItemOSCPanel)
 const long PlayListItemOSCPanel::ID_STATICTEXT3 = wxNewId();
@@ -181,7 +182,9 @@ PlayListItemOSCPanel::PlayListItemOSCPanel(wxWindow* parent, PlayListItemOSC* os
     TextCtrl_P5Value->SetValue(osc->GetValue(4));
     TextCtrl_Delay->SetValue(wxString::Format(wxT("%.3f"), (float)osc->GetDelay() / 1000.0));
 
-    ValidateWindow();
+	wxToolTip::SetAutoPop(10000);
+
+	ValidateWindow();
 }
 
 PlayListItemOSCPanel::~PlayListItemOSCPanel()
@@ -203,6 +206,8 @@ PlayListItemOSCPanel::~PlayListItemOSCPanel()
     _osc->SetValue(3, TextCtrl_P4Value->GetValue().ToStdString());
     _osc->SetValue(4, TextCtrl_P5Value->GetValue().ToStdString());
     _osc->SetDelay(wxAtof(TextCtrl_Delay->GetValue())*1000);
+
+	wxToolTip::SetAutoPop(-1);
 }
 
 void PlayListItemOSCPanel::OnTextCtrl_DelayText(wxCommandEvent& event)
