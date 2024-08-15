@@ -86,7 +86,7 @@ bool DmxColorAbilityWheel::IsValidModelSettings(Model* m) const
             dimmer_channel < nodeCount + 1);
 }
 
-void DmxColorAbilityWheel::AddColorTypeProperties(wxPropertyGridInterface *grid) const {
+void DmxColorAbilityWheel::AddColorTypeProperties(wxPropertyGridInterface *grid, bool pwm) const {
 
     wxPGProperty* p = grid->Append(new wxUIntProperty("Color Wheel Channel", "DmxColorWheelChannel", wheel_channel));
     p->SetAttribute("Min", 0);
@@ -339,13 +339,13 @@ void DmxColorAbilityWheel::ImportParameters(wxXmlNode* ImportXml, Model* m) cons
     }
 }
 
-void DmxColorAbilityWheel::SetNodeNames(std::vector<std::string>& names) const
+void DmxColorAbilityWheel::SetNodeNames(std::vector<std::string>& names, const std::string &pfx) const
 {
     if (CheckChannel(wheel_channel, names.size())) {
-        names[wheel_channel - 1] = "Color Wheel";
+        names[wheel_channel - 1] = pfx + "Color Wheel";
     }
     if (CheckChannel(dimmer_channel, names.size())) {
-        names[dimmer_channel - 1] = "Dimmer";
+        names[dimmer_channel - 1] = pfx + "Dimmer";
     }
 }
 
@@ -507,4 +507,14 @@ int DmxColorAbilityWheel::GetDMXWheelIndex(xlColor const& color) const {
         }
     }
     return -1;
+}
+
+
+void DmxColorAbilityWheel::GetPWMOutputs(std::map<uint32_t, PWMOutput> &map) const {
+    if (wheel_channel > 0) {
+        map[wheel_channel] = PWMOutput(wheel_channel, PWMOutput::Type::LED, 1, "Wheel");
+    }
+    if (dimmer_channel > 0) {
+        map[dimmer_channel] = PWMOutput(dimmer_channel, PWMOutput::Type::LED, 1, "Dimmer");
+    }
 }

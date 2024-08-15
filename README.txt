@@ -11,6 +11,55 @@ Issue Tracker is found here: www.github.com/xLightsSequencer/xLights/issues
 
 XLIGHTS/NUTCRACKER RELEASE NOTES
 ---------------------------------
+2024.14 August 5, 2024
+    - enh (scott)       Added Scale to Buffer to Fan Effect, Radius 1 and 2 become Percentage values(100=100% of buffer) when enabled
+    - enh (keith)       Add key bindings to switch between timing tracks, unselect all timing tracks
+    - enh (dkulp)       Update VirtualMatrix upload to FPP8 to use HDMI-A-# and not fb#
+    - enh (dkulp)       Add support for PWM ports to visualizer
+    - enh (dkulp)       Add upload for PWM ports to FPP8
+    - enh (cybercop23)  Add option to bulk edit groups Preview
+    - enh (derwin12)    Text Effect - Add Center function for XLFonts and No Repeat
+    - enh (keith)       Add LB1908 to the pixel type list
+    - enh (keith)       Fix "Prepare Audio" to create proper MP3 files (Windows/Linux)
+    - enh (dan)         Update "Prepare Audio" to create m4a/AAC fles. Use AudioToolbox AAC encoder on MacOS.
+    - enh (dan)         Update "Prepare Audio" to copy metadata/tags from source audio to target to no lose that information
+    - enh (keith)       Add filter text to value curve timing track events
+    - enh (derwin12)    Show colors from Color Wheel in MH Preset
+    - enh (scott)       DMX Model Presets to DMX Fixed Channels and added support Moving Head Effect
+    - enh (dkulp)       Servo models can now have "controller properties" (min/max/reverse/etc...) set on them to upload to the controller
+    - enh (derwin12)    Add validation to the preset channel values
+    - enh (keith)       Add ability to have associated models within an xmodel file
+    - enh (derwin12)    Add the generate node names ability to the New Moving Head Model
+    - enh (dkulp)       Add the generate node names ability to the Skull Model
+    - enh (keith)       New xsqz icon
+    - enh (derwin12)    Ruse existing shader files when doing a File Cleanup
+    - enh (keith)       Add falcon PiCap v2
+	- enh (keith)		Add some xlights model support to matrices and virtual matrices in xSchedule
+	- enh (keith)		Add the ability to hard code a timecode offset for each step in a playlist for ultimate control over timecode
+    - bug (derwin12)    Add all layers for the custom model dialog
+    - bug (keith)       Fix sequences packaged in subfolders not loading in xsqz
+    - bug (dkulp)       Fix issues with canvas mode effects and DMX buffers
+    - bug (derwin12)    Catch overly large buffer and limit them
+    - bug (keith)       Loop effects outputs a blank frame on loop
+    - bug (keith)       Fix export of model can crash if file create fails.
+    - bug (keith)       If model import fails then delete the model rather than leaving a half constructed model behind
+    - bug (keith)       Fix missing hinkspix data in tooltip in visualiser
+    - bug (dkulp)       Don't register to handle .zip files
+    - bug (scott)       Fix duplicate Smart Receiver pixel count on Genius Controllers
+2024.13 July 14, 2024
+    - enh (scott)       Added "auto shutter" to Moving Head Effect for Color Wheels
+    - enh (PeteMatthews) ILightThat controllers: Set universe size in config, add Switchy
+    - enh (scott)       Added Undo/Redo to Custom Model Auto Increment
+    - enh (scott)       Added ability to rename controller model name
+    - enh (keith)       Change the packeged sequence default extension to xsqz
+    - enh (keith)       Add ability to directly open packaged sequences from zip/xsqz file in read only mode in xlights by double clicking on zip or dragging it onto the icon
+    - enh (dkulp)       Support for linking Servo effects so that changes to end will effect the start of the next servo and vice/versa
+    - enh (dkulp)       When splitting an effect, use the location of the mouse as the split point (instead of the center)
+    - enh (keith)       For sparse custom models add a save format which is sparse
+    - bug (cybercop23)  Reset all MH Panel options
+    - bug (scott)       Fix some of the Experience SR Upload issues
+    - bug (scott)       Bulk Edit missing in Layout Tab
+    - bug (scott)       If windows hardware video render fails, fallback to software
 2024.12 Jun 23, 2024
     - enh (keith)       Add F48v5 support
     - enh (dkulp)       Add K2-Pi0 and K2-Pi-Servo (pixel ports only) support

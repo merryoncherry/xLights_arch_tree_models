@@ -195,6 +195,7 @@ const long LayoutPanel::ID_MNU_DELETE_EMPTY_MODEL_GROUPS = wxNewId();
 const long LayoutPanel::ID_MNU_RENAME_MODEL_GROUP = wxNewId();
 const long LayoutPanel::ID_MNU_CLONE_MODEL_GROUP = wxNewId();
 const long LayoutPanel::ID_MNU_BULKEDIT_GROUP_TAGCOLOR = wxNewId();
+const long LayoutPanel::ID_MNU_BULKEDIT_GROUP_PREVIEW = wxNewId();
 const long LayoutPanel::ID_MNU_MAKESCVALID = wxNewId();
 const long LayoutPanel::ID_MNU_MAKEALLSCVALID = wxNewId();
 const long LayoutPanel::ID_MNU_MAKEALLSCNOTOVERLAPPING = wxNewId();
@@ -1518,7 +1519,7 @@ void LayoutPanel::UpdateModelsForPreview(const std::string &group, LayoutGroup* 
                         }
                         if (m->DisplayAs == "SubModel") {
                             if (mark_selected) {
-                                prev_models.push_back(m);  // setting this causes exception when prev_models render finds a submodel
+                              //  prev_models.push_back(m);  // setting this causes exception when prev_models render finds a submodel
                             }
                         }
                         else if (m->DisplayAs == "ModelGroup") {
@@ -2109,6 +2110,23 @@ void LayoutPanel::BulkEditControllerPreview()
         // reselect all the models
         ReselectTreeModels(selectedModelPaths);
 
+        RenderLayout();
+    }
+}
+
+void LayoutPanel::BulkEditGroupControllerPreview() {
+    wxArrayString choices = Model::GetLayoutGroups(xlights->AllModels);
+    int sel = 0;
+    wxSingleChoiceDialog dlg(this, "Preview", "Preview", choices);
+    dlg.SetSelection(sel);
+    OptimiseDialogPosition(&dlg);
+    if (dlg.ShowModal() == wxID_OK) {
+        for (const auto& item : selectedTreeGroups) {
+            Model* model = GetModelFromTreeItem(item);
+            model->SetLayoutGroup(dlg.GetStringSelection().ToStdString());
+        }
+        xlights->GetOutputModelManager()->ClearSelectedModel();
+        xlights->GetOutputModelManager()->AddImmediateWork(OutputModelManager::WORK_RELOAD_ALLMODELS, "BulkEditGroupControllerPreview");
         RenderLayout();
     }
 }
@@ -3658,7 +3676,22 @@ void LayoutPanel::FinalizeModel()
             if (!_newModel->SupportsVisitors() || !XmlSerializer::IsXmlSerializerFormat(_newModel->GetModelXml())) {
                 xlights->AddTraceMessage("LayoutPanel::FinalizeModel Do the import. " + _lastXlightsModel);
                 xlights->AddTraceMessage("LayoutPanel::FinalizeModel Model type " + _newModel->GetDisplayAs());
-                _newModel->ImportXlightsModel(_lastXlightsModel, xlights, min_x, max_x, min_y, max_y);
+                bool success = _newModel->ImportXlightsModel(_lastXlightsModel, xlights, min_x, max_x, min_y, max_y);
+                if (!success) {
+                    _lastXlightsModel = "";
+                    xlights->GetOutputModelManager()->ClearSelectedModel();
+                    modelPreview->SetAdditionalModel(nullptr);
+                    if (_newModel != nullptr) {
+                        delete _newModel; // I am not sure this may cause issues ... but if we dont have it i think it leaks
+                        _newModel = nullptr;
+                    }
+                    modelPreview->SetCursor(wxCURSOR_DEFAULT);
+                    b->SetState(0);
+                    selectedButton = nullptr;
+                    xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RELOAD_ALLMODELS, "FinalizeModel");
+                    xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_REDRAW_LAYOUTPREVIEW, "FinalizeModel");
+                    return;
+                }
                 xlights->AddTraceMessage("LayoutPanel::FinalizeModel Import done.");
             }
 
@@ -7826,8 +7859,9 @@ void LayoutPanel::OnModelsPopup(wxCommandEvent& event) {
         xlights->GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_RELOAD_MODELLIST, "LayoutPanel::OnModelsPopup::ID_MNU_CLONE_MODEL_GROUP");
     } else if (event.GetId() == ID_MNU_BULKEDIT_GROUP_TAGCOLOR) {
         BulkEditGroupTagColor();
-    }
-    else if (event.GetId() == ID_PREVIEW_FLIP_HORIZONTAL) {
+    } else if (event.GetId() == ID_MNU_BULKEDIT_GROUP_PREVIEW) {
+        BulkEditGroupControllerPreview();
+    } else if (event.GetId() == ID_PREVIEW_FLIP_HORIZONTAL) {
         if (editing_models) {
             PreviewModelFlipH();
         } else {
@@ -8512,6 +8546,7 @@ void LayoutPanel::OnItemContextMenu(wxTreeListEvent& event)
     if (selectedTreeGroups.size() > 1) {
         mnuContext.AppendSeparator();
         mnuContext.Append(ID_MNU_BULKEDIT_GROUP_TAGCOLOR, "Bulk Edit Tag Color");
+        mnuContext.Append(ID_MNU_BULKEDIT_GROUP_PREVIEW, "Bulk Edit Preview");
     }
 
     bool foundInvalid = false;

@@ -19,6 +19,8 @@
 
 class Controller;
 class BaseController;
+class wxPropertyGrid;
+class wxPropertyGridEvent;
 
 class ControllerCaps
 {
@@ -63,6 +65,7 @@ public:
     bool SupportsInputOnlyUpload() const;
     bool NeedsDDPInputUpload() const;
     bool SupportsLEDPanelMatrix() const;
+    bool SupportsPWM() const;
     bool SupportsVirtualMatrix() const;
     bool SupportsVirtualStrings() const;
     bool SupportsSmartRemotes() const;
@@ -100,6 +103,7 @@ public:
     int GetMaxInputE131Universes() const;
     int GetMaxPixelPort() const;
     int GetMaxSerialPort() const;
+    int GetMaxPWMPort() const;
     int GetMaxVirtualMatrixPort() const;
     int GetMaxLEDPanelMatrixPort() const;
     int GetMaxPixelPortChannels() const;
@@ -142,5 +146,9 @@ public:
     std::string GetConfigDriver() const;
 
     void Dump() const;
+    
+    void AddProperties(Controller *controller, wxPropertyGrid* propertyGrid);
+    bool HandlePropertyEvent(Controller *controller, wxPropertyGridEvent& event);
+
     #pragma endregion
 };
