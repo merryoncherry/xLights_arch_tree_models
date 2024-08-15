@@ -21,6 +21,7 @@
 #include "TwoPointScreenLocation.h"
 #include "ThreePointScreenLocation.h"
 #include "PolyPointScreenLocation.h"
+#include "PWMOutput.h"
 
 #include "../Color.h"
 #include "BaseObject.h"
@@ -193,7 +194,8 @@ public:
     void AddState(wxXmlNode* n);
     void AddSubmodel(wxXmlNode* n);
     void AddModelAliases(wxXmlNode* n);
-    void ImportShadowModels(wxXmlNode* n, xLightsFrame* xlights);
+    void ImportExtraModels(wxXmlNode* n, xLightsFrame* xlights, ModelPreview* modelPreview, const std::string& layoutGroup);
+    Model* CreateDefaultModelFromSavedModelNode(Model* model, ModelPreview* modelPreview, wxXmlNode* node, xLightsFrame* xlights, const std::string& startChannel, bool& cancelled) const;
 
     wxString SerialiseSubmodel() const;
     wxString SerialiseAliases() const;
@@ -211,8 +213,10 @@ public:
     const ModelManager& GetModelManager() const { return modelManager; }
     virtual bool SupportsXlightsModel() { return false; }
     static Model* GetXlightsModel(Model* model, std::string& last_model, xLightsFrame* xlights, bool& cancelled, bool download, wxProgressDialog* prog, int low, int high, ModelPreview* modelPreview);
-    void ImportXlightsModel(std::string const& filename, xLightsFrame* xlights, float& min_x, float& max_x, float& min_y, float& max_y);
-    virtual void ImportXlightsModel(wxXmlNode* root, xLightsFrame* xlights, float& min_x, float& max_x, float& min_y, float& max_y) {}
+    [[nodiscard]] bool ImportXlightsModel(std::string const& filename, xLightsFrame* xlights, float& min_x, float& max_x, float& min_y, float& max_y);
+    [[nodiscard]] virtual bool ImportXlightsModel(wxXmlNode* root, xLightsFrame* xlights, float& min_x, float& max_x, float& min_y, float& max_y) {
+        return true;
+    }
     virtual void ExportXlightsModel() {}
     virtual void ImportModelChildren(wxXmlNode* root, xLightsFrame* xlights, wxString const& newname, float& min_x, float& max_x, float& min_y, float& max_y);
     bool FourChannelNodes() const;
@@ -287,22 +291,23 @@ protected:
     const ModelManager& modelManager;
 
     int FindNodeAtXY(int bufx, int bufy);
-    virtual void InitModel();
-    virtual int CalcCannelsPerString();
+    virtual void InitModel(void) {
+    }
+    virtual int CalcCannelsPerString(void);
     virtual void SetStringStartChannels(bool zeroBased, int NumberOfStrings, int StartChannel, int ChannelsPerString);
-    void RecalcStartChannels();
+    void RecalcStartChannels(void);
 
     void SetBufferSize(int NewHt, int NewWi);
     void SetNodeCount(size_t NumStrings, size_t NodesPerString, const std::string& rgbOrder);
-    void CopyBufCoord2ScreenCoord();
+    void CopyBufCoord2ScreenCoord(void);
 
     bool FindCustomModelScale(int scale) const;
 
-    wxString ExportSuperStringColors() const;
+    wxString ExportSuperStringColors(void) const;
     void ImportSuperStringColours(wxXmlNode* root);
 
-    void SetLineCoord();
-    std::string GetNextName();
+    void SetLineCoord(void);
+    std::string GetNextName(void);
 
     PIXEL_STYLE _pixelStyle = PIXEL_STYLE::PIXEL_STYLE_SMOOTH;
     int pixelSize = 2;
@@ -420,6 +425,9 @@ public:
     bool IsMatrixProtocol() const;
     bool IsLEDPanelMatrixProtocol() const;
     bool IsVirtualMatrixProtocol() const;
+    bool IsPWMProtocol() const;
+    
+    virtual std::vector<PWMOutput> GetPWMOutputs() const;
 
     static wxArrayString GetSmartRemoteValues(int smartRemoteCount);
 
@@ -555,7 +563,9 @@ public:
     void ClearIndividualStartChannels();
 
     void GetMinScreenXY(float& minx, float& miny) const;
-    virtual int GetNumStrands() const;
+    virtual int GetNumStrands() const {
+            return 1;
+    }
     std::string GetStrandName(size_t x, bool def = false) const
     {
         if (x < strandNames.size()) {

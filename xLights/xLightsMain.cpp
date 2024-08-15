@@ -1661,7 +1661,10 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     SetFixFileDirectories(mediaDirectories);
     wxString tbData = config->Read("ToolbarLocations");
     if (tbData.StartsWith(TOOLBAR_SAVE_VERSION)) {
+        const int size = AUIStatusBar->GetSize().GetHeight();
         MainAuiManager->LoadPerspective(tbData.Right(tbData.size() - 5));
+        MainAuiManager->GetPane("Status Bar").MinSize(wxSize(-1, size));
+        MainAuiManager->Update();
     }
     logger_base.debug("Perspectives loaded.");
 
@@ -1757,7 +1760,14 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     }
 
     if (wxDir::Exists(mAltBackupDir)) {
-        ObtainAccessToURL(mAltBackupDir);
+        if (!ObtainAccessToURL(mAltBackupDir, true)) {
+            std::string orig = mAltBackupDir;
+            PromptForDirectorySelection("Reselect Alternate Backup Directory", orig);
+            if (orig != mAltBackupDir) {
+                mAltBackupDir = orig;
+                config->Write(_("xLightsAltBackupDir"), mAltBackupDir);
+            }
+        }
         mAltBackupMenuItem->SetHelp(mAltBackupDir);
     } else {
         mAltBackupMenuItem->SetHelp("");
@@ -1840,7 +1850,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     if (ok && !dir.IsEmpty()) {
         if (!SetDir(dir, !showDirFromCommandLine)) {
             CurrentDir = "";
-            if (!PromptForShowDirectory(true)) {
+            if (!PromptForShowDirectory(true, dir)) {
                 CurrentDir = "";
                 splash.Hide();
                 wxMessageBox("Exiting as setting a show folder is not optional.");
@@ -4475,7 +4485,11 @@ void xLightsFrame::OnmAltBackupMenuItemSelected(wxCommandEvent& event)
     if (mAltBackupDir == "") {
         return;
     }
-    ObtainAccessToURL(mAltBackupDir);
+    if (!ObtainAccessToURL(mAltBackupDir, true)) {
+        std::string orig = mAltBackupDir;
+        PromptForDirectorySelection("Reselect alternate backup directory", orig);
+        mAltBackupDir = orig;
+    }
     SaveWorking();
 
     DoAltBackup();
@@ -4912,6 +4926,8 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
 
     size_t errcount = 0;
     size_t warncount = 0;
+    size_t toterrcount = 0;
+    size_t totwarncount = 0;
 
     wxFile f;
     wxString filename = wxFileName::CreateTempFileName("xLightsCheckSequence") + ".txt";
@@ -4941,6 +4957,10 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
     } else {
         LogAndWrite(f, "Sequence: No sequence open.");
     }
+
+    LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+    LogAndWrite(f, "");
+    LogAndWrite(f, "Network Checks");
 
     prog.Update(0, "Checking network");
     wxYield();
@@ -4990,6 +5010,15 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
 
     size_t errcountsave = errcount;
     size_t warncountsave = warncount;
+    LogAndWrite(f, wxString::Format("\nSection Errors (Network): %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+    LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+    toterrcount += errcount;
+    totwarncount += warncount;
+    errcount = 0;
+    warncount = 0;
+
+    LogAndWrite(f, "");
+    LogAndWrite(f, "Preference Checks");
 
     prog.Update(1, "Checking preferences");
     wxYield();
@@ -5070,11 +5099,21 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
     errcountsave = errcount;
     warncountsave = warncount;
 
+    LogAndWrite(f, wxString::Format("\nSection Errors (Preferences): %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+    LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+    toterrcount += errcount;
+    totwarncount += warncount;
+    errcount = 0;
+    warncount = 0;
+
+    LogAndWrite(f, "");
+    LogAndWrite(f, "Inactive Controller Checks");
+
     prog.Update(3, "Checking controllers");
     wxYield();
 
     LogAndWrite(f, "");
-    LogAndWrite(f, "Inactive Controllers");
+    LogAndWrite(f, "Checking for inactive controllers");
 
     // Check for inactive outputs
     for (const auto& c : _outputManager.GetControllers()) {
@@ -5133,6 +5172,13 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
     errcountsave = errcount;
     warncountsave = warncount;
 
+    LogAndWrite(f, wxString::Format("\nSection Errors (Controllers): %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+    LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+    toterrcount += errcount;
+    totwarncount += warncount;
+    errcount = 0;
+    warncount = 0;
+
     // Controller Checks
     // do these checks for all Managed Controllers
     std::list<Controller*> uniqueControllers;
@@ -5146,6 +5192,7 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
     if (uniqueControllers.size() > 0) {
         LogAndWrite(f, "");
         LogAndWrite(f, "Controller Checks");
+        LogAndWrite(f, "");
 
         // controller ip address must only be on one output ... no duplicates
         for (const auto& it : uniqueControllers) {
@@ -5249,7 +5296,7 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
 
         // Apply the vendor specific validations
         for (const auto& it : _outputManager.GetControllers()) {
-            wxString msg = wxString::Format("        Applying controller rules for %s:%s:%s", it->GetName(), it->GetIP(), it->GetDescription());
+            wxString msg = wxString::Format("Applying controller rules for %s:%s:%s", it->GetName(), it->GetIP(), it->GetDescription());
             LogAndWrite(f, msg.ToStdString());
 
             std::string check;
@@ -5478,11 +5525,18 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
     errcountsave = errcount;
     warncountsave = warncount;
 
-    prog.Update(50, "Checking models");
-    wxYield();
+    LogAndWrite(f, wxString::Format("\nSection Errors (Controllers): %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+    LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+    toterrcount += errcount;
+    totwarncount += warncount;
+    errcount = 0;
+    warncount = 0;
 
     LogAndWrite(f, "");
-    LogAndWrite(f, "Invalid start channels");
+    LogAndWrite(f, "Model Channel Checks");
+
+    prog.Update(50, "Checking models");
+    wxYield();
 
     for (const auto& it : AllModels) {
         if (it.second->GetDisplayAs() != "ModelGroup") {
@@ -6142,8 +6196,18 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
     errcountsave = errcount;
     warncountsave = warncount;
 
+    LogAndWrite(f, wxString::Format("\nSection Errors (Models): %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+    LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+    toterrcount += errcount;
+    totwarncount += warncount;
+    errcount = 0;
+    warncount = 0;
+
+    LogAndWrite(f, "");
+    LogAndWrite(f, "Sequence problems");
+    LogAndWrite(f, "");
+
     if (CurrentSeqXmlFile != nullptr) {
-        LogAndWrite(f, "");
         LogAndWrite(f, "Uncommon and often undesirable settings");
 
         if (CurrentSeqXmlFile->GetRenderMode() == xLightsXmlFile::CANVAS_MODE) {
@@ -6268,11 +6332,19 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
             warncountsave = warncount;
         }
 
-        prog.Update(70, "Checking effects");
-        wxYield();
+        LogAndWrite(f, wxString::Format("\nSection Errors (Sequence): %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+        LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+        toterrcount += errcount;
+        totwarncount += warncount;
+        errcount = 0;
+        warncount = 0;
 
         LogAndWrite(f, "");
-        LogAndWrite(f, "Effect problems");
+        LogAndWrite(f, "Sequence effect problems");
+        LogAndWrite(f, "");
+
+        prog.Update(70, "Checking effects");
+        wxYield();
 
         // check all effects
         bool disabledEffects = false;
@@ -6340,11 +6412,18 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
         errcountsave = errcount;
         warncountsave = warncount;
 
-        prog.Update(90, "Dumping used assets");
-        wxYield();
+        LogAndWrite(f, wxString::Format("\nSection Errors (Sequence): %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+        LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+        toterrcount += errcount;
+        totwarncount += warncount;
+        errcount = 0;
+        warncount = 0;
 
         LogAndWrite(f, "");
-        LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
+        LogAndWrite(f, "General Notes");
+
+        prog.Update(90, "Dumping used assets");
+        wxYield();
 
         LogAndWrite(f, "");
         LogAndWrite(f, "If you are planning on importing this sequence be aware the sequence relies on the following items that will not be imported.");
@@ -6366,17 +6445,15 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
             wxString msg = wxString::Format("        Viewpoint: %s.", it);
             LogAndWrite(f, msg.ToStdString());
         }
-
-        LogAndWrite(f, "");
-        LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
-
     } else {
         LogAndWrite(f, "");
         LogAndWrite(f, "No sequence loaded so sequence checks skipped.");
     }
+    LogAndWrite(f, "");
+    LogAndWrite(f, "-----------------------------------------------------------------------------------------------------------------");
 
     LogAndWrite(f, "");
-    LogAndWrite(f, "Checking problems with file access times.");
+    LogAndWrite(f, "OS Checks");
 
     prog.Update(95, "Checking performance");
 
@@ -6442,9 +6519,12 @@ std::string xLightsFrame::CheckSequence(bool displayInEditor, bool writeToFile)
     errcountsave = errcount;
     warncountsave = warncount;
 
+    LogAndWrite(f, wxString::Format("\nSection Errors (OS): %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+    LogAndWrite(f, "=================================================================================================================");
     LogAndWrite(f, "");
-    LogAndWrite(f, "Check sequence done.");
-    LogAndWrite(f, wxString::Format("Errors: %u. Warnings: %u", (unsigned int)errcount, (unsigned int)warncount).ToStdString());
+    LogAndWrite(f, "Check sequence completed.");
+    LogAndWrite(f, "");
+    LogAndWrite(f, wxString::Format("Total Errors: %u. Warnings: %u", (unsigned int)toterrcount, (unsigned int)totwarncount).ToStdString());
 
     prog.Update(100, "Done");
     wxYield();
@@ -7610,7 +7690,7 @@ bool xLightsFrame::FilesMatch(const std::string& file1, const std::string& file2
     return (memcmp(buf1, buf2, sizeof(buf1)) == 0);
 }
 
-std::string xLightsFrame::MoveToShowFolder(const std::string& file, const std::string& subdirectory)
+std::string xLightsFrame::MoveToShowFolder(const std::string& file, const std::string& subdirectory, const bool reuse)
 {
     log4cpp::Category& logger_base = log4cpp::Category::getInstance(std::string("log_base"));
     wxFileName fn(file);
@@ -7637,13 +7717,15 @@ std::string xLightsFrame::MoveToShowFolder(const std::string& file, const std::s
     target += fn.GetFullName();
 
     int i = 1;
-    while (FileExists(target) && !FilesMatch(file, target)) {
+    while (FileExists(target) && !FilesMatch(file, target) && !reuse) {
         target = dir + wxFileName::GetPathSeparator() + fn.GetName() + "_" + wxString::Format("%d", i++) + "." + fn.GetExt();
     }
 
     if (!FileExists(target)) {
         logger_base.debug("Copying file %s to %s.", (const char*)file.c_str(), (const char*)target.c_str());
         wxCopyFile(file, target, false);
+    } else if (reuse) {
+        logger_base.debug("Reusing file %s for %s.", (const char*)target.c_str(), (const char*)file.c_str());
     }
 
     return target.ToStdString();
@@ -9324,7 +9406,7 @@ void xLightsFrame::OnMenuItem_PrepareAudioSelected(wxCommandEvent& event)
 
     wxString filename = wxFileSelector("Choose reaper file describing the changes required to the audio.",
                                        CurrentDir, wxEmptyString, "*.rrp",
-                                       "Reaper files (*.rpp)|*.rpp|xAudio files (*.xaudio)|*.xaudio|All files (*.*)|*.*",
+                                       "Reaper or xAudio files (*.rpp;*.xaudio)|*.rpp;*.xaudio|All files (*.*)|*.*",
                                        wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
 
     if (filename != "") {
@@ -9350,19 +9432,22 @@ void xLightsFrame::OnMenuItem_PrepareAudioSelected(wxCommandEvent& event)
         };
 
         std::list<musicEdit> edits;
-        wxFileName targetFile;
-        targetFile.SetPath(CurrentDir);
-
+        wxFileName targetFile(CurrentDir);
+        AudioManager *firstAudio = nullptr;
         if (filename.Lower().EndsWith(".rpp")) {
             wxFile reaper;
             if (reaper.Open(filename)) {
                 wxString reaperContent;
                 reaper.ReadAll(&reaperContent);
 
+                targetFile = wxFileName(filename);
+                
                 wxRegEx regexTgt("RENDER_FILE \\\"[^\\\"]*?\\/([^\\\"\\/]*)\\\"", wxRE_ADVANCED | wxRE_NEWLINE);
                 if (regexTgt.Matches(reaperContent)) {
-                    targetFile.SetName(regexTgt.GetMatch(reaperContent, 1));
+                    targetFile.SetFullName(regexTgt.GetMatch(reaperContent, 1));
                     logger_base.debug("    Target file: %s", (const char*)targetFile.GetFullPath().c_str());
+                } else {
+                    targetFile.SetExt("m4a");
                 }
 
                 wxRegEx regexPosition("POSITION ([0-9\\.]*)", wxRE_ADVANCED | wxRE_NEWLINE);
@@ -9547,43 +9632,55 @@ void xLightsFrame::OnMenuItem_PrepareAudioSelected(wxCommandEvent& event)
             outputLength = std::max(outputLength, it.start + it.length);
 
             if (sourceSongs.find(it.file) == sourceSongs.end()) {
-                wxString music = wxFileSelector("Choose your copy of " + it.file + ".",
-                                                CurrentDir, wxEmptyString, wxEmptyString,
-                                                "Audio files|*.mp3;*.ogg;*.m4p;*.mp4;*.avi;*.wma;*.wmv;*.au;*.wav;*.m4a;*.mid;*.mkv;*.mov;*.mpg;*.asf;*.flv;*.mpeg",
-                                                wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
-
-                if (music != "") {
-                    sourceSongs[it.file] = new AudioManager(music);
+                wxFileName fn = targetFile;
+                fn.SetFullName(it.file);
+                if (!fn.Exists()) {
+                    wxString music = wxFileSelector("Choose your copy of " + it.file + ".",
+                                                    fn.GetPath(), wxEmptyString, wxEmptyString,
+                                                    "Audio files|*.mp3;*.ogg;*.m4p;*.mp4;*.avi;*.wma;*.wmv;*.au;*.wav;*.m4a;*.mid;*.mkv;*.mov;*.mpg;*.asf;*.flv;*.mpeg",
+                                                    wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
+                    if (music != "") {
+                        sourceSongs[it.file] = new AudioManager(music);
+                        // wait for song to load
+                        while (!sourceSongs[it.file]->IsDataLoaded()) {
+                            wxMilliSleep(100);
+                        }
+                    } else {
+                        sourceSongs[it.file] = nullptr;
+                    }
                 } else {
-                    sourceSongs[it.file] = nullptr;
+                    sourceSongs[it.file] = new AudioManager(fn.GetFullPath());
+                }
+                if (firstAudio == nullptr) {
+                    firstAudio = sourceSongs[it.file];
                 }
             }
         }
 
         bool ok = true;
 
-        long outputRate = -1;
+        long sampleRate = -1;
         for (const auto& it : sourceSongs) {
             if (it.second != nullptr) {
-                if (outputRate == -1) {
-                    outputRate = it.second->GetRate();
+                if (sampleRate == -1) {
+                    sampleRate = it.second->GetRate();
                 } else {
-                    if (ok && outputRate != it.second->GetRate()) {
+                    if (ok && sampleRate != it.second->GetRate()) {
                         logger_base.debug("Songs do not all have the same bitrate ... unable to do the required mixing.");
-                        wxMessageBox("In order to prepare the audio all the input songs must have the same bitrate.");
+                        wxMessageBox("In order to prepare the audio all the input songs must have the same sample rate.");
                         ok = false;
                     }
                 }
             }
         }
 
-        if (outputRate == -1) {
+        if (sampleRate == -1) {
             SetStatusText("Audio file creation failed - No input audio.");
             ok = false;
         }
 
         if (ok) {
-            long totalSamples = outputRate * outputLength;
+            long totalSamples = sampleRate * outputLength;
             logger_base.debug("    New file will:");
             logger_base.debug("        have %ld samples.", totalSamples);
             logger_base.debug("        be %0.3f seconds long.", outputLength);
@@ -9604,8 +9701,8 @@ void xLightsFrame::OnMenuItem_PrepareAudioSelected(wxCommandEvent& event)
                     SetStatusText("Combining audio clips.");
 
                     logger_base.debug("Processing sample from %s.", (const char*)it.file.c_str());
-                    long startOutput = outputRate * it.start;
-                    long outputSamples = outputRate * it.length;
+                    long startOutput = sampleRate * it.start;
+                    long outputSamples = sampleRate * it.length;
                     // logger_base.debug("    Sample Output Start %ld-%ld [%ld].", startOutput, startOutput + outputSamples - 1, outputSamples);
                     wxASSERT(startOutput + outputSamples - 1 <= totalSamples);
                     long startSample = audio->GetRate() * it.sourceoffset;
@@ -9700,6 +9797,15 @@ void xLightsFrame::OnMenuItem_PrepareAudioSelected(wxCommandEvent& event)
                 if (it > 1.0)
                     it = 1.0;
             }
+            
+#ifdef __WXOSX__
+            // Cannot generate MP3's, change to AAC/m4a (which has better quality anyway)
+            wxFileName fn = targetFile;
+            if (fn.GetExt() == "mp3") {
+                fn.SetExt("m4a");
+                targetFile = fn.GetFullPath();
+            }
+#endif
 
             if (FileExists(targetFile)) {
                 if (wxMessageBox(targetFile.GetFullPath() + " already exists. Do you want to overwrite it?", "Replace", wxYES_NO | wxCENTRE, this) == wxNO) {
@@ -9707,7 +9813,11 @@ void xLightsFrame::OnMenuItem_PrepareAudioSelected(wxCommandEvent& event)
                                     "Choose filename to save the audio as.",
                                     targetFile.GetPath(),
                                     targetFile.GetName(),
-                                    "MP3 Files|*.mp3",
+#ifdef __WXOSX__
+                                    "Audio Files|*.m4a",
+#else
+                                    "Audio Files|*.mp3;*.m4a",
+#endif
                                     wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
                     if (fd.ShowModal() == wxID_OK) {
@@ -9720,7 +9830,11 @@ void xLightsFrame::OnMenuItem_PrepareAudioSelected(wxCommandEvent& event)
             }
             SetStatusText("Saving output file.");
 
-            if (!AudioManager::CreateAudioFile(left, right, targetFile.GetFullPath(), outputRate)) {
+            if (!AudioManager::EncodeAudio(left,
+                               right,
+                               sampleRate,
+                               targetFile.GetFullPath(),
+                               firstAudio)) {
                 wxMessageBox("Error creating audio file. See log for details.");
                 SetStatusText("Audio file creation failed.");
             } else {

@@ -1382,7 +1382,8 @@ public:
     void UpdateFromBaseShowFolder(bool prompt);
     void UpdateRecentFilesList(bool reload);
     void AddToMRU(const std::string& filename);
-    bool PromptForShowDirectory(bool permanent);
+    bool PromptForShowDirectory(bool permanent, const std::string &defaultDir = "");
+    bool PromptForDirectorySelection(const std::string &msg, std::string &dir);
     bool SaveNetworksFile();
     bool IsControllersAndLayoutTabSaveLinked() { return _linkedSave == "Controllers and Layout Tab"; }
     bool IsControllerUploadLinked() { return _linkedControllerUpload == "Inputs and Outputs"; }
@@ -1890,7 +1891,7 @@ public:
     MainSequencer* GetMainSequencer() const { return mainSequencer; }
     wxString GetSeqXmlFileName();
 
-    std::string MoveToShowFolder(const std::string& file, const std::string& subdirectory);
+    std::string MoveToShowFolder(const std::string& file, const std::string& subdirectory, const bool reuse = false);
     bool IsInShowFolder(const std::string & file) const;
     bool FilesMatch(const std::string & file1, const std::string & file2) const;
     ColorPanel* GetColorPanel() const { return colorPanel; }

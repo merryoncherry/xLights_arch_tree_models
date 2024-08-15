@@ -1473,11 +1473,10 @@ static bool Compare3dPointTuple(const std::tuple<float, float, float, int> &l,
     return std::get<2>(l) < std::get<2>(r);
 }
 
-std::string FPP::CreateVirtualDisplayMap(ModelManager* allmodels) {
+std::string FPP::CreateVirtualDisplayMap(ModelManager* allmodels, int previewWi, int previewHi) {
     std::string ret;
 
     constexpr float PADDING{ 10.0F };
-    bool first { true };
     float minX{ 0.0F };
     float maxX{ 0.0F };
     float minY{ 0.0F };
@@ -1497,21 +1496,18 @@ std::string FPP::CreateVirtualDisplayMap(ModelManager* allmodels) {
         if (model->GetDisplayAs() == "ModelGroup") {
             continue;
         }
-
-        if (first) {
-            first = false;
-            maxY = model->GetModelScreenLocation().previewH;
-            maxX = model->GetModelScreenLocation().previewW;
-        }
-
+        
         minY = std::min(model->GetModelScreenLocation().GetBottom() - PADDING, minY);
         maxY = std::max(model->GetModelScreenLocation().GetTop() + PADDING, maxY);
         minX = std::min(model->GetModelScreenLocation().GetLeft() - PADDING, minX);
         maxX = std::max(model->GetModelScreenLocation().GetRight() + PADDING, maxX);
     }
 
+    int totW = std::max(previewWi, int(maxX - minX));
+    int totH = std::max(previewHi, int(maxY - minY));
+
     ret += "# Preview Size\n";
-    ret += ToUTF8(wxString::Format("%d,%d\n", int(maxX - minX), int(maxY - minY)));
+    ret += ToUTF8(wxString::Format("%d,%d\n", totW, totH));
 
     for (auto m = allmodels->begin(); m != allmodels->end(); ++m) {
         Model* model = m->second;
@@ -1757,6 +1753,7 @@ bool FPP::SetOutputs(ModelManager* allmodels, OutputManager* outputManager, Cont
         && !UploadVirtualMatrixOutputs(allmodels, outputManager, controller)
         && !UploadPixelOutputs(allmodels, outputManager, controller)
         && !UploadSerialOutputs(allmodels, outputManager, controller)
+        && !UploadPWMOutputs(allmodels, outputManager, controller)
         && !Restart("");
 }
 
@@ -1768,6 +1765,7 @@ bool FPP::UploadForImmediateOutput(ModelManager* allmodels, OutputManager* outpu
     UploadVirtualMatrixOutputs(allmodels, outputManager, controller);
     UploadPixelOutputs(allmodels, outputManager, controller);
     UploadSerialOutputs(allmodels, outputManager, controller);
+    UploadPWMOutputs(allmodels, outputManager, controller);
     SetInputUniversesBridge(controller);
     
     if (restartNeeded) {
@@ -1982,6 +1980,18 @@ static bool UpdateJSONValue(wxJSONValue &v, const std::string &key, int newValue
     int origValue = v[key].AsLong();
     if (origValue != newValue) {
         v[key] = newValue;
+        return true;
+    }
+    return false;
+}
+static bool UpdateJSONFloatValue(wxJSONValue &v, const std::string &key, float newValue) {
+    if (!v.HasMember(key)) {
+        v[key] = newValue;
+        return true;
+    }
+    float origValue = v[key].AsDouble();
+    if (origValue != newValue) {
+        v[key] = (double)newValue;
         return true;
     }
     return false;
@@ -2275,7 +2285,11 @@ bool FPP::UploadVirtualMatrixOutputs(ModelManager* allmodels,
                     v["layout"] = layout;
                     v["colorOrder"] = wxString("RGB");
                     v["invert"] = 0;
-                    v["device"] = wxString::Format("fb%d", port);
+                    if (IsVersionAtLeast(8, 0)) {
+                        v["device"] = wxString::Format("HDMI-A-%d", port);
+                    } else {
+                        v["device"] = wxString::Format("fb%d", port);
+                    }
                     v["xoff"] = 0;
                     v["description"] = name;
                     v["yoff"] = curOffset;
@@ -2419,6 +2433,121 @@ bool FPP::UploadSerialOutputs(ModelManager* allmodels,
     return false;
 }
 
+bool FPP::UploadPWMOutputs(ModelManager* allmodels,
+                           OutputManager* outputManager,
+                           Controller* controller) {
+    auto rules = ControllerCaps::GetControllerConfig(controller);
+    if (rules == nullptr) {
+        return false;
+    }
+    int maxPort = rules->GetMaxPWMPort();
+    if (maxPort <= 0) {
+        return false;
+    }
+    if (!IsVersionAtLeast(8, 0)) {
+        //PWM output requires FPP 8.0 or later
+        return true;
+    }
+    bool hasPWM = false;
+    if (!capeInfo.HasMember("id")) {
+        GetURLAsJSON("/api/cape", capeInfo);
+    }
+    for (int x = 0; x < capeInfo["provides"].Size(); x++) {
+        if (capeInfo["provides"][x].AsString() == "pwm") {
+            hasPWM = true;
+        }
+    }
+    if (!hasPWM) {
+        return true;
+    }
+    
+    UDController cud(controller, outputManager, allmodels, false);
+    if (cud.GetMaxPWMPort() == 0) {
+        return false;
+    }
+    bool fullcontrol = rules->SupportsFullxLightsControl() && controller->IsFullxLightsControl();
+
+    std::map<int, int> rngs;
+    FillRanges(rngs);
+    bool changed = false;
+    
+    wxJSONValue root;
+    int pca9685Index = -1;
+    if (!fullcontrol && GetURLAsJSON("/api/configfile/co-pwm.json", root, false)) {
+        if (root.HasMember("channelOutputs")) {
+            for (int x = 0; x < root["channelOutputs"].Size(); x++) {
+                if (root["channelOutputs"][x]["type"].AsString() == "PCA9685") {
+                    pca9685Index = x;
+                    break;
+                }
+            }
+        }
+    }
+    if (pca9685Index == -1) {
+        changed = true;
+        pca9685Index = 0;
+        root["channelOutputs"] = wxJSONValue(wxJSONTYPE_ARRAY);
+        root["channelOutputs"][pca9685Index]["type"] = wxString("PCA9685");
+        root["channelOutputs"][pca9685Index]["subType"] = rules->GetID();
+        root["channelOutputs"][pca9685Index]["enabled"] = 1;
+        root["channelOutputs"][pca9685Index]["frequency"] = controller->GetExtraProperty("PWMFrequency", "50hz");
+        root["channelOutputs"][pca9685Index]["startChannel"] = 0;
+        root["channelOutputs"][pca9685Index]["channelCount"] = -1;
+        root["channelOutputs"][pca9685Index]["outputs"] = wxJSONValue(wxJSONTYPE_ARRAY);
+    }
+    // make sure we have enough ports....
+    while (maxPort > root["channelOutputs"][pca9685Index]["outputs"].Size()) {
+        changed = true;
+        wxJSONValue v;
+        v["description"] = xlEMPTY_WXSTRING;
+        v["startChannel"] = 0;
+        v["is16bit"] = 1;
+        v["type"] = wxString("Servo");
+        v["min"] = 1000;
+        v["max"] = 2000;
+        v["reverse"] = 0;
+        v["zero"] = wxString("Hold");
+        v["dataType"] = wxString("Scaled");
+        root["channelOutputs"][pca9685Index]["outputs"].Append(v);
+    }
+    for (int x = 0; x < maxPort; x++) {
+        if (x < cud.GetMaxPWMPort()) {
+            auto *p = cud.GetControllerPWMPort(x + 1);
+            auto *m = p->GetFirstModel();
+            auto &jv = root["channelOutputs"][pca9685Index]["outputs"][x];
+            if (m) {
+                const auto &props = m->GetPWMProperties();
+                changed |= UpdateJSONValue(jv, "startChannel", m->GetStartChannel());
+                std::string mname = m->GetName();
+                changed |= UpdateJSONValue(jv, "description", mname + " - " + props.label);
+                changed |= UpdateJSONValue(jv, "is16bit", m->GetStartChannel() != m->GetEndChannel() ? 1 : 0);
+                if (props.type == 0) {
+                    //LED
+                    changed |= UpdateJSONValue(jv, "type", "LED");
+                    changed |= UpdateJSONValue(jv, "brightness", props.brightness);
+                    changed |= UpdateJSONFloatValue(jv, "gamma", props.gamma);
+                } else {
+                    //SERVO
+                    changed |= UpdateJSONValue(jv, "type", "Servo");
+                    changed |= UpdateJSONValue(jv, "min", props.minValue);
+                    changed |= UpdateJSONValue(jv, "max", props.maxValue);
+                    changed |= UpdateJSONValue(jv, "reverse", props.reverse ? 1 : 0);
+                    changed |= UpdateJSONValue(jv, "zero", props.zeroBehavior);
+                    changed |= UpdateJSONValue(jv, "dataType", props.dateType);
+                }
+            }
+        }
+    }
+    
+    if (changed) {
+        PostJSONToURL("/api/configfile/co-pwm.json", root);
+        SetRestartFlag();
+        SetNewRanges(rngs);
+    }
+    return false;
+}
+
+
 bool FPP::UploadPixelOutputs(ModelManager* allmodels,
                              OutputManager* outputManager,
                              Controller* controller) {
@@ -2543,7 +2672,7 @@ bool FPP::UploadPixelOutputs(ModelManager* allmodels,
     for (int pp = 1; pp <= rules->GetMaxPixelPort(); pp++) {
         if (cud.HasPixelPort(pp)) {
             UDControllerPort* port = cud.GetControllerPixelPort(pp);
-            port->CreateVirtualStrings(false);
+            port->CreateVirtualStrings(false, false);
             for (const auto& pvs : port->GetVirtualStrings()) {
                 wxJSONValue vs;
                 if (pvs->_isDummy) {
@@ -2877,7 +3006,7 @@ bool FPP::UploadControllerProxies(OutputManager* outputManager)
             proxies.Append(proxy);
         }
 
-        return PostJSONToURL("/api/proxies", proxies);
+        PostJSONToURL("/api/proxies", proxies);
     } else {
         auto currentProxies = GetProxyList();
         std::vector<std::string> newProxies;
