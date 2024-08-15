@@ -174,9 +174,11 @@ int32_t Experience::SetInputUniverses(wxJSONValue& data, Controller* controller)
     } else if (out->GetType() == OUTPUT_DDP) {
         data["system"]["operating_mode"] = wxString("ddp");
         DDPOutput* ddp = (DDPOutput*)out;
-        data["system"]["start_channel"] = ddp->IsKeepChannelNumbers() ? ddp->GetStartChannel() : 1;
         if (ddp->IsKeepChannelNumbers()) {
-            startChannel = 1;
+            data["system"]["start_channel"] = startChannel;
+            startChannel = 1;//offset for pixel page
+        } else {
+            data["system"]["start_channel"] = 1;
         }
     } else  {
         //should never hit this
@@ -253,7 +255,7 @@ bool Experience::SetOutputs(ModelManager* allmodels, OutputManager* outputManage
         port["long_range_port_index"].SetType(wxJSONTYPE_NULL);
         if (cud.HasPixelPort(p)) {
             UDControllerPort* portData = cud.GetControllerPixelPort(p);
-            portData->CreateVirtualStrings(false);
+            portData->CreateVirtualStrings(false, false);
             for (const auto& pvs : portData->GetVirtualStrings()) {
                 wxJSONValue vs;
                 vs["n"] = pvs->_description;
@@ -283,7 +285,7 @@ bool Experience::SetOutputs(ModelManager* allmodels, OutputManager* outputManage
             }
             port["disabled"] = false;
             stringData["outputs"][p - 1] = port;
-        } else if (fullControl) {
+        } else {
             wxJSONValue vs;
             vs["sc"] = 0;
             vs["ec"] = 0;
@@ -301,7 +303,7 @@ bool Experience::SetOutputs(ModelManager* allmodels, OutputManager* outputManage
             //one based
             if (cud.HasPixelPort(portID)) {
                 UDControllerPort* portData = cud.GetControllerPixelPort(portID);
-                portData->CreateVirtualStrings(false);
+                portData->CreateVirtualStrings(false, false);
                 for (const auto& pvs : portData->GetVirtualStrings()) {
                     wxJSONValue vs;
 
@@ -343,18 +345,31 @@ bool Experience::SetOutputs(ModelManager* allmodels, OutputManager* outputManage
                 }
                 port["disabled"] = false;
                 stringData["outputs"][portID - 1] = port;
-            } else if (fullControl) {
+            } else {
                 wxJSONValue vs;
                 vs["sc"] = 0;
                 vs["ec"] = 0;
+                vs["ri"] = 0;
                 port["virtual_strings"].Append(vs);
                 stringData["outputs"][portID - 1] = port;
             }
         }
+        //pad end with extra remotes to match other ports on receiver
+        for (int subID = 0; subID < 4; ++subID) {
+            int portID = GetNumberOfPixelOutputs() + (lrIdx * 4) + subID + 1;
+            while (stringData["outputs"][portID - 1]["virtual_strings"].AsArray()->size() < remoteIds.size()) {
+                wxJSONValue vs;
+                vs["sc"] = 0;
+                vs["ec"] = 0;
+                vs["ri"] = stringData["outputs"][portID - 1]["virtual_strings"].AsArray()->size();
+                stringData["outputs"][portID - 1]["virtual_strings"].Append(vs);
+            }
+        }
+
         if (remoteIds.size() != 0) {
             stringData["long_range_ports"][lrIdx]["number_of_receivers"] = remoteIds.size();
             stringData["long_range_ports"][lrIdx]["type"] = wxString("pixel");
-        } else if (fullControl) {
+        } else {
             stringData["long_range_ports"][lrIdx]["number_of_receivers"] = 1;
             stringData["long_range_ports"][lrIdx]["type"] = wxString("pixel");
         }
@@ -381,7 +396,7 @@ bool Experience::SetOutputs(ModelManager* allmodels, OutputManager* outputManage
 
             stringData["long_range_ports"][lrIdx]["number_of_receivers"] = 1;
             stringData["long_range_ports"][lrIdx]["type"] = wxString("dmx");
-        } else if (fullControl) {
+        } else {
             wxJSONValue vs;
             vs["sc"] = 0;
             vs["ec"] = 0;
@@ -396,7 +411,6 @@ bool Experience::SetOutputs(ModelManager* allmodels, OutputManager* outputManage
     progress.Update(70, "Uploading String Output Information.");
 
     PostJSONToURL(GetConfigURL(), stringData);
-
     progress.Update(100, "Done.");
     return true;
 }
